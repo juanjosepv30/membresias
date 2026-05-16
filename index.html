@@ -606,7 +606,7 @@ const API_TOKEN = 'animalcenter2024secret'; // debe coincidir con SECRET_TOKEN e
 
 // Modo offline: true = usa datos locales (localStorage), false = usa Google Sheets
 // Cambia a false una vez que tengas Apps Script configurado
-const OFFLINE_MODE = false;
+const OFFLINE_MODE = true;
 
 // ═══════════════════ STATE ═══════════════════
 const S={
@@ -620,27 +620,102 @@ const S={
 function lsGet(k){try{return JSON.parse(localStorage.getItem(k));}catch{return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
 
-// ── API call to Google Apps Script ──
+// ── JSONP: bypasses CORS — único método que funciona con Apps Script ──
+function jsonpGet(action){
+  return new Promise((resolve,reject)=>{
+    if(OFFLINE_MODE||!API_URL||API_URL.startsWith('TU_')){resolve(null);return;}
+    const cbName='_ac_cb_'+Date.now();
+    const timeout=setTimeout(()=>{
+      delete window[cbName];
+      const s=document.getElementById(cbName);
+      if(s)s.remove();
+      reject(new Error('timeout'));
+    },15000);
+    window[cbName]=function(data){
+      clearTimeout(timeout);
+      delete window[cbName];
+      const s=document.getElementById(cbName);
+      if(s)s.remove();
+      resolve(data&&data.ok?data:null);
+    };
+    const s=document.createElement('script');
+    s.id=cbName;
+    s.src=`${API_URL}?action=${action}&token=${API_TOKEN}&callback=${cbName}`;
+    s.onerror=()=>{clearTimeout(timeout);delete window[cbName];s.remove();reject(new Error('script error'));};
+    document.head.appendChild(s);
+  });
+}
+
+// ── POST via fetch (funciona para escritura, CORS no es problema en POST simple) ──
 async function apiGet(action){
-  if(OFFLINE_MODE||!API_URL||API_URL.startsWith('TU_')) return null;
+  if(OFFLINE_MODE||!API_URL||API_URL.startsWith('TU_'))return null;
   try{
-    const url=`${API_URL}?action=${action}&token=${API_TOKEN}`;
-    const res=await fetch(url);
-    const data=await res.json();
-    return data.ok?data:null;
-  }catch(e){console.warn('API GET error:',e);return null;}
+    // Intentar JSONP primero
+    const data=await jsonpGet(action);
+    return data;
+  }catch(e){
+    console.warn('JSONP falló, intentando fetch:',e);
+    try{
+      const url=`${API_URL}?action=${action}&token=${API_TOKEN}`;
+      const res=await fetch(url,{redirect:'follow'});
+      const text=await res.text();
+      const match=text.match(/\{[\s\S]*\}/);
+      if(!match)return null;
+      const data=JSON.parse(match[0]);
+      return data.ok?data:null;
+    }catch(e2){console.warn('fetch también falló:',e2);return null;}
+  }
 }
 
 async function apiPost(body){
-  if(OFFLINE_MODE||!API_URL||API_URL.startsWith('TU_')) return null;
+  if(OFFLINE_MODE||!API_URL||API_URL.startsWith('TU_'))return null;
   try{
     const res=await fetch(API_URL,{
       method:'POST',
+      redirect:'follow',
+      headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({...body,token:API_TOKEN})
     });
-    const data=await res.json();
+    const text=await res.text();
+    const match=text.match(/\{[\s\S]*\}/);
+    if(!match)return null;
+    const data=JSON.parse(match[0]);
     return data.ok?data:null;
   }catch(e){console.warn('API POST error:',e);return null;}
+}
+
+// ── Normalizar fecha desde Sheets (puede venir como Date object, string ISO, o texto) ──
+function normalizeDate(val){
+  if(!val||val===''||val==='0'||val===0)return'';
+  // Si es objeto Date (Google Sheets lo devuelve así)
+  if(val instanceof Date){
+    if(isNaN(val.getTime()))return'';
+    return val.toISOString().slice(0,10);
+  }
+  const s=String(val).trim();
+  if(!s||s==='0'||s==='false'||s==='undefined')return'';
+  // ISO con T: "2026-02-17T05:00:00.000Z"
+  if(s.includes('T')){
+    try{
+      const d=new Date(s);
+      if(!isNaN(d.getTime()))return d.toISOString().slice(0,10);
+    }catch(e){}
+  }
+  // Ya en formato YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  // DD-MM-YYYY o DD/MM/YYYY
+  const m=s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})$/);
+  if(m){
+    const[,d,mo,y]=m;
+    const yr=y.length===2?'20'+y:y;
+    return`${yr}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+  // Último intento
+  try{
+    const d=new Date(s);
+    if(!isNaN(d.getTime()))return d.toISOString().slice(0,10);
+  }catch(e){}
+  return'';
 }
 
 // ── Convert Sheets row format to app format ──
@@ -648,27 +723,32 @@ function sheetsToClients(rows,consumosRows){
   // Group consumos by clienteId
   const conMap={};
   (consumosRows||[]).forEach(r=>{
-    if(!conMap[r.clienteId])conMap[r.clienteId]={};
-    const svc=r.servicio;
-    if(!conMap[r.clienteId][svc])conMap[r.clienteId][svc]=[];
-    const entry=r.fecha+(r.nota?' — '+r.nota:'');
-    conMap[r.clienteId][svc].push({entry,id:r.id,ts:r.timestamp});
+    const cid=String(r.clienteId||'');
+    if(!cid)return;
+    if(!conMap[cid])conMap[cid]={};
+    const svc=String(r.servicio||'');
+    if(!svc)return;
+    if(!conMap[cid][svc])conMap[cid][svc]=[];
+    const fecha=normalizeDate(r.fecha);
+    if(!fecha)return;
+    const entry=fecha+(r.nota?' — '+r.nota:'');
+    conMap[cid][svc].push({entry,id:r.id,ts:r.timestamp});
   });
 
   return rows.map(r=>({
-    id:String(r.id),
-    plan:String(r.plan),
+    id:String(r.id||''),
+    plan:String(r.plan||''),
     nombre:String(r.nombre||''),
     cc:String(r.cc||''),
     celular:String(r.celular||''),
     correo:String(r.correo||''),
     mascotas:String(r.mascotas||''),
-    inicio:String(r.inicio||''),
+    inicio:normalizeDate(r.inicio),
     consumed: Object.fromEntries(
       Object.entries(conMap[String(r.id)]||{}).map(([k,v])=>[k,v.map(x=>x.entry)])
     ),
     _consumoIds: conMap[String(r.id)]||{}
-  }));
+  })).filter(c=>c.id&&c.plan&&c.nombre); // solo filtrar si faltan campos obligatorios
 }
 
 function sheetsToUsers(rows){
@@ -712,7 +792,11 @@ async function initState(){
     try{
       const res=await apiGet('getAll');
       if(res){
+        console.log('Sheets raw clientes count:',res.clientes?.length);
+        console.log('Primer cliente raw:',JSON.stringify(res.clientes?.[0]));
         S.clients = sheetsToClients(res.clientes||[], res.consumos||[]);
+        console.log('Clientes procesados:',S.clients.length);
+        console.log('Primer cliente procesado:',JSON.stringify(S.clients[0]));
         S.users   = sheetsToUsers(res.usuarios||[]);
         S.plans   = Object.keys(res.planes||{}).length>0 ? sheetsToPlans(res.planes) : PLANS_DEF;
         S.terms   = (res.terminos||[]).map(r=>String(r.texto||r));
@@ -775,12 +859,25 @@ function showLoadingScreen(show){
 }
 
 // ═══════════════════ HELPERS ═══════════════════
-function addYear(d){const x=new Date(d);x.setFullYear(x.getFullYear()+1);return x.toISOString().slice(0,10);}
-function daysLeft(i){return Math.ceil((new Date(addYear(i))-new Date())/86400000);}
+function addYear(d){
+  if(!d||d===''||d==='—')return'';
+  try{const x=new Date(d);if(isNaN(x.getTime()))return'';x.setFullYear(x.getFullYear()+1);return x.toISOString().slice(0,10);}
+  catch(e){return'';}
+}
+function daysLeft(i){
+  if(!i||i===''||i==='—')return 9999;
+  try{const r=Math.ceil((new Date(addYear(i))-new Date())/86400000);return isNaN(r)?9999:r;}
+  catch(e){return 9999;}
+}
 const MO=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 function fmtDate(d){if(!d)return'—';const[y,m,day]=d.split('-');return`${day} ${MO[+m-1]} ${y}`;}
 function fmtDT(ts){const d=new Date(ts);return d.toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});}
-function getStatus(i){const d=daysLeft(i);return d<=0?'expired':d<=30?'expiring':'active';}
+function getStatus(i){
+  if(!i||i===''||i==='—')return'active';
+  const d=daysLeft(i);
+  if(isNaN(d)||d===9999)return'active';
+  return d<=0?'expired':d<=30?'expiring':'active';
+}
 function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function genPass(mascotas){
   // Format: teamo + first pet name (lowercase, no spaces/special chars)
