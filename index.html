@@ -4,614 +4,923 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Animal Center — Portal Membresías</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --green:#4bae4f;--green-dark:#388e3c;--green-light:#e8f5e9;--green-mid:#c8e6c9;
   --orange:#ff8c00;--orange-light:#fff3e0;
-  --white:#ffffff;--bg:#f4f6f4;--surface:#ffffff;
+  --white:#fff;--bg:#f4f6f4;
   --border:#e0e7e0;--border2:#c8d8c8;
   --text:#1a2e1a;--text2:#3d5a3d;--text3:#6b8068;--muted:#9eb09e;
   --danger:#d32f2f;--danger-light:#ffebee;
   --warn:#f57f17;--warn-light:#fff8e1;
   --info:#0277bd;--info-light:#e1f5fe;
   --silver:#546e7a;--gold:#f57f17;--morada:#7b2fbe;
-  --shadow:0 2px 8px rgba(75,174,79,.1);
+  --shadow:0 2px 8px rgba(75,174,79,.1);--shadow-md:0 6px 20px rgba(0,0,0,.08);
   --radius:8px;--radius-lg:14px;
 }
 html,body{height:100%;font-family:'Nunito',sans-serif;font-size:14px;background:var(--bg);color:var(--text)}
 .hidden{display:none!important}
-a{color:var(--green);text-decoration:none}
-
-/* ── SCROLLBAR ── */
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+code{font-family:monospace;background:var(--bg);padding:1px 5px;border-radius:4px;font-size:12px}
 
-/* ══════════════ LOGIN ══════════════ */
+/* ── LOGIN ── */
 #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 55%,var(--orange) 100%)}
-.login-card{background:var(--white);border-radius:20px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.18)}
-.login-header{background:linear-gradient(135deg,var(--green),var(--green-dark));padding:28px 28px 22px;text-align:center;color:#fff;position:relative;overflow:hidden}
-.login-header::before{content:'';position:absolute;top:-30px;right:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.1)}
-.login-paw{font-size:40px;display:block;margin-bottom:10px}
-.login-header h1{font-size:22px;font-weight:900;letter-spacing:-.5px}
-.login-header p{font-size:12px;opacity:.8;margin-top:2px}
-.login-body{padding:24px 28px 28px}
-.login-body h2{font-size:16px;font-weight:700;margin-bottom:18px;text-align:center;color:var(--text)}
-.form-group{margin-bottom:14px}
-.form-group label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
-.form-group input{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:'Nunito',sans-serif;color:var(--text);background:#fff;transition:border .15s}
-.form-group input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(75,174,79,.12)}
-.btn-login{width:100%;padding:12px;border:none;border-radius:var(--radius);background:var(--green);color:#fff;font-weight:800;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;margin-top:6px;transition:background .15s}
+.login-card{background:#fff;border-radius:20px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.18)}
+.login-hdr{background:linear-gradient(135deg,var(--green),var(--green-dark));padding:26px 28px 20px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.login-hdr::before{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.1)}
+.login-hdr .paw{font-size:38px;display:block;margin-bottom:8px}
+.login-hdr h1{font-size:22px;font-weight:900;letter-spacing:-.5px}
+.login-hdr p{font-size:12px;opacity:.8;margin-top:2px}
+.login-body{padding:22px 26px 26px}
+.login-body h2{font-size:16px;font-weight:700;margin-bottom:16px;text-align:center}
+.fg{margin-bottom:13px}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.fg input{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:'Nunito',sans-serif;color:var(--text);transition:border .15s}
+.fg input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(75,174,79,.1)}
+.btn-login{width:100%;padding:11px;border:none;border-radius:var(--radius);background:var(--green);color:#fff;font-weight:800;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;margin-top:4px}
 .btn-login:hover{background:var(--green-dark)}
-.login-err{color:var(--danger);font-size:12px;text-align:center;margin-top:8px;font-weight:600}
-.login-hint{margin-top:18px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--text3);text-align:center;line-height:1.6}
+.login-err{color:var(--danger);font-size:12px;text-align:center;margin-top:7px;font-weight:600}
+.login-hint{margin-top:16px;padding-top:13px;border-top:1px solid var(--border);font-size:12px;color:var(--text3);text-align:center;line-height:1.6}
 .login-hint strong{color:var(--green)}
 
-/* ══════════════ TOPBAR ══════════════ */
-#topbar{background:#fff;border-bottom:2px solid var(--green-mid);display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:56px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
-.topbar-brand{display:flex;align-items:center;gap:12px}
-.topbar-logo{width:38px;height:38px;border-radius:10px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 8px rgba(75,174,79,.3)}
-.topbar-name{font-weight:900;font-size:16px;color:var(--green-dark);letter-spacing:-.3px;line-height:1}
-.topbar-sub{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
-.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.topbar-user{font-size:12px;color:var(--text3)}
+/* ── TOPBAR ── */
+#topbar{background:#fff;border-bottom:2px solid var(--green-mid);display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:54px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.tb-brand{display:flex;align-items:center;gap:10px}
+.tb-logo{width:36px;height:36px;border-radius:9px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:19px}
+.tb-name{font-weight:900;font-size:15px;color:var(--green-dark);letter-spacing:-.3px;line-height:1}
+.tb-sub{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.tb-right{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .role-tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px}
 .role-admin{background:#f3e8ff;color:#6b21a8}
 .role-personal{background:var(--info-light);color:var(--info)}
 .role-cliente{background:var(--green-light);color:var(--green-dark)}
-.btn-ghost{padding:5px 11px;border:1.5px solid var(--border);border-radius:var(--radius);background:transparent;color:var(--text3);cursor:pointer;font-size:12px;font-family:'Nunito',sans-serif;font-weight:600;transition:all .15s}
+.btn-ghost{padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);background:transparent;color:var(--text3);cursor:pointer;font-size:12px;font-family:'Nunito',sans-serif;font-weight:600;transition:all .15s;white-space:nowrap}
 .btn-ghost:hover{background:var(--bg);border-color:var(--green)}
-.btn-danger-ghost{padding:5px 11px;border:1.5px solid #fca5a5;border-radius:var(--radius);background:transparent;color:var(--danger);cursor:pointer;font-size:12px;font-family:'Nunito',sans-serif;font-weight:600}
-.btn-danger-ghost:hover{background:var(--danger-light)}
+.btn-red-ghost{padding:5px 10px;border:1.5px solid #fca5a5;border-radius:var(--radius);background:transparent;color:var(--danger);cursor:pointer;font-size:12px;font-family:'Nunito',sans-serif;font-weight:600}
+.btn-red-ghost:hover{background:var(--danger-light)}
 
-/* ══════════════ TABS ══════════════ */
+/* ── TABS ── */
 #tabs-bar{background:#fff;border-bottom:1px solid var(--border);display:flex;padding:0 20px}
-.tab-btn{padding:13px 18px;border:none;background:none;font-size:13px;font-weight:700;color:var(--text3);cursor:pointer;border-bottom:3px solid transparent;font-family:'Nunito',sans-serif;transition:color .15s}
+.tab-btn{padding:12px 17px;border:none;background:none;font-size:13px;font-weight:700;color:var(--text3);cursor:pointer;border-bottom:3px solid transparent;font-family:'Nunito',sans-serif}
 .tab-btn.active{color:var(--green-dark);border-bottom-color:var(--green)}
-.tab-btn:hover:not(.active){color:var(--text2)}
 
-/* ══════════════ MAIN ══════════════ */
-#main-content{padding:18px 20px;max-width:1360px;margin:0 auto}
+/* ── MAIN ── */
+#main-wrap{padding:16px 20px;max-width:1360px;margin:0 auto}
 
-/* ══════════════ STATS ══════════════ */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px}
-.stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;box-shadow:var(--shadow)}
-.stat-icon{font-size:20px}
-.stat-val{font-size:26px;font-weight:900;line-height:1.1;margin-top:4px}
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:9px;margin-bottom:16px}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+.stat-val{font-size:26px;font-weight:900;line-height:1.1;margin-top:3px}
 .stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
 
-/* ══════════════ FILTER BAR ══════════════ */
-.filter-bar{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:11px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;box-shadow:var(--shadow)}
-.search-input{flex:1;min-width:200px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;color:var(--text);background:#fff;transition:border .15s}
-.search-input:focus{outline:none;border-color:var(--green)}
+/* ── FILTER BAR ── */
+.filter-bar{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:10px 13px;display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:9px;box-shadow:var(--shadow)}
+.search-inp{flex:1;min-width:190px;padding:7px 11px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;color:var(--text)}
+.search-inp:focus{outline:none;border-color:var(--green)}
 .pill-group{display:flex;gap:4px;flex-wrap:wrap}
-.pill{padding:5px 11px;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text3);transition:all .15s}
-.pill:hover{background:var(--green-mid)}
-.pill.active{background:var(--green);color:#fff}
-.pill.active-silver{background:var(--silver);color:#fff}
-.pill.active-gold{background:var(--gold);color:#fff}
-.pill.active-morada{background:var(--morada);color:#fff}
-.btn-add{padding:7px 14px;border:none;border-radius:var(--radius);background:var(--green);color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin-left:auto;font-family:'Nunito',sans-serif;transition:background .15s;white-space:nowrap}
+.pill{padding:4px 10px;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text3)}
+.pill.act{background:var(--green);color:#fff}
+.pill.act-silver{background:var(--silver);color:#fff}
+.pill.act-gold{background:var(--gold);color:#fff}
+.pill.act-morada{background:var(--morada);color:#fff}
+.btn-add{padding:6px 13px;border:none;border-radius:var(--radius);background:var(--green);color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin-left:auto;font-family:'Nunito',sans-serif;white-space:nowrap}
 .btn-add:hover{background:var(--green-dark)}
-.results-count{font-size:12px;color:var(--text3);margin-bottom:7px;font-weight:600}
+.res-count{font-size:12px;color:var(--text3);margin-bottom:6px;font-weight:600}
 
-/* ══════════════ TABLE ══════════════ */
+/* ── TABLE ── */
 .table-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow)}
 .table-scroll{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead tr{background:var(--green-light)}
-th{padding:10px 14px;text-align:left;font-size:11px;font-weight:800;color:var(--green-dark);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
-td{padding:10px 14px;border-top:1px solid var(--border);vertical-align:middle}
+th{padding:9px 13px;text-align:left;font-size:11px;font-weight:800;color:var(--green-dark);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+td{padding:9px 13px;border-top:1px solid var(--border);vertical-align:middle}
 tbody tr:hover td{background:#f0faf0}
-.td-name{font-weight:700;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.td-muted{color:var(--text3);white-space:nowrap;font-size:12px}
-.td-pets{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text3);font-size:12px}
-.empty-row td{text-align:center;padding:2.5rem;color:var(--muted)}
+.td-name{font-weight:700;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.td-sm{color:var(--text3);white-space:nowrap;font-size:12px}
+.td-pets{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text3);font-size:12px}
+.empty-td td{text-align:center;padding:2.5rem;color:var(--muted)}
 
-/* ══════════════ BADGES ══════════════ */
-.plan-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;color:#fff;white-space:nowrap}
-.plan-SILVER{background:var(--silver)}
-.plan-GOLD{background:var(--gold)}
-.plan-MORADA{background:var(--morada)}
-.status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
-.s-active{background:var(--green-light);color:var(--green-dark)}
-.s-expiring{background:var(--warn-light);color:#b45309}
-.s-expired{background:var(--danger-light);color:var(--danger)}
+/* ── BADGES ── */
+.plan-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:800;color:#fff}
+.plan-SILVER{background:var(--silver)}.plan-GOLD{background:var(--gold)}.plan-MORADA{background:var(--morada)}
+.sb{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.sb-active{background:var(--green-light);color:var(--green-dark)}
+.sb-expiring{background:var(--warn-light);color:#b45309}
+.sb-expired{background:var(--danger-light);color:var(--danger)}
 .s-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
-/* ══════════════ PROGRESS ══════════════ */
-.prog-wrap{display:flex;align-items:center;gap:7px;min-width:90px}
-.prog-bar{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;min-width:55px}
-.prog-fill{height:100%;border-radius:3px;transition:width .4s ease}
-.prog-lbl{font-size:11px;color:var(--text3);white-space:nowrap;font-weight:600}
+/* ── PROGRESS ── */
+.pw{display:flex;align-items:center;gap:6px;min-width:88px}
+.pb{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;min-width:50px}
+.pf{height:100%;border-radius:3px;transition:width .4s}
+.pl{font-size:11px;color:var(--text3);font-weight:600}
 
-/* ══════════════ ACTION BUTTONS ══════════════ */
-.btn-action{padding:5px 11px;border:none;border-radius:var(--radius);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;white-space:nowrap;transition:opacity .15s}
-.btn-action:hover{opacity:.8}
-
-/* ══════════════ PLANS GRID ══════════════ */
-.plans-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+/* ── PLANS ── */
+.plans-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(275px,1fr));gap:17px}
 .plan-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow)}
-.plan-card-header{padding:20px 22px;color:#fff;position:relative;overflow:hidden}
-.plan-card-header::after{content:'';position:absolute;top:-25px;right:-25px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.12)}
-.plan-emoji{font-size:30px;margin-bottom:6px}
-.plan-title{font-weight:900;font-size:20px;letter-spacing:-.3px}
-.plan-price-val{font-size:26px;font-weight:900;margin-top:6px}
-.plan-meta{opacity:.8;font-size:12px;margin-top:2px}
-.plan-card-body{padding:18px 22px}
-.section-label{font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px}
-.plan-item{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border);color:var(--text2)}
-.plan-qty{font-weight:700;padding:1px 8px;border-radius:20px;font-size:11px}
-.plan-perk{display:flex;gap:7px;padding:5px 0;font-size:12px;color:var(--text3);line-height:1.45}
-.plan-perk-check{color:var(--green);font-weight:800;flex-shrink:0}
-.plan-edit-btn{width:100%;margin-top:13px;padding:8px;border:1.5px solid var(--border);border-radius:var(--radius);background:transparent;color:var(--text3);cursor:pointer;font-size:12px;font-family:'Nunito',sans-serif;font-weight:700;transition:all .15s}
+.pc-hdr{padding:19px 21px;color:#fff;position:relative;overflow:hidden}
+.pc-hdr::after{content:'';position:absolute;top:-22px;right:-22px;width:75px;height:75px;border-radius:50%;background:rgba(255,255,255,.12)}
+.pc-body{padding:16px 21px}
+.sec-lbl{font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.pi{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);color:var(--text2)}
+.pi-qty{font-weight:700;padding:1px 7px;border-radius:20px;font-size:10px}
+.pp{display:flex;gap:7px;padding:4px 0;font-size:12px;color:var(--text3);line-height:1.4}
+.plan-edit-btn{width:100%;margin-top:12px;padding:7px;border:1.5px solid var(--border);border-radius:var(--radius);background:transparent;color:var(--text3);cursor:pointer;font-size:12px;font-family:'Nunito',sans-serif;font-weight:700}
 .plan-edit-btn:hover{border-color:var(--green);color:var(--green)}
 
-/* ══════════════ TERMS ══════════════ */
-.terms-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 26px;max-width:740px;box-shadow:var(--shadow)}
-.terms-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.terms-header h3{font-size:17px;font-weight:900;color:var(--text)}
-.term-item{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
-.term-num{background:var(--green);color:#fff;border-radius:50%;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px}
-.term-text{font-size:13px;color:var(--text2);line-height:1.65}
+/* ── TERMS ── */
+.terms-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px;max-width:740px;box-shadow:var(--shadow)}
+.term-item{display:flex;gap:11px;margin-bottom:11px}
+.term-num{background:var(--green);color:#fff;border-radius:50%;min-width:21px;height:21px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px}
 
-/* ══════════════ CLIENT VIEW ══════════════ */
-#cv-wrap{max-width:660px;margin:0 auto;padding:18px 16px 48px}
-.cv-hero{border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;border:1px solid var(--border);box-shadow:var(--shadow)}
-.cv-hero-top{padding:22px 22px 18px;color:#fff;position:relative;overflow:hidden}
-.cv-hero-top::before{content:'';position:absolute;top:-30px;right:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.1)}
-.cv-hero-top::after{content:'';position:absolute;bottom:-35px;left:10px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.07)}
-.cv-memb-label{font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
-.cv-memb-name{font-weight:900;font-size:22px;letter-spacing:-.3px}
-.cv-client-name{font-size:13px;opacity:.85;margin-top:3px}
-.cv-status-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border-radius:20px;padding:3px 11px;font-size:11px;font-weight:700}
-.cv-dates{display:flex;flex-wrap:wrap;gap:18px;margin-top:14px;font-size:12px}
-.cv-date-lbl{font-size:10px;opacity:.65;text-transform:uppercase;letter-spacing:.4px}
-.cv-date-val{font-weight:700;margin-top:1px}
-.cv-usage-bar{background:#fff;padding:12px 20px;display:flex;align-items:center;gap:14px}
-.cv-section{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow)}
-.cv-section h4{font-size:14px;font-weight:800;margin-bottom:13px;display:flex;align-items:center;gap:9px;color:var(--text)}
-.cv-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-.svc-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
-.svc-card{border:1px solid var(--border);border-radius:var(--radius);padding:11px 13px}
-.svc-card.full{border-color:#fca5a5;background:var(--danger-light)}
-.svc-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
-.svc-name{font-weight:700;font-size:13px;color:var(--text)}
-.svc-count{font-size:15px;font-weight:800}
-.date-chips{margin-top:7px;display:flex;flex-wrap:wrap;gap:3px}
-.date-chip{background:var(--bg);color:var(--text3);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:600;display:inline-block}
-.perk-row{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);align-items:flex-start}
-.perk-check{color:var(--green);font-weight:800;font-size:15px;flex-shrink:0}
-.perk-text{font-size:13px;color:var(--text2);line-height:1.5}
+/* ── CLIENT VIEW ── */
+#cv-wrap{max-width:660px;margin:0 auto;padding:16px 16px 48px}
+.cv-hero{border-radius:var(--radius-lg);overflow:hidden;margin-bottom:13px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.cv-top{padding:20px;color:#fff;position:relative;overflow:hidden}
+.cv-top::before{content:'';position:absolute;top:-28px;right:-28px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.1)}
+.cv-sec{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:15px 17px;margin-bottom:11px;box-shadow:var(--shadow)}
+.cv-sec h4{font-size:14px;font-weight:800;margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.cv-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:9px}
+.svc-c{border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px}
+.svc-c.full{border-color:#fca5a5;background:var(--danger-light)}
+.svc-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.date-chips{margin-top:6px;display:flex;flex-wrap:wrap;gap:3px}
+.dc{background:var(--bg);color:var(--text3);border-radius:5px;padding:2px 6px;font-size:11px;font-weight:600}
+.perk-row{display:flex;gap:7px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);line-height:1.45}
 
-/* ══════════════ OVERLAY & MODAL ══════════════ */
+/* ── AUDIT DASHBOARD ── */
+.audit-dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:9px;margin-bottom:16px}
+.audit-filters{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:10px 13px;display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:10px}
+.audit-table-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow)}
+.audit-row-tr td{padding:9px 13px;border-top:1px solid var(--border);vertical-align:middle;font-size:13px}
+.audit-row-tr.ev-login td{background:#e8f5e9}
+.audit-row-tr.ev-crear-usuario td{background:#e8f5e9}
+.audit-row-tr.ev-eliminar-usuario td,.audit-row-tr.ev-desactivar-usuario td{background:#ffebee}
+.audit-row-tr.ev-crear-cliente td{background:#e1f5fe}
+.audit-row-tr.ev-registrar td{background:#fff8e1}
+.audit-row-tr:hover td{filter:brightness(.97)}
+.ev-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800;white-space:nowrap}
+.ev-login-b{background:#c8e6c9;color:#1b5e20}
+.ev-user-b{background:#c8e6c9;color:#1b5e20}
+.ev-del-b{background:#ffcdd2;color:#b71c1c}
+.ev-client-b{background:#b3e5fc;color:#01579b}
+.ev-service-b{background:#fff9c4;color:#f57f00}
+.ev-default-b{background:var(--bg);color:var(--text3)}
+.date-range{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.date-range input[type=date]{padding:6px 9px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:'Nunito',sans-serif;color:var(--text)}
+.date-range input:focus{outline:none;border-color:var(--green)}
+
+/* ── OVERLAY & MODAL ── */
 #overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}
 #overlay.show{display:flex}
 .modal{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.25)}
-.modal-lg{max-width:660px}
-.modal-hdr{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:5;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
-.modal-hdr h4{font-size:15px;font-weight:800;color:var(--text)}
-.modal-close{background:var(--bg);border:none;border-radius:var(--radius);padding:4px 9px;cursor:pointer;font-size:15px;color:var(--text3);font-weight:700}
-.modal-close:hover{background:var(--border)}
-.modal-body{padding:16px 20px}
-.modal-footer{padding:11px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
-.modal-body label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;margin-top:11px}
+.modal-lg{max-width:680px}
+.modal-xl{max-width:820px}
+.modal-hdr{padding:14px 19px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:5;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
+.modal-hdr h4{font-size:15px;font-weight:800}
+.modal-close{background:var(--bg);border:none;border-radius:var(--radius);padding:4px 9px;cursor:pointer;font-size:15px;color:var(--text3)}
+.modal-body{padding:15px 19px}
+.modal-body label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;margin-top:10px}
 .modal-body label:first-child{margin-top:0}
-.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;color:var(--text);background:#fff}
+.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;color:var(--text)}
 .modal-body input:focus,.modal-body select:focus,.modal-body textarea:focus{outline:none;border-color:var(--green)}
 .modal-body textarea{resize:vertical}
-.btn-primary{padding:9px 18px;border:none;border-radius:var(--radius);background:var(--green);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:background .15s}
-.btn-primary:hover{background:var(--green-dark)}
-.btn-primary:disabled{background:var(--border);color:var(--muted);cursor:not-allowed}
-.btn-secondary{padding:9px 15px;border:1.5px solid var(--border);border-radius:var(--radius);background:transparent;color:var(--text3);font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
-.btn-secondary:hover{background:var(--bg)}
+.modal-footer{padding:10px 19px;border-top:1px solid var(--border);display:flex;gap:7px;justify-content:flex-end}
+.btn-pri{padding:9px 17px;border:none;border-radius:var(--radius);background:var(--green);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif}
+.btn-pri:hover{background:var(--green-dark)}
+.btn-pri:disabled{background:var(--border);color:var(--muted);cursor:not-allowed}
+.btn-sec{padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--radius);background:transparent;color:var(--text3);font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
+.btn-danger{padding:9px 14px;border:none;border-radius:var(--radius);background:var(--danger-light);color:var(--danger);font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
+.btn-danger:hover{background:#ffcdd2}
+.btn-warn{padding:7px 12px;border:none;border-radius:var(--radius);background:var(--warn-light);color:var(--warn);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
+.btn-sm{padding:4px 9px;border:1.5px solid var(--border);border-radius:6px;background:transparent;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--text3)}
 
-/* ══════════════ SERVICE MODAL ══════════════ */
-.svc-select-grid{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
-.svc-sel-btn{padding:7px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);color:var(--text3);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s}
+/* ── SERVICE SEL ── */
+.svc-sel-grid{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0 11px}
+.svc-sel-btn{padding:6px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);color:var(--text3);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
 .svc-sel-btn:disabled{opacity:.4;cursor:not-allowed}
-.svc-sel-btn.active{background:var(--green);color:#fff;border-color:var(--green)}
-.svc-sel-btn:not(:disabled):hover:not(.active){border-color:var(--green);color:var(--green-dark)}
-.section-divider{border:none;border-top:1px solid var(--border);margin:14px 0}
-.hist-item{display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-radius:var(--radius);padding:6px 10px;margin-bottom:4px;font-size:12px}
-.hist-del{background:var(--danger-light);border:none;border-radius:6px;color:var(--danger);padding:2px 8px;cursor:pointer;font-size:11px;font-family:'Nunito',sans-serif;font-weight:700}
+.svc-sel-btn.sel{background:var(--green);color:#fff;border-color:var(--green)}
+.hist-item{display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-radius:var(--radius);padding:5px 9px;margin-bottom:3px;font-size:12px}
+.hist-del{background:var(--danger-light);border:none;border-radius:5px;color:var(--danger);padding:2px 7px;cursor:pointer;font-size:11px;font-family:'Nunito',sans-serif;font-weight:700}
+.divider{border:none;border-top:1px solid var(--border);margin:12px 0}
 
-/* ══════════════ USERS ══════════════ */
-.user-list{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px}
-.user-row{display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid var(--border)}
-.user-row:last-child{border-bottom:none}
-.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--info-light);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--info);flex-shrink:0}
+/* ── PLAN SEL ── */
+.plan-sel-grid{display:flex;gap:7px;margin-bottom:4px}
+.ps-btn{flex:1;padding:9px 5px;border-radius:var(--radius);border:1.5px solid var(--border);background:#fff;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif}
+.ps-btn.sel-MORADA{border-color:var(--morada);background:#f3e8ff;color:#5b21b6}
+.ps-btn.sel-SILVER{border-color:var(--silver);background:#eceff1;color:#263238}
+.ps-btn.sel-GOLD{border-color:var(--gold);background:#fff8e1;color:#b45309}
+
+/* ── USERS ── */
+.user-list{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:13px}
+.user-row-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--border)}
+.user-row-item:last-child{border-bottom:none}
+.user-avatar{width:33px;height:33px;border-radius:50%;background:var(--info-light);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--info);flex-shrink:0}
 .user-info{flex:1;min-width:0}
-.user-name{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.user-username{font-size:11px;color:var(--text3)}
-.inactive{opacity:.5}
-.new-user-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.new-user-full{grid-column:1/-1}
+.user-name{font-weight:700;font-size:13px}
+.user-uname{font-size:11px;color:var(--text3)}
+.tag-xs{font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;white-space:nowrap}
 
-/* ══════════════ AUDIT ══════════════ */
-.audit-list{max-height:440px;overflow-y:auto}
-.audit-row{display:flex;gap:12px;padding:11px 18px;border-bottom:1px solid var(--border);align-items:flex-start}
-.audit-time{min-width:115px;font-size:11px;color:var(--text3);padding-top:2px;flex-shrink:0;line-height:1.4}
-.audit-content{flex:1}
-.audit-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:3px}
-.audit-action{font-size:13px;font-weight:700;color:var(--text)}
-.audit-detail{font-size:12px;color:var(--text3);margin-top:1px}
-.tag-sm{font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px}
+/* ── NOTICE ── */
+.notice{padding:9px 12px;border-radius:var(--radius);font-size:12px;font-weight:600;margin-top:8px}
+.ni{background:var(--info-light);color:var(--info)}
+.nw{background:var(--warn-light);color:#b45309}
+.ns{background:var(--green-light);color:var(--green-dark)}
+.nd{background:var(--danger-light);color:var(--danger)}
 
-/* ══════════════ NOTICE ══════════════ */
-.notice{padding:9px 13px;border-radius:var(--radius);font-size:12px;font-weight:600}
-.notice-info{background:var(--info-light);color:var(--info)}
-.notice-warn{background:var(--warn-light);color:#b45309}
-.notice-danger{background:var(--danger-light);color:var(--danger)}
-.notice-success{background:var(--green-light);color:var(--green-dark)}
+/* ── EMAIL PREVIEW ── */
+.email-preview{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:10px}
+.email-hdr{background:linear-gradient(135deg,var(--green),var(--green-dark));padding:18px 20px;color:#fff;text-align:center}
+.email-body{padding:18px 20px;font-size:13px;color:var(--text2);line-height:1.7;background:#fafff9}
+.cred-box{background:#fff;border:1.5px solid var(--green-mid);border-radius:var(--radius);padding:12px 16px;margin:12px 0;font-family:monospace;font-size:13px}
 
-/* ══════════════ PLAN SELECTOR ══════════════ */
-.plan-select-grid{display:flex;gap:7px;margin-bottom:4px}
-.plan-sel-btn{flex:1;padding:9px 6px;border-radius:var(--radius);border:1.5px solid var(--border);background:#fff;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s}
-.plan-sel-btn:hover:not(.selected){border-color:var(--green)}
-.plan-sel-btn.selected-MORADA{border-color:var(--morada);background:#f3e8ff;color:#5b21b6}
-.plan-sel-btn.selected-SILVER{border-color:var(--silver);background:#eceff1;color:#263238}
-.plan-sel-btn.selected-GOLD{border-color:var(--gold);background:#fff8e1;color:#b45309}
+/* ── CHANGE PASS ── */
+.pass-strength{height:4px;border-radius:2px;background:var(--border);margin-top:4px;overflow:hidden}
+.ps-fill{height:100%;border-radius:2px;transition:width .3s,background .3s}
 
-/* ══════════════ RESP ══════════════ */
-@media(max-width:640px){
-  .topbar-user{display:none}
+/* ── VENTAS DASHBOARD ── */
+.ventas-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.kpi-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi-card::after{content:'';position:absolute;top:-15px;right:-15px;width:60px;height:60px;border-radius:50%;opacity:.07}
+.kpi-top{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:6px}
+.kpi-val{font-size:28px;font-weight:900;line-height:1;margin-bottom:3px}
+.kpi-sub{font-size:11px;color:var(--text3)}
+.kpi-delta{font-size:11px;font-weight:700;padding:1px 7px;border-radius:20px;display:inline-block;margin-top:4px}
+.delta-up{background:#c8e6c9;color:#1b5e20}
+.delta-dn{background:#ffcdd2;color:#b71c1c}
+.ventas-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:640px){.ventas-grid2{grid-template-columns:1fr}}
+.chart-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow)}
+.chart-card h4{font-size:13px;font-weight:800;color:var(--text);margin-bottom:14px}
+.bar-chart{display:flex;flex-direction:column;gap:7px}
+.bar-row{display:flex;align-items:center;gap:9px;font-size:12px}
+.bar-lbl{min-width:52px;color:var(--text3);font-weight:600;text-align:right;flex-shrink:0}
+.bar-track{flex:1;background:var(--bg);border-radius:3px;height:18px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:7px;font-size:11px;font-weight:700;color:#fff;transition:width .6s ease;min-width:2px}
+.bar-num{min-width:36px;color:var(--text2);font-weight:700;text-align:right;flex-shrink:0}
+.plan-donut{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.donut-legend{display:flex;flex-direction:column;gap:7px;flex:1}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:12px}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.recent-sales{display:flex;flex-direction:column;gap:0}
+.sale-row{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px}
+.sale-row:last-child{border-bottom:none}
+.sale-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;font-weight:800;color:#fff}
+.sale-info{flex:1;min-width:0}
+.sale-name{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sale-date{font-size:11px;color:var(--text3)}
+.sale-price{font-weight:800;font-size:13px;color:var(--green-dark);white-space:nowrap}
+.ven-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px}
+.ven-tab{padding:8px 15px;border:none;background:none;font-size:12px;font-weight:700;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;font-family:'Nunito',sans-serif}
+.ven-tab.active{color:var(--green-dark);border-bottom-color:var(--green)}
+
+/* ── USERS SEARCH ── */
+.users-section-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);padding:10px 12px 6px;background:var(--green-light);border-bottom:1px solid var(--green-mid)}
+.client-user-search{display:flex;gap:7px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--bg)}
+.client-user-search input{flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif}
+.client-user-search input:focus{outline:none;border-color:var(--green)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .tb-right .btn-ghost:not(:last-child){display:none}
   th:nth-child(3),td:nth-child(3),th:nth-child(5),td:nth-child(5){display:none}
-  #main-content{padding:12px}
+  #main-wrap{padding:10px}
 }
 </style>
 </head>
 <body>
 <div id="app">
 
-<!-- ══ LOGIN ══ -->
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-header">
-      <span class="login-paw">🐾</span>
+    <div class="login-hdr">
+      <span class="paw">🐾</span>
       <h1>Animal Center</h1>
       <p>Clínica Veterinaria · Petshop · Cúcuta</p>
     </div>
     <div class="login-body">
       <h2>Ingresar al portal</h2>
-      <div class="form-group">
-        <label>Usuario</label>
-        <input id="inp-user" type="text" placeholder="Tu usuario de la tienda online" autocomplete="username">
-      </div>
-      <div class="form-group" style="position:relative">
+      <div class="fg"><label>Usuario</label><input id="inp-user" type="text" placeholder="Tu usuario de la tienda online"></div>
+      <div class="fg" style="position:relative">
         <label>Contraseña</label>
-        <input id="inp-pass" type="password" placeholder="••••••••" autocomplete="current-password">
-        <button onclick="togglePass()" style="position:absolute;right:10px;bottom:9px;background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted)" id="eye-btn">👁</button>
+        <input id="inp-pass" type="password" placeholder="••••••••">
+        <button onclick="togglePass()" style="position:absolute;right:10px;bottom:9px;background:none;border:none;cursor:pointer;font-size:15px;color:var(--muted)">👁</button>
       </div>
       <div id="login-err" class="login-err hidden"></div>
       <button class="btn-login" onclick="doLogin()">Ingresar →</button>
-      <div class="login-hint">
-        Usa las mismas credenciales de <strong>animalcentercuc.com</strong><br>
-        ¿Problemas? Llámanos al <strong>310 3438639</strong>
-      </div>
+      <div class="login-hint">Credenciales de <strong>animalcentercuc.com</strong><br>¿Soporte? 310 3438639</div>
     </div>
   </div>
 </div>
 
-<!-- ══ STAFF VIEW ══ -->
+<!-- STAFF VIEW -->
 <div id="staff-view" class="hidden">
   <div id="topbar">
-    <div class="topbar-brand">
-      <div class="topbar-logo">🐾</div>
-      <div>
-        <div class="topbar-name">Animal Center</div>
-        <div class="topbar-sub">Portal Membresías</div>
-      </div>
+    <div class="tb-brand">
+      <div class="tb-logo">🐾</div>
+      <div><div class="tb-name">Animal Center</div><div class="tb-sub">Portal Membresías</div></div>
     </div>
-    <div class="topbar-right">
-      <span class="topbar-user" id="topbar-user-lbl"></span>
-      <span class="role-tag" id="topbar-role-tag"></span>
+    <div class="tb-right">
+      <span style="font-size:12px;color:var(--text3)" id="tb-user-lbl"></span>
+      <span class="role-tag" id="tb-role-tag"></span>
       <button class="btn-ghost hidden" id="btn-nav-users" onclick="openUsersModal()">👥 Usuarios</button>
-      <button class="btn-ghost hidden" id="btn-nav-audit" onclick="openAuditModal()">📋 Auditoría</button>
-      <button class="btn-danger-ghost" onclick="doLogout()">Salir</button>
+      <button class="btn-ghost hidden" id="btn-nav-audit" onclick="showAuditDash()">📊 Auditoría</button>
+      <button class="btn-ghost" onclick="openMyProfile()">⚙️ Mi perfil</button>
+      <button class="btn-red-ghost" onclick="doLogout()">Salir</button>
     </div>
   </div>
   <div id="tabs-bar">
     <button class="tab-btn active" onclick="switchTab('clientes',this)">👥 Clientes</button>
     <button class="tab-btn" onclick="switchTab('planes',this)">🏷️ Planes</button>
     <button class="tab-btn" onclick="switchTab('terminos',this)">📋 Términos</button>
+    <button class="tab-btn hidden" id="tab-ventas-btn" onclick="switchTab('ventas',this)">📈 Ventas</button>
+    <button class="tab-btn hidden" id="tab-audit-btn" onclick="switchTab('auditoria',this)">📊 Auditoría</button>
   </div>
-  <div id="main-content">
-    <!-- CLIENTES -->
+  <div id="main-wrap">
     <div id="tab-clientes">
+      <!-- KPI cards -->
       <div class="stats-grid" id="stats-grid"></div>
-      <div class="filter-bar">
-        <input class="search-input" id="search-inp" placeholder="🔍  Nombre, cédula, mascota o celular..." oninput="renderTable()">
-        <div class="pill-group" id="plan-pills"></div>
-        <div class="pill-group" id="status-pills"></div>
-        <button class="btn-add hidden" id="btn-new-client" onclick="openNewClientModal()">+ Nuevo cliente</button>
+
+      <!-- Filter / search bar -->
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)">
+        <!-- Row 1: search + add button -->
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+          <div style="position:relative;flex:1;min-width:220px">
+            <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none">🔍</span>
+            <input class="search-inp" id="search-inp"
+              placeholder="Nombre, cédula, mascota o celular..."
+              oninput="renderTable()"
+              style="padding-left:34px;width:100%">
+          </div>
+          <button class="btn-add" id="btn-new-client" onclick="openNewClientModal()">＋ Nuevo cliente</button>
+          <button class="btn-ghost" id="btn-clear-clients" onclick="clearClientFilters()" style="font-size:12px">Limpiar</button>
+        </div>
+
+        <!-- Row 2: plan pills + status pills + date range + sort -->
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <!-- Plan filter -->
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">Plan:</span>
+            <div class="pill-group" id="plan-pills"></div>
+          </div>
+          <!-- Separator -->
+          <div style="width:1px;height:22px;background:var(--border);flex-shrink:0"></div>
+          <!-- Status filter -->
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">Estado:</span>
+            <div class="pill-group" id="status-pills"></div>
+          </div>
+          <!-- Separator -->
+          <div style="width:1px;height:22px;background:var(--border);flex-shrink:0"></div>
+          <!-- Date range: inicio -->
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">Ingreso:</span>
+            <input type="date" id="cl-from" onchange="renderTable()"
+              style="padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:'Nunito',sans-serif;color:var(--text);background:#fff">
+            <span style="font-size:11px;color:var(--muted)">→</span>
+            <input type="date" id="cl-to" onchange="renderTable()"
+              style="padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:'Nunito',sans-serif;color:var(--text);background:#fff">
+          </div>
+          <!-- Separator -->
+          <div style="width:1px;height:22px;background:var(--border);flex-shrink:0"></div>
+          <!-- Sort -->
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">Orden:</span>
+            <div class="pill-group" id="sort-pills"></div>
+          </div>
+        </div>
       </div>
-      <div class="results-count" id="results-count"></div>
+
+      <div class="res-count" id="res-count"></div>
+
       <div class="table-wrap"><div class="table-scroll">
         <table>
           <thead><tr>
             <th>Nombre</th><th>Cédula</th><th>Mascota(s)</th><th>Plan</th>
-            <th>Inicio</th><th>Renovación</th><th>Estado</th><th>Consumo</th><th></th>
+            <th id="th-inicio" style="cursor:pointer;user-select:none" onclick="toggleDateSort()">Inicio ↕</th>
+            <th>Renovación</th><th>Estado</th><th>Consumo</th><th></th>
           </tr></thead>
           <tbody id="clients-tbody"></tbody>
         </table>
       </div></div>
     </div>
-    <!-- PLANES -->
-    <div id="tab-planes" class="hidden">
-      <div class="plans-grid" id="plans-grid"></div>
-    </div>
-    <!-- TÉRMINOS -->
+    <div id="tab-ventas" class="hidden"><div id="ventas-content"></div></div>
+    <div id="tab-planes" class="hidden"><div class="plans-grid" id="plans-grid"></div></div>
     <div id="tab-terminos" class="hidden">
       <div class="terms-card">
-        <div class="terms-header">
-          <h3>📋 Términos y Condiciones</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:17px">
+          <h3 style="font-size:17px;font-weight:900">📋 Términos y Condiciones</h3>
           <button class="btn-ghost hidden" id="btn-edit-terms" onclick="openTermsModal()">✏️ Editar</button>
         </div>
         <div id="terms-list"></div>
       </div>
     </div>
+    <div id="tab-auditoria" class="hidden">
+      <div class="audit-dash" id="audit-stats"></div>
+      <div class="audit-filters">
+        <input class="search-inp" id="audit-search" placeholder="🔍 Buscar en historial..." oninput="renderAuditTable()" style="min-width:180px;flex:1">
+        <div class="date-range">
+          <label style="font-size:11px;color:var(--text3);font-weight:700">Desde</label>
+          <input type="date" id="audit-from" onchange="renderAuditTable()">
+          <label style="font-size:11px;color:var(--text3);font-weight:700">Hasta</label>
+          <input type="date" id="audit-to" onchange="renderAuditTable()">
+        </div>
+        <div class="pill-group" id="audit-type-pills"></div>
+        <div class="pill-group" id="audit-role-pills"></div>
+        <button class="btn-ghost" onclick="clearAuditFilters()">Limpiar filtros</button>
+      </div>
+      <div class="res-count" id="audit-count"></div>
+      <div class="audit-table-wrap"><div class="table-scroll">
+        <table>
+          <thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Rol</th><th>Evento</th><th>Detalle</th><th>Cliente</th></tr></thead>
+          <tbody id="audit-tbody"></tbody>
+        </table>
+      </div></div>
+    </div>
   </div>
 </div>
 
-<!-- ══ CLIENT VIEW ══ -->
+<!-- CLIENT VIEW -->
 <div id="client-view" class="hidden">
-  <div id="topbar" style="position:sticky;top:0;z-index:100">
-    <div class="topbar-brand">
-      <div class="topbar-logo">🐾</div>
-      <div>
-        <div class="topbar-name">Animal Center</div>
-        <div class="topbar-sub">Mi Membresía</div>
-      </div>
+  <div id="topbar-cv" style="background:#fff;border-bottom:2px solid var(--green-mid);display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:54px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)">
+    <div class="tb-brand">
+      <div class="tb-logo">🐾</div>
+      <div><div class="tb-name">Animal Center</div><div class="tb-sub">Mi Membresía</div></div>
     </div>
-    <div class="topbar-right">
-      <button class="btn-danger-ghost" onclick="doLogout()">Cerrar sesión</button>
+    <div class="tb-right">
+      <button class="btn-ghost" onclick="openMyProfile()">⚙️ Mi cuenta</button>
+      <button class="btn-red-ghost" onclick="doLogout()">Salir</button>
     </div>
   </div>
   <div id="cv-wrap"></div>
 </div>
 
-<!-- ══ MODAL OVERLAY ══ -->
+<!-- OVERLAY -->
 <div id="overlay" onclick="overlayClick(event)">
   <div class="modal" id="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-hdr">
-      <h4 id="modal-title">—</h4>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
+    <div class="modal-hdr"><h4 id="modal-title">—</h4><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div class="modal-body" id="modal-body"></div>
     <div class="modal-footer" id="modal-footer"></div>
   </div>
 </div>
 
-</div><!-- #app -->
-
 <script>
-// ═══════════════════════════════════════════════
-//  DATA
-// ═══════════════════════════════════════════════
+// ═══════════════════ DATA ═══════════════════
 const PLANS_DEF={
   MORADA:{id:'MORADA',name:'Morada',price:60000,emoji:'💜',color:'#7b2fbe',colorDark:'#5b1a9b',consumables:[],perks:['5% de descuento en todo el pet (concentrados, ropa, accesorios, snacks, camas, aseo e higiene, medicamentos no inyectables)','Domicilio GRATIS por compras a partir de $150.000','Acceso a descuentos extras en el año']},
   SILVER:{id:'SILVER',name:'Silver',price:350000,emoji:'🥈',color:'#546e7a',colorDark:'#37474f',consumables:[{key:'consultas',label:'Consultas generales',icon:'🩺',total:3},{key:'cons_esp',label:'Consulta especializada',icon:'🔬',total:1},{key:'chem6',label:'Chem 6',icon:'🧪',total:1},{key:'eco',label:'Ecografía',icon:'📡',total:1},{key:'vacuna',label:'Refuerzo anual',icon:'💉',total:1}],perks:['5% de descuento en consultas, exámenes, cirugías, medicamentos, hospitalizaciones, costos fúnebres y peluquería','30% de descuento en microchip e instalación','Domicilio GRATIS por compras a partir de $150.000']},
   GOLD:{id:'GOLD',name:'Gold',price:650000,emoji:'🥇',color:'#f57f17',colorDark:'#e65100',consumables:[{key:'consultas',label:'Consultas generales',icon:'🩺',total:4},{key:'cons_esp',label:'Consultas especializadas',icon:'🔬',total:2},{key:'vacuna',label:'Refuerzo anual',icon:'💉',total:1},{key:'eco',label:'Ecografía',icon:'📡',total:1},{key:'rx',label:'Rayos X',icon:'☢️',total:1},{key:'chem10',label:'Chem 10',icon:'🧫',total:1},{key:'po',label:'Parcial de orina',icon:'🔭',total:1}],perks:['10% de descuento en consultas, exámenes, cirugías, medicamentos, hospitalizaciones, costos fúnebres y peluquería','30% de descuento en microchip e instalación','Domicilio GRATIS por compras a partir de $150.000']}
 };
-const TERMS_DEF=['Los planes son INTRANSFERIBLES — solo puede usarlos la persona registrada en la tarjeta.','Siempre presentar tarjeta y cédula para hacer uso del plan.','Si la persona no puede venir presencialmente, debe enviar foto de la cédula del responsable y autorización por WhatsApp al número del titular.','Pedidos por WhatsApp solo desde el número registrado al momento de compra de la membresía.','El plan es por persona. Con varias mascotas los servicios gratuitos NO se multiplican. Si tiene 2 mascotas, el primer refuerzo es gratis; el segundo obtiene descuento.','Duración: 365 días a partir de la fecha de compra.','En caso de pérdida de la tarjeta, solicitarla nuevamente al personal.','No se aceptan devoluciones una vez haya hecho uso de los servicios.','La clínica no se hace responsable si el tutor no hace uso completo del plan.','Las consultas y exámenes gratuitos son válidos 1 vez en el año; si no se usan, se pierden. No son acumulables.','Al momento de renovar, pueden existir nuevos planes y los precios pueden variar.'];
+const TERMS_DEF=['Los planes son INTRANSFERIBLES — solo puede usarlos la persona registrada en la tarjeta.','Siempre presentar tarjeta y cédula para hacer uso del plan.','Si la persona no puede venir presencialmente, debe enviar foto de la cédula del responsable y autorización por WhatsApp al número del titular.','Pedidos por WhatsApp solo desde el número registrado al momento de compra de la membresía.','El plan es por persona. Con varias mascotas los servicios gratuitos NO se multiplican.','Duración: 365 días a partir de la fecha de compra.','En caso de pérdida de la tarjeta, solicitarla nuevamente al personal.','No se aceptan devoluciones una vez haya hecho uso de los servicios.','La clínica no se hace responsable si el tutor no hace uso completo del plan.','Las consultas y exámenes gratuitos son válidos 1 vez en el año; no son acumulables.','Al momento de renovar, pueden existir nuevos planes y los precios pueden variar.'];
 const USERS_DEF=[
-  {id:'u1',username:'admin',password:'admin2024',role:'admin',nombre:'Administrador',active:true},
-  {id:'u2',username:'personal1',password:'personal123',role:'personal',nombre:'Staff Clínica',active:true},
-  {id:'u3',username:'personal2',password:'personal456',role:'personal',nombre:'Recepción',active:true},
-  {id:'u4',username:'gabriela.delgado',password:'lupita123',role:'cliente',nombre:'Gabriela Delgado',clientId:'s07',active:true},
-  {id:'u5',username:'karem.lizcano',password:'coco123',role:'cliente',nombre:'Karem Lizcano',clientId:'s12',active:true},
-  {id:'u6',username:'caterine.vasquez',password:'avril123',role:'cliente',nombre:'Caterine Vasquez',clientId:'g04',active:true},
-  {id:'u7',username:'mauricio.garcia',password:'rojo123',role:'cliente',nombre:'Mauricio Garcia',clientId:'g11',active:true},
-  {id:'u8',username:'martha.gamboa',password:'linda123',role:'cliente',nombre:'Martha Gamboa',clientId:'m01',active:true}
+  {id:'u1',username:'admin',password:'admin2024',role:'admin',nombre:'Administrador',correo:'admin@animalcenter.com.co',active:true},
+  {id:'u2',username:'personal1',password:'personal123',role:'personal',nombre:'Staff Clínica',correo:'personal@animalcenter.com.co',active:true},
+  {id:'u3',username:'personal2',password:'personal456',role:'personal',nombre:'Recepción',correo:'recepcion@animalcenter.com.co',active:true},
+  {id:'u4',username:'gabriela.delgado',password:'lupita123',role:'cliente',nombre:'Gabriela Delgado',correo:'mgabrieladelgado@outlook.com',clientId:'s07',active:true},
+  {id:'u5',username:'karem.lizcano',password:'coco123',role:'cliente',nombre:'Karem Lizcano',correo:'karemlizcano1030@gmail.com',clientId:'s12',active:true},
+  {id:'u6',username:'caterine.vasquez',password:'avril123',role:'cliente',nombre:'Caterine Vasquez',correo:'CATERINEVASQUEZ115@GMAIL.COM',clientId:'g04',active:true},
+  {id:'u7',username:'mauricio.garcia',password:'rojo123',role:'cliente',nombre:'Mauricio Garcia',correo:'souyiro13@hotmail.com',clientId:'g09',active:true},
+  {id:'u8',username:'martha.gamboa',password:'linda123',role:'cliente',nombre:'Martha Gamboa',correo:'mgamboa@procuraduria.gov.co',clientId:'mx01',active:true}
 ];
 const CLIENTS_DEF=[
-  {id:'s01',plan:'SILVER',nombre:'Álvaro Buitrago',cc:'1093755364',celular:'3156080246',correo:'',mascotas:'ANGELICA HERNANDEZ',inicio:'2025-11-13',consumed:{consultas:['2025-11-13','2025-12-27'],cons_esp:['2025-11-13'],vacuna:['2026-04-24']}},
-  {id:'s02',plan:'SILVER',nombre:'Corp. Educativa Sin Fronteras',cc:'900488572-0',celular:'3223913965',correo:'NANIALE2000@GMAIL.COM',mascotas:'PACO ANDRES',inicio:'2025-11-22',consumed:{consultas:['2025-11-22','2025-11-22','2025-11-22']}},
-  {id:'s03',plan:'SILVER',nombre:'Elena Castellanos',cc:'60302281',celular:'3165809444',correo:'elenacastellanosibarra@hotmail.com',mascotas:'PRINCESA',inicio:'2025-11-27',consumed:{consultas:['2025-12-07']}},
-  {id:'s04',plan:'SILVER',nombre:'Elizabet Vargas',cc:'27897785',celular:'3107517474',correo:'elizabet_vc@hotmail.com',mascotas:'MIA',inicio:'2026-03-25',consumed:{consultas:['2026-04-08']}},
-  {id:'s05',plan:'SILVER',nombre:'Estela Moncada',cc:'27786403',celular:'3002137489',correo:'',mascotas:'FIFI',inicio:'2025-12-17',consumed:{consultas:['2025-12-17','2026-02-27'],chem6:['2026-02-08'],eco:['2025-12-17'],vacuna:['2025-12-17']}},
-  {id:'s06',plan:'SILVER',nombre:'Freddy Quintero',cc:'13174516',celular:'3204063742',correo:'',mascotas:'NIÑA LULU',inicio:'2025-12-19',consumed:{consultas:['2025-12-19','2025-12-19','2025-12-19'],cons_esp:['2025-12-19']}},
-  {id:'s07',plan:'SILVER',nombre:'Gabriela Delgado',cc:'1004841736',celular:'3166953589',correo:'mgabrieladelgado@outlook.com',mascotas:'LUPITA',inicio:'2025-01-12',consumed:{consultas:['2026-02-18'],chem6:['2026-02-22']}},
-  {id:'s08',plan:'SILVER',nombre:'Gelen Valentina Hernandez',cc:'1092541866',celular:'3212353471',correo:'',mascotas:'',inicio:'2026-01-27',consumed:{consultas:['2026-01-27','2026-01-27','2026-01-27'],cons_esp:['2026-01-27'],vacuna:['2026-03-25']}},
-  {id:'s09',plan:'SILVER',nombre:'Jaime Cardenas',cc:'13489490',celular:'3125138057',correo:'',mascotas:'CHISPA',inicio:'2026-02-06',consumed:{consultas:['2026-02-09'],vacuna:['2026-04-27']}},
-  {id:'s10',plan:'SILVER',nombre:'Juan Carlos Buitrago',cc:'88212640',celular:'3153364172',correo:'juancarlosbuitragoc@gmail.com',mascotas:'LILI',inicio:'2026-02-06',consumed:{consultas:['2026-02-06','2026-02-06','2026-02-06']}},
-  {id:'s11',plan:'SILVER',nombre:'Juan Carlos Gallego',cc:'1152457589',celular:'3233270078',correo:'',mascotas:'COCO',inicio:'2026-02-07',consumed:{consultas:['2026-02-07','2026-02-07']}},
-  {id:'s12',plan:'SILVER',nombre:'Karem Lizcano',cc:'1016099783',celular:'3006501407',correo:'karemlizcano1030@gmail.com',mascotas:'coco - channel',inicio:'2026-02-07',consumed:{consultas:['2026-02-07']}},
-  {id:'s13',plan:'SILVER',nombre:'Leidy Ardila',cc:'1093757477',celular:'3123077079',correo:'leidycaro_1291@hotmail.com',mascotas:'KIA-KLOY-APOLO-SUSSY',inicio:'2026-02-07',consumed:{consultas:['2026-04-21','2026-05-08'],cons_esp:['2026-04-25']}},
-  {id:'s14',plan:'SILVER',nombre:'Leidy Dayana Velasquez',cc:'37863896',celular:'',correo:'',mascotas:'',inicio:'2026-02-12',consumed:{consultas:['2026-02-12','2026-02-23']}},
-  {id:'s15',plan:'SILVER',nombre:'Liliana D Pablo',cc:'60343987',celular:'3158316647',correo:'ld_pablo@hotmail.com',mascotas:'BOSTON-PARIS-ATHERNAS',inicio:'2026-02-13',consumed:{consultas:['2026-02-13','2026-03-18'],cons_esp:['2026-03-18'],eco:['2026-03-16']}},
-  {id:'s16',plan:'SILVER',nombre:'Liseth Contreras',cc:'1092156886',celular:'3222609303',correo:'',mascotas:'TINA',inicio:'2026-02-13',consumed:{consultas:['2026-02-13','2026-04-17'],eco:['2026-02-13']}},
-  {id:'s17',plan:'SILVER',nombre:'Luz Tinjaca',cc:'60307830',celular:'3015875208',correo:'',mascotas:'THANOS - ALEGRIA',inicio:'2026-02-28',consumed:{consultas:['2026-03-07'],eco:['2026-02-28']}},
-  {id:'s18',plan:'SILVER',nombre:'Maria Chacon',cc:'19358758',celular:'584126404029',correo:'marichaconve@gmail.com',mascotas:'MIA-SASHA',inicio:'2026-02-24',consumed:{consultas:['2026-03-20','2026-03-30']}},
-  {id:'s19',plan:'SILVER',nombre:'Maria Yolanda Lizcano',cc:'27790184',celular:'3108761559',correo:'',mascotas:'DIVA',inicio:'2026-02-27',consumed:{consultas:['2026-03-11'],eco:['2026-02-27']}},
-  {id:'s20',plan:'SILVER',nombre:'Marisela Aguilar',cc:'1090378340',celular:'3238845231',correo:'marcelaaguinar@gmail.com',mascotas:'KIARA',inicio:'2026-03-05',consumed:{consultas:['2026-03-05','2026-03-05'],cons_esp:['2026-03-05']}},
-  {id:'s21',plan:'SILVER',nombre:'Martha Isabel Angarita',cc:'60364361',celular:'3017478462',correo:'',mascotas:'LUPE-CLOE Y ROMA',inicio:'2026-03-05',consumed:{consultas:['2026-03-05','2026-03-05']}},
-  {id:'s22',plan:'SILVER',nombre:'Milangel Rodriguez',cc:'20897954',celular:'3202914037',correo:'',mascotas:'GUCCI-REY GATO',inicio:'2026-03-07',consumed:{consultas:['2026-03-07','2026-03-07','2026-03-07']}},
-  {id:'s23',plan:'SILVER',nombre:'Nataly Contreras',cc:'1014227215',celular:'3008899101',correo:'',mascotas:'AVVA Y DOGGIE',inicio:'2026-03-08',consumed:{consultas:['2026-03-08','2026-03-08'],eco:['2026-02-05']}},
-  {id:'s24',plan:'SILVER',nombre:'Nereyda Anaya',cc:'27604157',celular:'3015420599',correo:'NEREYDATO@GMAIL.COM',mascotas:'ATLAS Y LETICIA',inicio:'2026-03-10',consumed:{}},
-  {id:'s25',plan:'SILVER',nombre:'Paola Andrea Luna',cc:'31580572',celular:'3155377915',correo:'',mascotas:'NALA Y PAQUITA',inicio:'2026-03-12',consumed:{consultas:['2026-03-12','2026-03-12','2026-03-12'],cons_esp:['2026-03-12']}},
-  {id:'s26',plan:'SILVER',nombre:'Paola Bustos',cc:'1098809837',celular:'3183893275',correo:'',mascotas:'NEGRITA-CHANEL-COBY-CLOE',inicio:'2026-03-16',consumed:{consultas:['2026-03-16','2026-03-16','2026-03-16'],cons_esp:['2026-03-16']}},
-  {id:'s27',plan:'SILVER',nombre:'Rocio Amparo Amaya Carrascal',cc:'1090450912',celular:'3212434488',correo:'',mascotas:'loky',inicio:'2026-03-16',consumed:{consultas:['2026-03-16','2026-03-17']}},
-  {id:'s28',plan:'SILVER',nombre:'Sara Maria Romero',cc:'60331072',celular:'3142186103',correo:'saramariaromero@gmail.com',mascotas:'BURUSA-OLA-LINDA-PEPITA',inicio:'2026-02-04',consumed:{consultas:['2026-04-23','2026-05-05'],eco:['2026-02-04'],vacuna:['2026-05-05']}},
-  {id:'s29',plan:'SILVER',nombre:'Stefani Sepulveda',cc:'1094859593',celular:'3024347517',correo:'',mascotas:'RAMON',inicio:'2026-03-20',consumed:{consultas:['2026-03-20','2026-03-20','2026-03-20']}},
-  {id:'s30',plan:'SILVER',nombre:'Tatiana Andrea Bayona',cc:'1098780367',celular:'3165472858',correo:'',mascotas:'AZUL ROZO',inicio:'2026-03-21',consumed:{consultas:['2026-04-13']}},
-  {id:'s31',plan:'SILVER',nombre:'Yannimar Borja',cc:'1090527726',celular:'3202054643',correo:'yannimarbv@gmail.com',mascotas:'BENJI-LUPE',inicio:'2026-03-25',consumed:{consultas:['2026-03-25','2026-04-29']}},
-  {id:'s32',plan:'SILVER',nombre:'Yesica Cachimuel',cc:'1026285690',celular:'3104749104',correo:'arq.yesica.cachimuel@gmail.com',mascotas:'ENZO - GOLDEN',inicio:'2026-03-27',consumed:{consultas:['2026-05-07'],cons_esp:['2026-03-27'],eco:['2026-03-27'],vacuna:['2026-03-27']}},
-  {id:'s33',plan:'SILVER',nombre:'Silvia Pita',cc:'1091352307',celular:'3202527711',correo:'SILVIAPITASTUDIOPMU@GMAIL.COM',mascotas:'LISSY-EMMA',inicio:'2026-04-08',consumed:{consultas:['2026-05-02'],cons_esp:['2026-04-08'],chem6:['2026-04-08'],eco:['2026-05-02']}},
-  {id:'s34',plan:'SILVER',nombre:'Marzia Pallotini',cc:'1010147056',celular:'3124685267',correo:'marziapallottini@gmail.com',mascotas:'TIGRILLO',inicio:'2026-04-16',consumed:{consultas:['2026-04-16','2026-04-16','2026-04-16'],cons_esp:['2026-04-16']}},
-  {id:'s35',plan:'SILVER',nombre:'Carlos Amarildo Garcia Parada',cc:'13485205',celular:'3208533689',correo:'',mascotas:'SCOTT-LANK-POLA',inicio:'2026-04-17',consumed:{consultas:['2026-04-17','2026-04-17']}},
-  {id:'s36',plan:'SILVER',nombre:'Isaac Nahaniel Silva Urbina',cc:'1140417450',celular:'3166963627',correo:'isaacsilva1107@hotmail.com',mascotas:'FREYA',inicio:'2026-04-18',consumed:{consultas:['2026-04-18','2026-04-18','2026-04-18'],cons_esp:['2026-04-18']}},
-  {id:'s37',plan:'SILVER',nombre:'Nanette Fajardo Granados',cc:'1090367878',celular:'3006777685',correo:'nanita7678@hotmail.com',mascotas:'ARYA',inicio:'2026-02-04',consumed:{consultas:['2026-04-19','2026-05-04']}},
-  {id:'s38',plan:'SILVER',nombre:'Lourdes Garcia Perez',cc:'68285845',celular:'3222724361',correo:'',mascotas:'MONO',inicio:'2026-04-21',consumed:{consultas:['2026-04-21','2026-04-21']}},
-  {id:'s39',plan:'SILVER',nombre:'Cielo Gaona (Silver)',cc:'60256594',celular:'3156755696',correo:'CIELOVILLANA@HOTMAIL.COM',mascotas:'NINO-RUFO-TOBY',inicio:'2026-04-30',consumed:{}},
-  {id:'s40',plan:'SILVER',nombre:'Nelly Urbina',cc:'37253231',celular:'3118682220',correo:'melissaurbina945@yahoo.com',mascotas:'ETHAN-MOLLY DAYANA',inicio:'2026-05-07',consumed:{consultas:['2026-05-11'],cons_esp:['2026-05-09']}},
-  {id:'s41',plan:'SILVER',nombre:'Roger Leonardo Parada',cc:'1092344719',celular:'3142391054',correo:'rogerparadamendoza18@gmail.com',mascotas:'PIPE-LUKAS',inicio:'2026-05-08',consumed:{consultas:['2026-05-08','2026-05-08','2026-05-08'],cons_esp:['2026-05-08']}},
-  {id:'s42',plan:'SILVER',nombre:'Isabel Ramirez Peñaranda',cc:'60354535',celular:'3223615371',correo:'isabel473@gmail.com',mascotas:'LUNA / MONO / JULIETA',inicio:'2026-05-09',consumed:{}},
-  {id:'s43',plan:'SILVER',nombre:'Karen Jacome',cc:'63536394',celular:'3007778652',correo:'gerencia@ecoimagensalud.com',mascotas:'JUANITA-BONITA',inicio:'2026-05-09',consumed:{consultas:['2026-05-09','2026-05-09','2026-05-09'],cons_esp:['2026-05-09'],chem6:['2026-05-09']}},
-  {id:'s44',plan:'SILVER',nombre:'Rafael Rojas',cc:'88206094',celular:'3144156723',correo:'rafaelrojas1973@msn.com',mascotas:'SACHA',inicio:'2026-05-09',consumed:{consultas:['2026-05-09','2026-05-09']}},
-  {id:'s45',plan:'SILVER',nombre:'Jose Gabriel Duran Rios',cc:'5401891',celular:'3246845359',correo:'josegabrielduran@gmail.com',mascotas:'CATNUA',inicio:'2026-05-10',consumed:{consultas:['2026-05-10','2026-05-10','2026-05-10']}},
-  {id:'g01',plan:'GOLD',nombre:'Karol Yesmyn Botello Carrillo',cc:'1090461741',celular:'3132345480',correo:'karol10a@gmail.com',mascotas:'HERA - HUSKY',inicio:'2025-11-18',consumed:{cons_esp:['2026-05-07']}},
-  {id:'g02',plan:'GOLD',nombre:'Leila Duran / Isabela Garcia',cc:'60410849',celular:'3173059314',correo:'leylarocioduran@gmail.com',mascotas:'milan-tokyo',inicio:'2025-11-22',consumed:{consultas:['2025-11-22','2025-11-29'],cons_esp:['2025-11-29'],eco:['2025-11-22'],chem10:['2025-11-25'],vacuna:['2026-02-28']}},
-  {id:'g03',plan:'GOLD',nombre:'Anibal Diaz',cc:'1090375228',celular:'3143951662',correo:'',mascotas:'',inicio:'2025-11-25',consumed:{}},
-  {id:'g04',plan:'GOLD',nombre:'Caterine Vasquez',cc:'1062907027',celular:'3203908570',correo:'CATERINEVASQUEZ115@GMAIL.COM',mascotas:'AVRIL-ESTRELLITA',inicio:'2025-12-04',consumed:{consultas:['2025-12-04','2025-12-05','2026-02-07','2026-04-28'],cons_esp:['2025-12-04','2025-12-05'],eco:['2025-12-04'],chem10:['2025-12-04'],rx:['2026-02-07'],vacuna:['2026-04-23']}},
-  {id:'g05',plan:'GOLD',nombre:'Xiomara Niño',cc:'60363093',celular:'3153119352',correo:'',mascotas:'obiwan-luna',inicio:'2025-12-04',consumed:{consultas:['2025-12-04','2026-04-17'],eco:['2025-12-04'],rx:['2025-12-04']}},
-  {id:'g06',plan:'GOLD',nombre:'Fanny Avila',cc:'60413962',celular:'3125027497',correo:'',mascotas:'LUCAS-ABBY',inicio:'2025-12-05',consumed:{consultas:['2025-12-27','2026-01-02','2026-05-08'],chem10:['2025-12-22'],vacuna:['2025-12-07']}},
-  {id:'g07',plan:'GOLD',nombre:'Juan Pablo Mendoza',cc:'1090497119',celular:'3163946962',correo:'',mascotas:'TOMAS-DIVA',inicio:'2025-12-05',consumed:{consultas:['2026-03-16','2026-01-27','2026-01-27'],vacuna:['2026-01-09']}},
-  {id:'g08',plan:'GOLD',nombre:'Melissa Marulanda',cc:'1090412533',celular:'3004728378',correo:'',mascotas:'TOBY-TITI-TOMY-AXEL',inicio:'2025-12-14',consumed:{consultas:['2025-12-27','2026-01-08','2026-01-17'],eco:['2026-04-08']}},
-  {id:'g09',plan:'GOLD',nombre:'Mauricio Garcia',cc:'13277296',celular:'3123491333',correo:'souyiro13@hotmail.com',mascotas:'ROJO-MONA-POLO-LUNA',inicio:'2025-12-14',consumed:{consultas:['2026-02-24','2026-03-11','2026-05-06'],cons_esp:['2026-02-24'],eco:['2026-02-24'],chem10:['2026-01-15'],vacuna:['2025-12-16']}},
-  {id:'g10',plan:'GOLD',nombre:'Gladis Belen Urbina Eslava',cc:'60305775',celular:'3153823043',correo:'',mascotas:'MERENGUE-NEIGE-BROWNIE',inicio:'2025-12-16',consumed:{consultas:['2026-02-07','2026-03-19','2026-03-19'],vacuna:['2025-12-19']}},
-  {id:'g11',plan:'GOLD',nombre:'Maritza Lizbeth Maldonado',cc:'60355696',celular:'3165389157',correo:'MARITZAMALDONADO02@GMAIL.COM',mascotas:'ALANA-BENJI-MIA-TOMASITO',inicio:'2026-01-04',consumed:{consultas:['2026-01-04','2026-01-20'],cons_esp:['2026-01-04'],eco:['2026-01-05'],chem10:['2026-03-05']}},
-  {id:'g12',plan:'GOLD',nombre:'Laura Herrera',cc:'1032502082',celular:'3138568436',correo:'',mascotas:'HARRY-AURELIO-GALA',inicio:'2026-01-21',consumed:{consultas:['2026-01-21','2026-01-21','2026-01-21']}},
-  {id:'g13',plan:'GOLD',nombre:'Mayra Gomez Lizarazo',cc:'1098615346',celular:'3160562202',correo:'mayragomezli2901@gmail.com',mascotas:'VALENTINO-FRANCHESCO',inicio:'2026-01-28',consumed:{consultas:['2026-01-28','2026-04-27'],eco:['2026-02-25'],vacuna:['2026-01-28']}},
-  {id:'g14',plan:'GOLD',nombre:'Alix Reyes',cc:'1090485600',celular:'3184957784',correo:'',mascotas:'MINNIE',inicio:'2026-02-01',consumed:{consultas:['2026-02-01','2026-03-14','2026-04-05'],eco:['2026-02-01']}},
-  {id:'g15',plan:'GOLD',nombre:'Audrey Torres Suarez',cc:'37294605',celular:'3108574164',correo:'',mascotas:'ROMEO-PERSEO-NEGRO',inicio:'2026-02-18',consumed:{consultas:['2026-02-18','2026-02-18','2026-02-18'],vacuna:['2026-02-18']}},
-  {id:'g16',plan:'GOLD',nombre:'Blanca Mirely Ibarra Sanchez',cc:'1090469067',celular:'3102028089',correo:'',mascotas:'ZAFIRA - DRACCO',inicio:'2026-03-03',consumed:{consultas:['2026-03-03','2026-03-09'],eco:['2026-03-03'],chem10:['2026-03-03'],vacuna:['2026-05-09']}},
-  {id:'g17',plan:'GOLD',nombre:'Monica Viviana Matamoros',cc:'1037600051',celular:'3174375289',correo:'',mascotas:'BRUNO-MILU-ERA-ROMA',inicio:'2026-03-09',consumed:{consultas:['2026-04-17'],eco:['2026-03-09'],chem10:['2026-03-09'],rx:['2026-03-09']}},
-  {id:'g18',plan:'GOLD',nombre:'Erika Daniela Leon Coronel',cc:'1193473978',celular:'3166140591',correo:'erikaleoncoronel@gmail.com',mascotas:'CANDY',inicio:'2026-03-11',consumed:{consultas:['2026-04-06','2026-03-12','2026-03-16'],eco:['2026-03-11'],vacuna:['2026-04-23']}},
-  {id:'g19',plan:'GOLD',nombre:'Nataly Paola Rojas Cuervo',cc:'1004914514',celular:'3503201071',correo:'',mascotas:'GOGETA-VEGETA-GARFIELD',inicio:'2026-03-19',consumed:{consultas:['2026-03-19','2026-03-19','2026-03-19'],cons_esp:['2026-03-20'],eco:['2026-03-20']}},
-  {id:'g20',plan:'GOLD',nombre:'Melba Forigua',cc:'52192269',celular:'3134853174',correo:'',mascotas:'LULU-MAX-LUNA-ESTRELLITA',inicio:'2026-03-21',consumed:{consultas:['2026-03-21','2026-04-28','2026-05-07'],eco:['2026-03-21'],vacuna:['2026-04-28']}},
-  {id:'g21',plan:'GOLD',nombre:'Edith Johanna Vergel Becerra',cc:'37271425',celular:'3105559727',correo:'',mascotas:'NICKY',inicio:'2026-04-18',consumed:{consultas:['2026-04-18','2026-04-18','2026-04-18'],eco:['2026-04-18'],vacuna:['2026-04-18']}},
-  {id:'g22',plan:'GOLD',nombre:'Zaira Gonzalez Rodriguez',cc:'27602794',celular:'3144629541',correo:'',mascotas:'FUHRER-SIMBA',inicio:'2026-04-27',consumed:{consultas:['2026-04-30','2026-04-30','2026-04-30']}},
-  {id:'g23',plan:'GOLD',nombre:'Cielo Gaona (Gold)',cc:'60256594-G',celular:'3156755696',correo:'',mascotas:'NINO-RUFO-TOBY',inicio:'2026-04-30',consumed:{consultas:['2026-04-30','2026-04-30','2026-04-30'],eco:['2026-04-30'],vacuna:['2026-04-30']}},
-  {id:'g24',plan:'GOLD',nombre:'Jhonathan Ramirez',cc:'1090473784',celular:'3203223249',correo:'',mascotas:'MALKA - THOR',inicio:'2026-05-09',consumed:{}},
-  {id:'m01',plan:'MORADA',nombre:'Martha Gamboa',cc:'60254603',celular:'3123175907',correo:'mgamboa@procuraduria.gov.co',mascotas:'LINDA',inicio:'2026-02-17',consumed:{}},
-  {id:'m02',plan:'MORADA',nombre:'Nora Mantilla',cc:'60308521',celular:'3202323432',correo:'NORAMANTILLA@GMAIL.COM',mascotas:'MUÑECA',inicio:'2026-04-30',consumed:{}}
+  {id:"s01",plan:"SILVER",nombre:"ANGELICA HERNANDEZ",cc:"1090481195",celular:"3204280620",correo:"angelicahdez29@gmail.com",mascotas:"ANNE",inicio:"2025-11-13",consumed:{consultas:["2025-11-13", "2025-12-27"],cons_esp:["2025-11-13"],eco:["2026-04-24"]}},
+  {id:"s02",plan:"SILVER",nombre:"CORPORACION EDUCATIVA SIN FRONTERAS - ALBANY ALEJANDRA CORREDOR PE\u00d1A",cc:"900488572-0",celular:"3223913965",correo:"NANIALE2000@GMAIL.COM",mascotas:"PACO ANDRES",inicio:"2025-11-22",consumed:{consultas:["2025-11-22"],eco:["2025-11-22"]}},
+  {id:"s03",plan:"SILVER",nombre:"ELENA CASTELLANOS",cc:"60302281",celular:"3165809444",correo:"elenacastellanosibarra@hotmail.com",mascotas:"PRINCESA",inicio:"2025-11-27",consumed:{consultas:["2025-12-07"]}},
+  {id:"s04",plan:"SILVER",nombre:"ELIZABET VARGAS",cc:"27897785",celular:"3107517474",correo:"elizabet_vc@hotmail.com",mascotas:"MIA",inicio:"2026-03-25",consumed:{eco:["2026-04-08"]}},
+  {id:"s05",plan:"SILVER",nombre:"ESTELA MONCADA",cc:"27786403",celular:"3002137489",correo:"",mascotas:"FIFI",inicio:"2025-12-17",consumed:{consultas:["2025-12-17", "2026-02-08"],cons_esp:["2026-02-27"],chem6:["2025-12-17"]}},
+  {id:"s06",plan:"SILVER",nombre:"FREDDY QUINTERO",cc:"13174516",celular:"3204063742",correo:"VELAZQUEZNINIJOHANA@GMAIL.COM",mascotas:"NI\u00d1A LULU",inicio:"2025-12-19",consumed:{cons_esp:["2025-12-19"],chem6:["2025-12-19"],eco:["2025-12-19"]}},
+  {id:"s07",plan:"SILVER",nombre:"GABRIELA DELGADO",cc:"1004841736",celular:"3166953589",correo:"mgabrieladelgado@outlook.com",mascotas:"LUPITA",inicio:"2025-01-12",consumed:{consultas:["2026-02-18"],chem6:["2026-02-18"],vacuna:["2026-02-22"]}},
+  {id:"s08",plan:"SILVER",nombre:"GELEN VALENTINA HERNANDEZ",cc:"1092541866",celular:"3212353471",correo:"",mascotas:"",inicio:"2026-01-27",consumed:{cons_esp:["2026-01-27"],chem6:["2026-01-27"],eco:["2026-01-27"],vacuna:["2026-03-25"]}},
+  {id:"s09",plan:"SILVER",nombre:"JAIME CARDENAS",cc:"13489490",celular:"3125138057",correo:"",mascotas:"CHISPA",inicio:"2026-02-06",consumed:{cons_esp:["2026-02-09"],chem6:["2026-04-27"]}},
+  {id:"s10",plan:"SILVER",nombre:"JUAN CARLOS BUITRAGO",cc:"88212640",celular:"3153364172",correo:"juancarlosbuitragoc@gmail.com",mascotas:"LILI",inicio:"2026-02-06",consumed:{consultas:["2026-02-06"],chem6:["2026-02-06"]}},
+  {id:"s11",plan:"SILVER",nombre:"JUAN CARLOS GALLEGO",cc:"1152457589",celular:"3233270078",correo:"JCGALLEGOV@GMAIL.COM",mascotas:"COCO",inicio:"2026-02-07",consumed:{cons_esp:["2026-02-07"],vacuna:["2026-02-07"]}},
+  {id:"s12",plan:"SILVER",nombre:"KAREM LIZCANO",cc:"1016099783",celular:"3006501407",correo:"karemlizcano1030@gmail.com",mascotas:"coco - channel",inicio:"2026-02-07",consumed:{consultas:["2026-02-07"]}},
+  {id:"s13",plan:"SILVER",nombre:"LEIDY ARDILA",cc:"1093757477",celular:"3123077079",correo:"leidycaro_1291@hotmail.com",mascotas:"KIA-KLOY-APOLO-SUSSY-NICO-MIA-MICHI",inicio:"2026-02-07",consumed:{consultas:["2026-04-21", "2026-05-08"],eco:["2026-04-25"]}},
+  {id:"s14",plan:"SILVER",nombre:"LEIDY DAYANA VELASQUEZ",cc:"37863896",celular:"",correo:"",mascotas:"",inicio:"2026-02-12",consumed:{chem6:["2026-02-12"],vacuna:["2026-02-23"]}},
+  {id:"s15",plan:"SILVER",nombre:"LILIANA DPABLO",cc:"60343987",celular:"3158316647",correo:"ld_pablo@hotmail.com",mascotas:"BOSTON-PARIS-ATHERNAS",inicio:"2026-02-13",consumed:{consultas:["2026-02-13", "2026-03-18"],chem6:["2026-03-18"],vacuna:["2026-03-16"]}},
+  {id:"s16",plan:"SILVER",nombre:"LISETH CONTRERAS",cc:"1092156886",celular:"3222609303",correo:"liseth1699@hotmail.com",mascotas:"TINA",inicio:"2026-02-13",consumed:{consultas:["2026-02-13", "2026-04-17"],chem6:["2026-02-13"]}},
+  {id:"s17",plan:"SILVER",nombre:"LUZ TINJACA",cc:"60307830",celular:"3015875208",correo:"luzstellat@hotmail.com",mascotas:"THANOS - ALEGRIA",inicio:"",consumed:{consultas:["2026-02-28"],cons_esp:["2026-03-07"],chem6:["2026-02-28"]}},
+  {id:"s18",plan:"SILVER",nombre:"MARIA CHACON",cc:"19358758",celular:"584126404029",correo:"marichaconve@gmail.com",mascotas:"MIA-SASHA",inicio:"2026-02-24",consumed:{consultas:["2026-03-20"],chem6:["2026-03-30"]}},
+  {id:"s19",plan:"SILVER",nombre:"MARIA YOLANDA LIZCANO",cc:"27790184",celular:"3108761559",correo:"juanpmendozalizcano@gmail.com",mascotas:"DIVA",inicio:"2026-02-27",consumed:{consultas:["2026-03-11"],cons_esp:["2026-02-27"]}},
+  {id:"s20",plan:"SILVER",nombre:"MARISELA AGUILAR",cc:"1090378340",celular:"3238845231",correo:"marcelaaguinar@gmail.com",mascotas:"KIARA",inicio:"2026-03-05",consumed:{consultas:["2026-03-05"],chem6:["2026-03-05"],eco:["2026-03-05"]}},
+  {id:"s21",plan:"SILVER",nombre:"MARTHA ISABEL ANGARITA",cc:"60364361",celular:"3017478462",correo:"marluis95@hotmail.com",mascotas:"LUPE -CLOE Y ROMA",inicio:"2026-03-05",consumed:{consultas:["2026-03-05"],chem6:["2026-03-05"]}},
+  {id:"s22",plan:"SILVER",nombre:"MILANGEL RODRIGUEZ",cc:"20897954",celular:"3202914037",correo:"milangeldeangelis@gmail.com",mascotas:"GUCCI-REY GATO",inicio:"2026-03-07",consumed:{cons_esp:["2026-03-07"],chem6:["2026-03-07"]}},
+  {id:"s23",plan:"SILVER",nombre:"NATALY CONTRERAS",cc:"1014227215",celular:"3008899101",correo:"NATALY.CONTRERAST@GMAIL.COM",mascotas:"AVVA Y DOGGIE",inicio:"2026-03-08",consumed:{consultas:["2026-03-08"],vacuna:["2026-02-05"]}},
+  {id:"s24",plan:"SILVER",nombre:"NEREYDA ANAYA",cc:"27604157",celular:"3015420599",correo:"NEREYDATO@GMAIL.COM",mascotas:"ATLAS Y LETICIA",inicio:"2026-03-10",consumed:{}},
+  {id:"s25",plan:"SILVER",nombre:"PAOLA ANDREA LUNA",cc:"31580572",celular:"3155377915",correo:"LUNITAG@YAHOO.COM",mascotas:"NALA Y PAQUITA",inicio:"2026-03-12",consumed:{consultas:["2026-03-12"],chem6:["2026-03-12"],eco:["2026-03-12"]}},
+  {id:"s26",plan:"SILVER",nombre:"PAOLA BUSTOS",cc:"1098809837",celular:"3183893275",correo:"PAOLA,B1998@HOTMAIL.COM",mascotas:"NEGRITA - CHANEL - COBY - CLOE",inicio:"2026-03-16",consumed:{consultas:["2026-03-16"],chem6:["2026-03-16"],eco:["2026-03-16"]}},
+  {id:"s27",plan:"SILVER",nombre:"ROCIO AMPARO AMAYA CARRASCAL",cc:"1090450912",celular:"3212434488",correo:"rocio.litzy.vargas@gmail.com",mascotas:"loky",inicio:"2026-03-16",consumed:{cons_esp:["2026-03-16"],eco:["2026-03-17"]}},
+  {id:"s28",plan:"SILVER",nombre:"SARA MARIA ROMERO",cc:"60331072",celular:"3142186103",correo:"saramariaromero@gmail.com",mascotas:"BURUSA-OLA-LINDA-PEPITA-PEPITO-REINA-GORDITA-VAQUITA-MU\u00d1ECA-NEGRA",inicio:"2026-02-04",consumed:{consultas:["2026-04-23"],cons_esp:["2026-05-05"],eco:["2026-05-05"],vacuna:["2026-02-04"]}},
+  {id:"s29",plan:"SILVER",nombre:"STEFANI SEPULVEDA",cc:"1094859593",celular:"3024347517",correo:"sepulvedaserranos@gmail.com",mascotas:"RAMON",inicio:"2026-03-20",consumed:{consultas:["2026-03-20"],chem6:["2026-03-20"]}},
+  {id:"s30",plan:"SILVER",nombre:"TATIANA ANDREA BAYONA",cc:"1098780367",celular:"3165472858",correo:"tatianarozo1696@gmail.com",mascotas:"AZUL ROZO",inicio:"2026-03-21",consumed:{consultas:["2026-04-13"]}},
+  {id:"s31",plan:"SILVER",nombre:"YANNIMAR BORJA",cc:"1090527726",celular:"3202054643",correo:"yannimarbv@gmail.com",mascotas:"BENJI-LUPE",inicio:"2026-03-25",consumed:{consultas:["2026-03-25", "2026-04-29"]}},
+  {id:"s32",plan:"SILVER",nombre:"YESICA CACHIMUEL",cc:"1026285690",celular:"3104749104",correo:"arq.yesica.cachimuel@gmail.com",mascotas:"ENZO - GOLDEN",inicio:"2026-03-27",consumed:{consultas:["2026-05-07", "2026-05-14"],chem6:["2026-03-27"],eco:["2026-03-27"],vacuna:["2026-03-27"]}},
+  {id:"s33",plan:"SILVER",nombre:"SILVIA PITA",cc:"1091352307",celular:"3202527711",correo:"SILVIAPITASTUDIOPMU@GMAIL.COM",mascotas:"LISSY-EMMA",inicio:"2026-04-08",consumed:{consultas:["2026-05-02"],cons_esp:["2026-04-08"],chem6:["2026-05-02"],eco:["2026-04-08"]}},
+  {id:"s34",plan:"SILVER",nombre:"MARZIA PALLOTINI",cc:"1010147056",celular:"3124685267",correo:"marziapallottini@gmail.com",mascotas:"TIGRILLO",inicio:"2026-04-16",consumed:{cons_esp:["2026-04-16"],chem6:["2026-04-16"],eco:["2026-04-16"]}},
+  {id:"s35",plan:"SILVER",nombre:"CARLOS AMARILDO GARCIA PARADA",cc:"13485205",celular:"3208533689",correo:"GARCIAAMARILDO@HOTMAIL.COM",mascotas:"SCOTT-LANK-POLA",inicio:"2026-04-17",consumed:{eco:["2026-04-17"]}},
+  {id:"s36",plan:"SILVER",nombre:"ISAAC NAHANIEL SILVA URBINA",cc:"1140417450",celular:"3166963627",correo:"isaacsilva1107@hotmail.com",mascotas:"FREYA",inicio:"2026-04-18",consumed:{consultas:["2026-04-18", "2026-05-16"],chem6:["2026-04-18"],eco:["2026-04-18"]}},
+  {id:"s37",plan:"SILVER",nombre:"NANETTE FAJARDO GRANADOS",cc:"1090367878",celular:"3006777685",correo:"nanita7678@hotmail.com",mascotas:"ARYA",inicio:"2026-02-04",consumed:{cons_esp:["2026-04-19"],chem6:["2026-05-04"]}},
+  {id:"s38",plan:"SILVER",nombre:"LOURDES GARCIA PEREZ",cc:"68285845",celular:"3222724361",correo:"poljean2@hotmail.com",mascotas:"MONO",inicio:"2026-04-21",consumed:{consultas:["2026-04-21"]}},
+  {id:"s39",plan:"SILVER",nombre:"CIELO GAONA",cc:"60256594-S",celular:"3156755696",correo:"CIELOVILLANA@HOTMAIL.COM",mascotas:"NINO - RUFO - TOBY",inicio:"2026-04-30",consumed:{}},
+  {id:"s40",plan:"SILVER",nombre:"NELLY URBINA",cc:"37253231",celular:"3118682220",correo:"melissaurbina945@yahoo.com",mascotas:"ETHAN-MOLLY DAYANA",inicio:"2026-05-07",consumed:{cons_esp:["2026-05-11"],chem6:["2026-05-09"]}},
+  {id:"s41",plan:"SILVER",nombre:"ROGER LEONARDO PARADA",cc:"1092344719",celular:"3142391054",correo:"rogerparadamendoza18@gmail.com",mascotas:"PIPE-LUKAS",inicio:"2026-05-08",consumed:{consultas:["2026-05-08"],chem6:["2026-05-08"],eco:["2026-05-08"]}},
+  {id:"s42",plan:"SILVER",nombre:"ISABEL RAMIREZ PE\u00d1ARANDA",cc:"60354535-S",celular:"3223615371",correo:"isabel473@gmail.com",mascotas:"LUNA / MONO / JULIETA",inicio:"2026-05-09",consumed:{}},
+  {id:"s43",plan:"SILVER",nombre:"KAREN JACOME",cc:"63536394",celular:"3007778652",correo:"gerencia@ecoimagensalud.com",mascotas:"JUANITA-BONITA",inicio:"2026-05-09",consumed:{consultas:["2026-05-09"],cons_esp:["2026-05-09"],chem6:["2026-05-09"],eco:["2026-05-09"]}},
+  {id:"s44",plan:"SILVER",nombre:"RAFAEL ROJAS",cc:"88206094",celular:"3144156723",correo:"rafaelrojas1973@msn.com",mascotas:"SACHA",inicio:"2026-05-09",consumed:{chem6:["2026-05-09"]}},
+  {id:"s45",plan:"SILVER",nombre:"JOSE GABRIEL DUARN RIOS",cc:"5401891",celular:"3246845359",correo:"josegabrielduran@gmail.com",mascotas:"CATNUA",inicio:"2026-05-10",consumed:{cons_esp:["2026-05-10"],chem6:["2026-05-10"],eco:["2026-05-12"]}},
+  {id:"s46",plan:"SILVER",nombre:"DANITZA BUENDIA",cc:"1090526037",celular:"3217572880",correo:"",mascotas:"M\u00c1XIMO",inicio:"2026-05-16",consumed:{consultas:["2026-05-16"],chem6:["2026-05-16"],eco:["2026-05-16"]}},
+  {id:"mx01",plan:"MORADA",nombre:"MARTHA GAMBOA",cc:"60254603",celular:"3123175907",correo:"mgamboa@procuraduria.gov.co",mascotas:"LINDA",inicio:"2026-02-17",consumed:{}},
+  {id:"g01",plan:"GOLD",nombre:"KAREM LIZCANO",cc:"1016099783",celular:"3006501407",correo:"karemlizcano1030@gmail.com",mascotas:"coco - channel",inicio:"",consumed:{}},
+  {id:"g02",plan:"GOLD",nombre:"KAROL YESMYN BOTELLO CARRILLO",cc:"1090461741",celular:"3132345480",correo:"karol10a@gmail.com",mascotas:"HERA - HUSKY",inicio:"2025-11-18",consumed:{chem10:["2026-05-07"]}},
+  {id:"g03",plan:"GOLD",nombre:"LEILA DURAN/ISABELA GARCIA",cc:"60410849",celular:"3173059314",correo:"leylarocioduran@gmail.com",mascotas:"milan-tokyo",inicio:"2025-11-22",consumed:{consultas:["2025-11-22", "2025-11-29"],eco:["2025-11-29"],rx:["2026-02-28"],chem10:["2025-11-22"]}},
+  {id:"g04",plan:"GOLD",nombre:"ANIBAL DIAZ",cc:"1090375228",celular:"3143951662",correo:"anibal.diaz5228@outlook.com",mascotas:"",inicio:"2025-11-25",consumed:{}},
+  {id:"g05",plan:"GOLD",nombre:"CATERINE VASQUEZ",cc:"1062907027",celular:"3203908570",correo:"CATERINEVASQUEZ115@GMAIL.COM",mascotas:"AVRIL-ESTRELLITA",inicio:"2025-12-04",consumed:{consultas:["2025-12-04", "2026-02-28", "2026-04-23", "2026-04-28"],po:["2025-12-05"],eco:["2025-12-04"],rx:["2026-02-07"],chem10:["2025-12-04"],cons_esp:["2025-12-05", "2026-02-07"]}},
+  {id:"g06",plan:"GOLD",nombre:"XIOMARA NI\u00d1O",cc:"60363093",celular:"3153119352",correo:"xiomani4@gmail.com",mascotas:"obiwan-luna",inicio:"2025-12-04",consumed:{consultas:["2025-12-04", "2026-04-17"],rx:["2025-12-04"],chem10:["2025-12-04"],vacuna:["2026-01-26"]}},
+  {id:"g07",plan:"GOLD",nombre:"FANNY AVILA",cc:"60413962",celular:"3125027497",correo:"NAILE1@HOTMAIL.COM",mascotas:"LUCAS-ABBY",inicio:"2025-12-05",consumed:{consultas:["2025-12-27", "2026-01-02", "2026-02-02", "2026-05-08"],chem10:["2025-12-22"],vacuna:["2025-12-07"]}},
+  {id:"g08",plan:"GOLD",nombre:"JUAN PABLO MENDOZA",cc:"1090497119",celular:"3163946962",correo:"JUANPMENDOZALIZCANO@GMAIL.COM",mascotas:"TOMAS-DIVA",inicio:"2025-12-05",consumed:{consultas:["2026-03-16"],eco:["2026-01-27"],rx:["2026-01-27"],vacuna:["2026-01-09"]}},
+  {id:"g09",plan:"GOLD",nombre:"LEIDY GUITIERREZ",cc:"1094247653",celular:"3204106548",correo:"constanzagch@gmail.com",mascotas:"BIMBA-ALOHA-EFFI-NI\u00d1A-LUPE-AZABI-ODDY-SNOW-SHAKIRA-CARLOTA-CRISTAL-CHISPAS-CANELA-NEGRA-MONA-TORETA",inicio:"2025-12-10",consumed:{consultas:["2026-01-05"],vacuna:["2025-12-10"]}},
+  {id:"g10",plan:"GOLD",nombre:"FABIO ENRIQUE BAUTISTA",cc:"13484228",celular:"3143804566",correo:"FABAMO66@HOTMAIL.COM",mascotas:"SUGER WANDA MAX",inicio:"2025-12-13",consumed:{consultas:["2025-12-22"],chem10:["2026-02-07"],cons_esp:["2026-02-07"]}},
+  {id:"g11",plan:"GOLD",nombre:"MELISSA MARULANDA",cc:"1090412533",celular:"3004728378",correo:"melissamarulanda@gmail.com",mascotas:"TOBY-TITI-TOMY-AXEL-LOLA-OREO",inicio:"2025-12-14",consumed:{consultas:["2025-12-27", "2026-01-08", "2026-01-17"],eco:["2026-01-17"],chem10:["2026-01-16"],vacuna:["2026-04-08"]}},
+  {id:"g12",plan:"GOLD",nombre:"MAURICIO GARCIA",cc:"13277296",celular:"3123491333",correo:"souyiro13@hotmail.com",mascotas:"ROJO-MONA-POLO-LUNA-NEGRA-LALA-DINO-NENA-SUSAN-DODO-DOCTOR-FLOR",inicio:"2025-12-14",consumed:{consultas:["2026-02-24", "2026-03-11", "2026-05-06", "2026-05-11"],eco:["2026-02-24"],rx:["2026-01-15"],chem10:["2026-02-24"],cons_esp:["2026-01-14"],vacuna:["2025-12-16"]}},
+  {id:"g13",plan:"GOLD",nombre:"PAULA MIRANDA",cc:"1090525985",celular:"3222273424",correo:"paulaandreamar@ufps.edu.co",mascotas:"MAXIMILIANO-CLOE-LAILA-LULU-LUNA-LOLA-FRESA",inicio:"2025-12-14",consumed:{consultas:["2025-12-14", "2026-04-03"],chem10:["2026-03-11"],cons_esp:["2025-12-14"]}},
+  {id:"g14",plan:"GOLD",nombre:"GLADIS BELEN URBINA ESLAVA",cc:"60305775",celular:"3153823043",correo:"glabure@hotmail.com",mascotas:"MERENGUE-NEIGE-BROWNIE",inicio:"2025-12-16",consumed:{consultas:["2026-02-07", "2026-03-19", "2026-05-16"],po:["2026-03-19"],chem10:["2025-12-14"],cons_esp:["2025-12-19"],vacuna:["2026-01-24"]}},
+  {id:"g15",plan:"GOLD",nombre:"ONCOMEDICAL-FABIOLA RAMIREZ",cc:"9000037353-1",celular:"3132624930",correo:"contabilidad@oncomedicalips.com.co",mascotas:"TRUFA-ROMEO-MILO",inicio:"2026-01-02",consumed:{}},
+  {id:"g16",plan:"GOLD",nombre:"MARITZA LIZBETH MALDONADO LIZCANO",cc:"60355696",celular:"3165389157",correo:"MARITZAMALDONADO02@GMAIL.COM",mascotas:"ALANA - BENJI - MIA - TOMASITO",inicio:"2026-01-04",consumed:{consultas:["2026-01-04", "2026-01-20"],po:["2026-01-04"],eco:["2026-01-05"],vacuna:["2026-03-05"]}},
+  {id:"g17",plan:"GOLD",nombre:"MARIA ANGELIZA NU\u00d1EZ",cc:"37441481",celular:"3187348400",correo:"maria.angelica0202@gmail.com",mascotas:"MAX - SACK - BRUNO - JULIETA",inicio:"2026-01-08",consumed:{consultas:["2026-01-18", "2026-01-27", "2026-03-19"],po:["2026-01-24"],eco:["2026-03-19"],rx:["2026-01-22"]}},
+  {id:"g18",plan:"GOLD",nombre:"DAISY FRANCO",cc:"60354822",celular:"3173737271",correo:"daisyfranco09@hotmail.com",mascotas:"HOMERO-LOLA-LULU",inicio:"2026-01-15",consumed:{}},
+  {id:"g19",plan:"GOLD",nombre:"JULIETH CASTRO",cc:"1093763567",celular:"3016997631",correo:"richelcastro2108@hotmail.com",mascotas:"ZOE MARIA-MICHI",inicio:"2026-01-19",consumed:{consultas:["2026-01-19", "2026-02-02"],rx:["2026-01-19"],cons_esp:["2026-01-27"]}},
+  {id:"g20",plan:"GOLD",nombre:"LAURA HERRERA",cc:"1032502082",celular:"3138568436",correo:"",mascotas:"HARRY-AURELIO-GALA",inicio:"2026-01-21",consumed:{consultas:["2026-01-21"],po:["2026-01-21"],chem10:["2026-01-21"]}},
+  {id:"g21",plan:"GOLD",nombre:"MAYRA SUSANA GOMEZ LIZARAZO",cc:"1098615346",celular:"3160562202",correo:"mayragomezli2901@gmail.com",mascotas:"VALENTINO-FRANCHESCO",inicio:"2026-01-28",consumed:{consultas:["2026-01-28", "2026-04-27"],po:["2026-02-25"],chem10:["2026-01-28"]}},
+  {id:"g22",plan:"GOLD",nombre:"DANIELA ALEXANDRA GOMEZ GORDILLO",cc:"1093801263",celular:"3002918313",correo:"danigomez9909@gmail.com",mascotas:"GITANA - REX - ESTRELLA - LUNA - INOSUKE / MIA - MANCHAS - MONO",inicio:"2026-01-30",consumed:{po:["2026-04-30"],eco:["2026-05-04"],rx:["2026-01-30"],cons_esp:["2026-01-30", "2026-04-30"]}},
+  {id:"g23",plan:"GOLD",nombre:"ALIX REYES",cc:"1090485600",celular:"3184957784",correo:"alixreyes28@hotmail.com",mascotas:"MINNIE",inicio:"2026-02-01",consumed:{consultas:["2026-02-01", "2026-03-14", "2026-04-05"],eco:["2026-02-01"],chem10:["2026-03-20"]}},
+  {id:"g24",plan:"GOLD",nombre:"KAREN ROSMARI LEAL MOROS",cc:"1005035185",celular:"3143529820",correo:"Karenrosmarilm@ufps.edu.co",mascotas:"Nala pitbull - Ela cocker - Tom gato - Negra gata",inicio:"2026-02-04",consumed:{po:["2026-02-04"],eco:["2026-02-04"],chem10:["2026-02-04"],cons_esp:["2026-02-04"]}},
+  {id:"g25",plan:"GOLD",nombre:"KELLY SANJUAN",cc:"1093758417",celular:"3214114895",correo:"kellysanjuan090@gmail.com",mascotas:"mia",inicio:"2026-02-06",consumed:{consultas:["2026-02-06"],rx:["2026-02-06"]}},
+  {id:"g26",plan:"GOLD",nombre:"MATEO MALDONADO",cc:"88158168",celular:"3105543203",correo:"mateomaldo7@hotmail.com",mascotas:"LUKKAS",inicio:"2026-02-06",consumed:{consultas:["2026-04-11"],po:["2026-04-11"],vacuna:["2026-04-11"]}},
+  {id:"g27",plan:"GOLD",nombre:"ALBERT ORELLANO",cc:"1090399034",celular:"3046507354",correo:"albertorellano@icloud.com",mascotas:"BOLT - ONIX - BRUNO",inicio:"2026-02-09",consumed:{}},
+  {id:"g28",plan:"GOLD",nombre:"AUDREY TORRES SUAREZ",cc:"37294605",celular:"3108574164",correo:"vivito0128@hotmail.com",mascotas:"ROMEO MOJICA-PERSEO-NEGRO-DENVER-MAIKOL",inicio:"2026-02-18",consumed:{consultas:["2026-02-18"],rx:["2026-02-18"]}},
+  {id:"g29",plan:"GOLD",nombre:"BLANCA MIRELY IBARRA SANCHEZ",cc:"1090469067",celular:"3102028089",correo:"MIRELY_07@HOTMAIL.COM",mascotas:"ZAFIRA - DRACCO",inicio:"2026-03-03",consumed:{consultas:["2026-03-03", "2026-03-09"],eco:["2026-03-03"],chem10:["2026-03-03"],vacuna:["2026-05-09"]}},
+  {id:"g30",plan:"GOLD",nombre:"JORGE ISAAC FORRERO",cc:"1090527674",celular:"3016217315",correo:"jifsfor@gmail.com",mascotas:"EULER-JUSEPETH-PRINCESA",inicio:"2026-03-05",consumed:{consultas:["2026-03-29"],chem10:["2026-03-05"],cons_esp:["2026-03-05"],vacuna:["2026-04-11"]}},
+  {id:"g31",plan:"GOLD",nombre:"NOLEIVER VILLAMIZAR",cc:"88033253",celular:"3115469362",correo:"noleiver@gmail.com",mascotas:"WILL",inicio:"2026-03-05",consumed:{}},
+  {id:"g32",plan:"GOLD",nombre:"ANA LUCIA RANGEL",cc:"37392258",celular:"3115277752",correo:"analucia519@hotmail.com",mascotas:"TINGAR SKAIT WALTER",inicio:"2026-03-06",consumed:{consultas:["2026-03-12"],vacuna:["2026-03-06"]}},
+  {id:"g33",plan:"GOLD",nombre:"MONICA VIVIANA MATAMOROS RODRIGUEZ",cc:"1037600051",celular:"3174375289",correo:"monimatamoros2689@hotmail.com",mascotas:"BRUNO-MILU-ERA-ROMA",inicio:"2026-03-09",consumed:{consultas:["2026-04-17"],eco:["2026-03-09"],chem10:["2026-03-09"],cons_esp:["2026-03-09"]}},
+  {id:"g34",plan:"GOLD",nombre:"ERIKA DANIELA LEON CORONEL",cc:"1193473978",celular:"3166140591",correo:"erikaleoncoronel@gmail.com",mascotas:"CANDY",inicio:"2026-03-11",consumed:{consultas:["2026-04-06"],eco:["2026-03-12"],rx:["2026-03-16"],chem10:["2026-03-11"],cons_esp:["2026-04-23"]}},
+  {id:"g35",plan:"GOLD",nombre:"NURY RODRIGUEZ",cc:"60315981",celular:"3174375256",correo:"nuryrodriguez20@hotmail.com",mascotas:"ROMA-MILU-BRUNO-HERA",inicio:"2026-03-11",consumed:{consultas:["2026-03-30"],eco:["2026-04-17"],chem10:["2026-04-09"]}},
+  {id:"g36",plan:"GOLD",nombre:"SULMA JIMENEZ QUINTERO",cc:"68292688",celular:"3219363471",correo:"SULMAYJQ2004@GMAIL.COM",mascotas:"ISIS",inicio:"2026-03-13",consumed:{consultas:["2026-03-13"],eco:["2026-03-13"],chem10:["2026-03-13"]}},
+  {id:"g37",plan:"GOLD",nombre:"NURY JASMIN VARGAS QUINTERO",cc:"60364957",celular:"3214910964",correo:"nuryjasmin73@gmail.com",mascotas:"RUFFO - KLIM",inicio:"2026-03-14",consumed:{consultas:["2026-04-04"]}},
+  {id:"g38",plan:"GOLD",nombre:"NATALY PAOLA ROJAS CUERVO",cc:"1004914514",celular:"3503201071",correo:"natalyrojas1313@gmail.com",mascotas:"GOGETA-VEGETA-GARFIELD-ONIGUIRI",inicio:"2026-03-19",consumed:{consultas:["2026-03-19"],po:["2026-03-19"],chem10:["2026-03-19"],cons_esp:["2026-03-20"],vacuna:["2026-03-20"]}},
+  {id:"g39",plan:"GOLD",nombre:"JAIME CARDENAS",cc:"13489490-G",celular:"3125138057",correo:"",mascotas:"MAX - CHISPAS - BRUNO - KANDER",inicio:"2026-03-20",consumed:{}},
+  {id:"g40",plan:"GOLD",nombre:"MELBA FORIGUA",cc:"52192269",celular:"3134853174",correo:"MYASMIRA@YAHOO.COM",mascotas:"LULU - MAX - LUNA - ESTRELLITA - NIKI Y PERLA (GATOS)",inicio:"2026-03-21",consumed:{consultas:["2026-03-21", "2026-04-28", "2026-05-07"],eco:["2026-03-21"],chem10:["2026-04-28"]}},
+  {id:"g41",plan:"GOLD",nombre:"PAULA ANDREA JIMENEZ",cc:"43908658",celular:"3213044101",correo:"seminario_16@hotmail.com",mascotas:"VIOLETA-THOR-TOTI-TOM-LUKAS-LUNA-PACO-MONO",inicio:"2026-03-26",consumed:{}},
+  {id:"g42",plan:"GOLD",nombre:"LEIDY NAVARRO GUERRERO",cc:"37180137",celular:"3134132828",correo:"Li_modest24@hotmail.com",mascotas:"LUKAS NAVARRO",inicio:"2026-03-26",consumed:{eco:["2026-03-30"],chem10:["2026-03-28"],cons_esp:["2026-05-14"],vacuna:["2026-05-05"]}},
+  {id:"g43",plan:"GOLD",nombre:"NICOLE PATI\u00d1O",cc:"1091356341",celular:"3227371209",correo:"NICOLEAPATINOA@GMAIL.COM",mascotas:"AXEL-TAO-NALA",inicio:"2026-03-28",consumed:{po:["2026-05-03"],chem10:["2026-03-28"]}},
+  {id:"g44",plan:"GOLD",nombre:"DIEGO FERNANDO CARRILLO DIAZ",cc:"1093772318",celular:"3202848214",correo:"DIEGO.DKDJ@GMAIL.COM",mascotas:"MISSY-BRUNO",inicio:"2026-03-31",consumed:{}},
+  {id:"g45",plan:"GOLD",nombre:"ALVARO ENRIQUE PEREZ VALENCIA",cc:"1090502802",celular:"3125313975",correo:"ALVAROPEREZ3494@GMAIL.COM",mascotas:"PRINCESA",inicio:"",consumed:{}},
+  {id:"g46",plan:"GOLD",nombre:"ANDRES GUTIERREZ",cc:"88267797",celular:"3159269166",correo:"AMGO2000@HOTMAIL.COM",mascotas:"MOCA CAPUCHINO COFFE MILO",inicio:"2026-04-06",consumed:{}},
+  {id:"g47",plan:"GOLD",nombre:"ALEJANDRA VARGAS BLANCO",cc:"1090476441",celular:"3160540526",correo:"ALEJAVBARBLAN@GMAIL.COM",mascotas:"TEQUILA - RANA",inicio:"2026-04-14",consumed:{consultas:["2026-04-14", "2026-05-03"],po:["2026-04-18"],eco:["2026-04-14"]}},
+  {id:"g48",plan:"GOLD",nombre:"ADRIAN VILLAN PARRA",cc:"1090499128",celular:"3045924758",correo:"adrian2908cv@gmail.com",mascotas:"MICHI-MONECO-MU\u00d1ECA-SACHA",inicio:"2026-04-15",consumed:{}},
+  {id:"g49",plan:"GOLD",nombre:"ANDREA TATIANA TORRES",cc:"1094267802",celular:"3134535004",correo:"antatopri@gmail.com",mascotas:"PI\u00d1A",inicio:"2026-04-16",consumed:{consultas:["2026-04-16"],chem10:["2026-04-16"]}},
+  {id:"g50",plan:"GOLD",nombre:"MILDRED VERGEL",cc:"37442400",celular:"3115795209",correo:"mildredalvarado22@hotmail.com",mascotas:"PERLA",inicio:"2026-04-16",consumed:{consultas:["2026-04-16"],chem10:["2026-04-16"]}},
+  {id:"g51",plan:"GOLD",nombre:"EDITH JOHANNA VERGEL BECERRA",cc:"37271425",celular:"3105559727",correo:"edyjoa@hotmail.com",mascotas:"NICKY",inicio:"2026-04-18",consumed:{consultas:["2026-04-18"],po:["2026-04-18"],eco:["2026-04-18"],chem10:["2026-04-18"]}},
+  {id:"g52",plan:"GOLD",nombre:"MERLLY LAZARO",cc:"1090381741",celular:"3138824817",correo:"merllylucia19@gmail.com",mascotas:"ATENEA-KIRA-ROSALIA",inicio:"2026-04-19",consumed:{}},
+  {id:"g53",plan:"GOLD",nombre:"HERNANDO FABIAN CASTRO JARAMILLO",cc:"88246591",celular:"3167418913",correo:"FABCASTROJARAMILLO@GMAIL.COM",mascotas:"LOLA",inicio:"2026-04-25",consumed:{consultas:["2026-04-25"],rx:["2026-04-25"]}},
+  {id:"g54",plan:"GOLD",nombre:"LAURA VALERIA VARGAS ZABALA",cc:"1092338613",celular:"3052099719",correo:"lauravaleria140305@gmail.com",mascotas:"ZAOKO",inicio:"2026-04-25",consumed:{vacuna:["2026-04-25"]}},
+  {id:"g55",plan:"GOLD",nombre:"ZAIRA GONZALEZ RODRIGUEZ",cc:"27602794",celular:"3144629541",correo:"zaira.gr@gmail.com",mascotas:"FUHRER-SIMBA",inicio:"2026-04-27",consumed:{consultas:["2026-04-30"],eco:["2026-04-30"],chem10:["2026-04-30"]}},
+  {id:"g56",plan:"GOLD",nombre:"JULIANA MORENO",cc:"1098647415",celular:"3228529642",correo:"jemojem@hotmail.com",mascotas:"KARA PACO LARA",inicio:"2026-04-29",consumed:{cons_esp:["2026-04-29"]}},
+  {id:"g57",plan:"GOLD",nombre:"CIELO GAONA",cc:"60256594",celular:"3156755696",correo:"CIELOVILLANA@HOTMAIL.COM",mascotas:"NINO - RUFO - TOBY",inicio:"2026-04-30",consumed:{consultas:["2026-04-30"],eco:["2026-04-30"],rx:["2026-04-30"],chem10:["2026-04-30"]}},
+  {id:"g58",plan:"GOLD",nombre:"JOSE ASDRUBAL AVILA MORENO",cc:"88194568",celular:"3123796898",correo:"jasbam@gmail.com",mascotas:"JACK",inicio:"2026-05-04",consumed:{}},
+  {id:"g59",plan:"GOLD",nombre:"ISABEL RAMIREZ PE\u00d1ARANDA",cc:"60354535",celular:"3223615371",correo:"isabel473@gmail.com",mascotas:"LUNA / MONO / JULIETA",inicio:"2026-05-09",consumed:{}},
+  {id:"g60",plan:"GOLD",nombre:"JHONATHAN RAMIREZ",cc:"1090473784",celular:"3203223249",correo:"jhon0ramirez@gmail.com",mascotas:"MALKA - THOR",inicio:"2026-05-09",consumed:{consultas:["2026-05-14"]}},
+  {id:"m61",plan:"MORADA",nombre:"NORA MANTILLA",cc:"60308521",celular:"3202323432",correo:"NORAMANTILLA@GMAIL.COM",mascotas:"MU\u00d1ECA",inicio:"2026-04-30",consumed:{}}
 ];
 
-// ═══════════════════════════════════════════════
-//  STATE & STORAGE
-// ═══════════════════════════════════════════════
-const S={clients:[],users:[],plans:{},terms:[],audit:[],session:null,filterPlan:'ALL',filterStatus:'ALL'};
+// ═══════════════════ CONFIGURACIÓN GOOGLE SHEETS ═══════════════════
+// ⚠️  REEMPLAZA esta URL con la URL de tu Google Apps Script desplegado
+// La obtienes en Apps Script → Implementar → Gestionar implementaciones → copiar URL
+const API_URL = 'https://script.google.com/macros/s/AKfycbyG5uSZgDNsE_1WKVMH44Vxa9YSeGAAld3h4ZOFrF5VYfneZod98FAOBeBZOaow1uPc/exec';
+const API_TOKEN = 'animalcenter2024secret'; // debe coincidir con SECRET_TOKEN en Apps Script
+
+// Modo offline: true = usa datos locales (localStorage), false = usa Google Sheets
+// Cambia a false una vez que tengas Apps Script configurado
+const OFFLINE_MODE = false;
+
+// ═══════════════════ STATE ═══════════════════
+const S={
+  clients:[],users:[],plans:{},terms:[],audit:[],
+  session:null,filterPlan:'ALL',filterStatus:'ALL',
+  auditTypeFilter:'ALL',auditRoleFilter:'ALL',
+  loading:false, sheetsConnected:false
+};
+
+// ── localStorage (fallback / caché offline) ──
 function lsGet(k){try{return JSON.parse(localStorage.getItem(k));}catch{return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
-function initState(){
-  S.clients=lsGet('ac:clients')||CLIENTS_DEF;
-  S.users=lsGet('ac:users')||USERS_DEF;
-  S.plans=lsGet('ac:plans')||PLANS_DEF;
-  S.terms=lsGet('ac:terms')||TERMS_DEF;
-  S.audit=lsGet('ac:audit')||[];
-}
-function saveClients(){lsSet('ac:clients',S.clients);}
-function saveUsers(){lsSet('ac:users',S.users);}
-function savePlans(){lsSet('ac:plans',S.plans);}
-function saveTerms(){lsSet('ac:terms',S.terms);}
-function saveAudit(){lsSet('ac:audit',S.audit);}
 
-// ═══════════════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════════════
+// ── API call to Google Apps Script ──
+async function apiGet(action){
+  if(OFFLINE_MODE||!API_URL||API_URL.startsWith('TU_')) return null;
+  try{
+    const url=`${API_URL}?action=${action}&token=${API_TOKEN}`;
+    const res=await fetch(url);
+    const data=await res.json();
+    return data.ok?data:null;
+  }catch(e){console.warn('API GET error:',e);return null;}
+}
+
+async function apiPost(body){
+  if(OFFLINE_MODE||!API_URL||API_URL.startsWith('TU_')) return null;
+  try{
+    const res=await fetch(API_URL,{
+      method:'POST',
+      body:JSON.stringify({...body,token:API_TOKEN})
+    });
+    const data=await res.json();
+    return data.ok?data:null;
+  }catch(e){console.warn('API POST error:',e);return null;}
+}
+
+// ── Convert Sheets row format to app format ──
+function sheetsToClients(rows,consumosRows){
+  // Group consumos by clienteId
+  const conMap={};
+  (consumosRows||[]).forEach(r=>{
+    if(!conMap[r.clienteId])conMap[r.clienteId]={};
+    const svc=r.servicio;
+    if(!conMap[r.clienteId][svc])conMap[r.clienteId][svc]=[];
+    const entry=r.fecha+(r.nota?' — '+r.nota:'');
+    conMap[r.clienteId][svc].push({entry,id:r.id,ts:r.timestamp});
+  });
+
+  return rows.map(r=>({
+    id:String(r.id),
+    plan:String(r.plan),
+    nombre:String(r.nombre||''),
+    cc:String(r.cc||''),
+    celular:String(r.celular||''),
+    correo:String(r.correo||''),
+    mascotas:String(r.mascotas||''),
+    inicio:String(r.inicio||''),
+    consumed: Object.fromEntries(
+      Object.entries(conMap[String(r.id)]||{}).map(([k,v])=>[k,v.map(x=>x.entry)])
+    ),
+    _consumoIds: conMap[String(r.id)]||{}
+  }));
+}
+
+function sheetsToUsers(rows){
+  return rows.map(r=>({
+    id:String(r.id),username:String(r.username||''),password:String(r.password||''),
+    role:String(r.role||'cliente'),nombre:String(r.nombre||''),correo:String(r.correo||''),
+    clientId:String(r.clienteId||''),active:r.activo!==false&&r.activo!=='FALSE'&&r.activo!==0
+  }));
+}
+
+function sheetsToPlans(rows){
+  const plans={};
+  rows.forEach(r=>{
+    try{
+      plans[String(r.id)]={
+        id:String(r.id),name:String(r.nombre||''),price:Number(r.precio||0),
+        emoji:String(r.emoji||''),color:String(r.color||''),colorDark:String(r.colorDark||''),
+        consumables:JSON.parse(r.consumibles_json||'[]'),
+        perks:JSON.parse(r.perks_json||'[]')
+      };
+    }catch(e){console.warn('Plan parse error',e);}
+  });
+  return plans;
+}
+
+function sheetsToAudit(rows){
+  return rows.map(r=>({
+    id:String(r.id||''),ts:String(r.timestamp||''),
+    userId:String(r.userId||''),userName:String(r.userName||''),
+    userRole:String(r.userRole||''),action:String(r.action||''),
+    detail:String(r.detail||''),clientId:String(r.clienteId||'')
+  }));
+}
+
+// ── INIT: load from Sheets or fallback to localStorage/seed ──
+async function initState(){
+  showLoadingScreen(true);
+
+  // Try Google Sheets first
+  if(!OFFLINE_MODE&&API_URL&&!API_URL.startsWith('TU_')){
+    try{
+      const res=await apiGet('getAll');
+      if(res){
+        S.clients = sheetsToClients(res.clientes||[], res.consumos||[]);
+        S.users   = sheetsToUsers(res.usuarios||[]);
+        S.plans   = Object.keys(res.planes||{}).length>0 ? sheetsToPlans(res.planes) : PLANS_DEF;
+        S.terms   = (res.terminos||[]).map(r=>String(r.texto||r));
+        S.audit   = sheetsToAudit(res.auditoria||[]);
+        S.sheetsConnected=true;
+        // Cache locally as backup
+        lsSet('ac:clients',S.clients);lsSet('ac:users',S.users);
+        lsSet('ac:plans',S.plans);lsSet('ac:terms',S.terms);lsSet('ac:audit',S.audit);
+        showLoadingScreen(false);
+        return;
+      }
+    }catch(e){console.warn('Sheets load failed, falling back:',e);}
+  }
+
+  // Fallback: localStorage or seed data
+  const DATA_VERSION='2026-05-16-v1';
+  if(lsGet('ac:version')!==DATA_VERSION){
+    localStorage.removeItem('ac:clients');localStorage.removeItem('ac:users');
+    localStorage.removeItem('ac:plans');localStorage.removeItem('ac:terms');
+    lsSet('ac:version',DATA_VERSION);
+  }
+  S.clients = lsGet('ac:clients')||CLIENTS_DEF;
+  S.users   = lsGet('ac:users')||USERS_DEF;
+  S.plans   = lsGet('ac:plans')||PLANS_DEF;
+  S.terms   = lsGet('ac:terms')||TERMS_DEF;
+  S.audit   = lsGet('ac:audit')||[];
+  S.sheetsConnected=false;
+  showLoadingScreen(false);
+}
+
+// ── SAVE: write to Sheets AND local cache ──
+function save(k,v){
+  // Always keep local cache
+  lsSet('ac:'+k,v);
+
+  // Also push to Sheets asynchronously (fire and forget)
+  if(S.sheetsConnected){
+    if(k==='clients') v.forEach(c=>apiPost({action:'saveClient',data:c}));
+    if(k==='users')   v.forEach(u=>apiPost({action:'saveUser',data:u}));
+    if(k==='plans')   Object.values(v).forEach(p=>apiPost({action:'savePlan',data:p}));
+    if(k==='terms')   apiPost({action:'saveTerminos',data:v});
+    if(k==='audit')   {/* audit uses addAudit directly */}
+  }
+}
+
+// ── Loading screen ──
+function showLoadingScreen(show){
+  let screen=el('loading-screen');
+  if(!screen){
+    screen=document.createElement('div');
+    screen.id='loading-screen';
+    screen.style.cssText='position:fixed;inset:0;background:linear-gradient(135deg,#388e3c,#4bae4f);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;font-family:Nunito,sans-serif;gap:16px';
+    screen.innerHTML='<div style="font-size:52px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.2))">🐾</div><div style="font-size:20px;font-weight:800;letter-spacing:-.3px">Animal Center</div><div style="font-size:14px;opacity:.8" id="loading-msg">Cargando datos...</div><div style="width:200px;height:4px;background:rgba(255,255,255,.3);border-radius:2px;overflow:hidden;margin-top:4px"><div id="loading-bar" style="height:100%;background:#fff;border-radius:2px;width:0%;transition:width .4s ease;animation:loadbar 1.5s ease-in-out infinite"></div></div>';
+    const style=document.createElement('style');
+    style.textContent='@keyframes loadbar{0%{width:0%}50%{width:70%}100%{width:95%}}';
+    document.head.appendChild(style);
+    document.body.appendChild(screen);
+  }
+  screen.style.display=show?'flex':'none';
+}
+
+// ═══════════════════ HELPERS ═══════════════════
 function addYear(d){const x=new Date(d);x.setFullYear(x.getFullYear()+1);return x.toISOString().slice(0,10);}
 function daysLeft(i){return Math.ceil((new Date(addYear(i))-new Date())/86400000);}
-const MONTHS=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-function fmtDate(d){if(!d)return'—';const[y,m,day]=d.split('-');return`${day} ${MONTHS[+m-1]} ${y}`;}
+const MO=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function fmtDate(d){if(!d)return'—';const[y,m,day]=d.split('-');return`${day} ${MO[+m-1]} ${y}`;}
 function fmtDT(ts){const d=new Date(ts);return d.toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});}
 function getStatus(i){const d=daysLeft(i);return d<=0?'expired':d<=30?'expiring':'active';}
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function genPass(mascotas){
+  // Format: teamo + first pet name (lowercase, no spaces/special chars)
+  const firstPet=(mascotas||'').split(/[-,\/\s]+/).find(s=>s.trim())||'peludo';
+  const clean=firstPet.trim().toLowerCase().replace(/[^a-záéíóúüñ]/g,'');
+  return'teamo'+clean;
+}
+function genUser(nombre,cc){return nombre.split(' ')[0].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'')+'.'+(cc||'').slice(-4);}
 function statusBadge(inicio){
   const s=getStatus(inicio);
-  const cfg={active:{cls:'s-active',dot:'#4bae4f',l:'Activa'},expiring:{cls:'s-expiring',dot:'#f57f17',l:'Por vencer'},expired:{cls:'s-expired',dot:'#e53935',l:'Vencida'}};
-  const v=cfg[s];
-  return`<span class="status-badge ${v.cls}"><span class="s-dot" style="background:${v.dot}"></span>${v.l}</span>`;
+  const m={active:{cls:'sb-active',dot:'#4bae4f',l:'Activa'},expiring:{cls:'sb-expiring',dot:'#f57f17',l:'Por vencer'},expired:{cls:'sb-expired',dot:'#e53935',l:'Vencida'}};
+  const v=m[s];return`<span class="sb ${v.cls}"><span class="s-dot" style="background:${v.dot}"></span>${v.l}</span>`;
 }
-function planBadge(id){
-  const p=S.plans[id];
-  const c={SILVER:'var(--silver)',GOLD:'var(--gold)',MORADA:'var(--morada)'}[id]||'#888';
-  return`<span class="plan-badge" style="background:${c}">${p?p.emoji+' '+p.name:id}</span>`;
+function planBadge(id){const p=S.plans[id];const c={SILVER:'var(--silver)',GOLD:'var(--gold)',MORADA:'var(--morada)'}[id]||'#888';return`<span class="plan-badge plan-${id}" >${p?p.emoji+' '+p.name:id}</span>`;}
+function getUsage(c){const pl=S.plans[c.plan];if(!pl)return{used:0,total:0};const tot=pl.consumables.reduce((s,x)=>s+x.total,0);const used=pl.consumables.reduce((s,x)=>s+Math.min((c.consumed[x.key]||[]).length,x.total),0);return{used,total:tot};}
+function el(id){return document.getElementById(id);}
+
+// AUDIT EVENT CLASSIFICATION
+function auditClass(action){
+  const a=action.toLowerCase();
+  if(a.includes('inicio de sesión'))return'login';
+  if(a.includes('crear usuario')||a.includes('crear usuario'))return'crear-usuario';
+  if(a.includes('eliminar usuario'))return'eliminar-usuario';
+  if(a.includes('desactivar usuario'))return'desactivar-usuario';
+  if(a.includes('crear cliente'))return'crear-cliente';
+  if(a.includes('registrar'))return'registrar';
+  if(a.includes('eliminar'))return'eliminar';
+  return'otro';
 }
-function getUsage(c){
-  const pl=S.plans[c.plan];if(!pl)return{used:0,total:0};
-  const tot=pl.consumables.reduce((s,x)=>s+x.total,0);
-  const used=pl.consumables.reduce((s,x)=>s+Math.min((c.consumed[x.key]||[]).length,x.total),0);
-  return{used,total:tot};
+function auditBadge(action){
+  const cls=auditClass(action);
+  const m={
+    'login':{bg:'#c8e6c9',c:'#1b5e20',l:'Login'},
+    'crear-usuario':{bg:'#c8e6c9',c:'#1b5e20',l:'✅ Nuevo usuario'},
+    'eliminar-usuario':{bg:'#ffcdd2',c:'#b71c1c',l:'🗑 Eliminar usuario'},
+    'desactivar-usuario':{bg:'#ffcdd2',c:'#b71c1c',l:'⛔ Desactivar'},
+    'crear-cliente':{bg:'#b3e5fc',c:'#01579b',l:'👤 Nuevo cliente'},
+    'registrar':{bg:'#fff9c4',c:'#f57f00',l:'💊 Servicio'},
+    'eliminar':{bg:'#ffcdd2',c:'#b71c1c',l:'🗑 Eliminar'},
+    'otro':{bg:'var(--bg)',c:'var(--text3)',l:action.slice(0,22)}
+  };
+  const v=m[cls]||m['otro'];
+  return`<span class="ev-badge" style="background:${v.bg};color:${v.c}">${v.l}</span>`;
 }
+
 function addAudit(action,detail,clientId=''){
   if(!S.session)return;
-  S.audit.push({id:'a'+Date.now(),ts:new Date().toISOString(),userId:S.session.id,userName:S.session.nombre,userRole:S.session.role,action,detail,clientId});
-  saveAudit();
+  const entry={id:'a'+Date.now(),ts:new Date().toISOString(),userId:S.session.id,userName:S.session.nombre,userRole:S.session.role,action,detail,clientId};
+  S.audit.push(entry);
+  lsSet('ac:audit',S.audit);
+  if(S.sheetsConnected)apiPost({action:'addAudit',data:entry}).catch(()=>{});
 }
-function el(id){return document.getElementById(id);}
-function show(id){el(id).classList.remove('hidden');}
-function hide(id){el(id).classList.add('hidden');}
 
-// ═══════════════════════════════════════════════
-//  AUTH
-// ═══════════════════════════════════════════════
+// ═══════════════════ EMAIL SIMULATION ═══════════════════
+function simulateEmail(to,subject,htmlBody){
+  // In production: replace with real API call (EmailJS, SendGrid, etc.)
+  console.log(`📧 EMAIL SIMULADO\nDe: vet@animalcenter.com.co\nPara: ${to}\nAsunto: ${subject}\n---\n${htmlBody.replace(/<[^>]+>/g,'')}`);
+  return true;
+}
+
+function sendWelcomeEmail(toEmail,clientName,pets,planName,username,password){
+  const subject=`🐾 Bienvenido al Portal Animal Center — Tu membresía ${planName}`;
+  const html=`
+    <h2>¡Felicitaciones por adquirir tu Membresía Animal Care ${planName}!</h2>
+    <p>Hola <strong>${clientName}</strong>,</p>
+    <p>Ahora sí comienza una nueva etapa para tu peludo <strong>${pets}</strong>. 🐾</p>
+    <p>Con tu membresía Animal Care ${planName} tendrás acceso a todos los beneficios exclusivos que hemos preparado para cuidar a tu mascota de la mejor manera.</p>
+    <h3>Tus credenciales de acceso al portal:</h3>
+    <ul><li><strong>Usuario:</strong> ${username}</li><li><strong>Contraseña:</strong> ${password}</li></ul>
+    <p>Ingresa en: <a href="#">Portal Animal Center</a></p>
+    <p>Te recomendamos cambiar tu contraseña en tu primer ingreso desde la sección <em>Mi cuenta</em>.</p>
+    <hr>
+    <p style="font-size:12px;color:#888">Animal Center · Cúcuta · vet@animalcenter.com.co · Tel: 310 3438639</p>
+  `;
+  simulateEmail(toEmail,subject,html);
+}
+
+function sendResetEmail(toEmail,userName,newPass){
+  const subject='🔐 Restablecimiento de contraseña — Animal Center';
+  const html=`<p>Hola <strong>${userName}</strong>, tu contraseña fue restablecida por el administrador.</p><p><strong>Nueva contraseña temporal:</strong> ${newPass}</p><p>Por seguridad, cámbiala en tu próximo ingreso desde <em>Mi cuenta</em>.</p>`;
+  simulateEmail(toEmail,subject,html);
+}
+
+// ═══════════════════ AUTH ═══════════════════
 function togglePass(){const i=el('inp-pass');i.type=i.type==='password'?'text':'password';}
 el('inp-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 
 function doLogin(){
-  const u=el('inp-user').value.trim();
-  const p=el('inp-pass').value;
+  const u=el('inp-user').value.trim();const p=el('inp-pass').value;
   const found=S.users.find(x=>x.username===u&&x.password===p&&x.active);
   const errEl=el('login-err');
   if(!found){errEl.textContent='Usuario o contraseña incorrectos';errEl.classList.remove('hidden');return;}
-  errEl.classList.add('hidden');
-  S.session=found;
+  errEl.classList.add('hidden');S.session=found;
   addAudit('Inicio de sesión','Rol: '+found.role);
-  if(found.role==='cliente'){showClientView();}else{showStaffView();}
+  found.role==='cliente'?showClientView():showStaffView();
 }
+function doLogout(){if(S.session)addAudit('Cierre de sesión','');S.session=null;el('login-screen').classList.remove('hidden');el('staff-view').classList.add('hidden');el('client-view').classList.add('hidden');el('inp-user').value='';el('inp-pass').value='';}
 
-function doLogout(){
-  if(S.session)addAudit('Cierre de sesión','');
-  S.session=null;
-  el('login-screen').classList.remove('hidden');
-  el('staff-view').classList.add('hidden');
-  el('client-view').classList.add('hidden');
-  el('inp-user').value='';el('inp-pass').value='';
-}
-
-// ═══════════════════════════════════════════════
-//  STAFF VIEW
-// ═══════════════════════════════════════════════
+// ═══════════════════ STAFF VIEW ═══════════════════
 function showStaffView(){
-  hide('login-screen');hide('client-view');show('staff-view');
+  el('login-screen').classList.add('hidden');el('client-view').classList.add('hidden');el('staff-view').classList.remove('hidden');
   const s=S.session;
-  el('topbar-user-lbl').textContent='Hola, '+s.nombre;
-  const rt=el('topbar-role-tag');
-  rt.textContent={admin:'👑 Admin',personal:'👤 Personal'}[s.role]||s.role;
-  rt.className='role-tag role-'+s.role;
-  if(s.role==='admin'){show('btn-nav-users');show('btn-nav-audit');show('btn-new-client');show('btn-edit-terms');}
-  else{hide('btn-nav-users');hide('btn-nav-audit');hide('btn-new-client');hide('btn-edit-terms');}
+  el('tb-user-lbl').textContent='Hola, '+s.nombre;
+  const rt=el('tb-role-tag');rt.textContent={admin:'👑 Admin',personal:'👤 Personal'}[s.role]||s.role;rt.className='role-tag role-'+s.role;
+  if(s.role==='admin'){el('btn-nav-users').classList.remove('hidden');el('btn-nav-audit').classList.remove('hidden');el('btn-edit-terms').classList.remove('hidden');el('tab-audit-btn').classList.remove('hidden');el('tab-ventas-btn').classList.remove('hidden');}
+  showConnectionStatus();
   buildPlanPills();buildStatusPills();renderStats();renderTable();renderPlans();renderTerms();
 }
 
 function switchTab(name,btn){
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  ['clientes','planes','terminos'].forEach(t=>{el('tab-'+t).classList.toggle('hidden',t!==name);});
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  ['clientes','planes','terminos','ventas','auditoria'].forEach(t=>el('tab-'+t).classList.toggle('hidden',t!==name));
+  if(name==='auditoria')renderAuditDash();
+  if(name==='ventas')renderVentas();
 }
+function showAuditDash(){el('tab-audit-btn').click();}
 
 // ── PILLS ──
 function buildPlanPills(){
   el('plan-pills').innerHTML=[['ALL','Todos'],['SILVER','Silver'],['GOLD','Gold'],['MORADA','Morada']].map(([v,l])=>{
-    let cls='pill';
-    if(S.filterPlan===v)cls+=v==='ALL'?' active':' active-'+v.toLowerCase();
-    return`<button class="${cls}" onclick="setPlanFilter('${v}')">${l}</button>`;
+    let cls='pill';if(S.filterPlan===v)cls+=v==='ALL'?' act':' act-'+v.toLowerCase();
+    return`<button class="${cls}" onclick="setPF('${v}')">${l}</button>`;
   }).join('');
 }
 function buildStatusPills(){
   el('status-pills').innerHTML=[['ALL','Todos'],['active','Activas'],['expiring','Por vencer'],['expired','Vencidas']].map(([v,l])=>
-    `<button class="pill${S.filterStatus===v?' active':''}" onclick="setStatusFilter('${v}')">${l}</button>`
-  ).join('');
+    `<button class="pill${S.filterStatus===v?' act':''}" onclick="setSF('${v}')">${l}</button>`).join('');
 }
-function setPlanFilter(v){S.filterPlan=v;buildPlanPills();renderTable();}
-function setStatusFilter(v){S.filterStatus=v;buildStatusPills();renderTable();}
+function setPF(v){S.filterPlan=v;buildPlanPills();renderTable();}
+function setSF(v){S.filterStatus=v;buildStatusPills();renderTable();}
 
 // ── STATS ──
 function renderStats(){
   const bp={SILVER:0,GOLD:0,MORADA:0};let exp=0,exd=0;
   S.clients.forEach(c=>{bp[c.plan]++;const s=getStatus(c.inicio);if(s==='expiring')exp++;if(s==='expired')exd++;});
   el('stats-grid').innerHTML=[
-    {i:'👥',v:S.clients.length,l:'Total',c:'var(--green)'},
-    {i:'🥈',v:bp.SILVER,l:'Silver',c:'var(--silver)'},
-    {i:'🥇',v:bp.GOLD,l:'Gold',c:'var(--gold)'},
-    {i:'💜',v:bp.MORADA,l:'Morada',c:'var(--morada)'},
-    {i:'⚠️',v:exp,l:'Por vencer',c:'var(--warn)'},
-    {i:'❌',v:exd,l:'Vencidas',c:'var(--danger)'}
-  ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.i}</div><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
+    {i:'👥',v:S.clients.length,l:'Total',c:'var(--green)'},{i:'🥈',v:bp.SILVER,l:'Silver',c:'var(--silver)'},
+    {i:'🥇',v:bp.GOLD,l:'Gold',c:'var(--gold)'},{i:'💜',v:bp.MORADA,l:'Morada',c:'var(--morada)'},
+    {i:'⚠️',v:exp,l:'Por vencer',c:'var(--warn)'},{i:'❌',v:exd,l:'Vencidas',c:'var(--danger)'}
+  ].map(s=>`<div class="stat-card"><div style="font-size:19px">${s.i}</div><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
 }
 
 // ── TABLE ──
@@ -619,350 +928,686 @@ function renderTable(){
   const q=(el('search-inp').value||'').toLowerCase().trim();
   const rows=S.clients.filter(c=>{
     const mq=!q||c.nombre.toLowerCase().includes(q)||c.cc.includes(q)||(c.mascotas||'').toLowerCase().includes(q)||(c.celular||'').includes(q);
-    const mp=S.filterPlan==='ALL'||c.plan===S.filterPlan;
-    const ms=S.filterStatus==='ALL'||getStatus(c.inicio)===S.filterStatus;
-    return mq&&mp&&ms;
+    return mq&&(S.filterPlan==='ALL'||c.plan===S.filterPlan)&&(S.filterStatus==='ALL'||getStatus(c.inicio)===S.filterStatus);
   });
-  el('results-count').textContent=rows.length+' resultado'+(rows.length!==1?'s':'');
-  const isStaff=S.session&&(S.session.role==='admin'||S.session.role==='personal');
-  if(!rows.length){
-    el('clients-tbody').innerHTML='<tr class="empty-row"><td colspan="9">Sin resultados para esta búsqueda</td></tr>';return;
-  }
+  el('res-count').textContent=rows.length+' resultado'+(rows.length!==1?'s':'');
+  if(!rows.length){el('clients-tbody').innerHTML='<tr class="empty-td"><td colspan="9">Sin resultados</td></tr>';return;}
+  const col={SILVER:'var(--silver)',GOLD:'var(--gold)',MORADA:'var(--morada)'};
   el('clients-tbody').innerHTML=rows.map(c=>{
-    const{used,total}=getUsage(c);
-    const pct=total>0?Math.round(used/total*100):0;
-    const col={SILVER:'var(--silver)',GOLD:'var(--gold)',MORADA:'var(--morada)'}[c.plan];
-    const progHTML=total>0?`<div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${used===total?'var(--danger)':col}"></div></div><span class="prog-lbl">${used}/${total}</span></div>`:'<span style="font-size:11px;color:var(--muted)">—</span>';
-    const btn=isStaff?`<button class="btn-action" style="background:${col}20;color:${col}" onclick="openRegisterModal('${c.id}')">✏️ Gestionar</button>`:'';
-    return`<tr>
-      <td class="td-name" title="${escH(c.nombre)}">${escH(c.nombre)}</td>
-      <td class="td-muted">${escH(c.cc)}</td>
-      <td class="td-pets" title="${escH(c.mascotas||'')}">${escH(c.mascotas||'—')}</td>
-      <td>${planBadge(c.plan)}</td>
-      <td class="td-muted">${fmtDate(c.inicio)}</td>
-      <td class="td-muted">${fmtDate(addYear(c.inicio))}</td>
-      <td>${statusBadge(c.inicio)}</td>
-      <td>${progHTML}</td>
-      <td>${btn}</td>
-    </tr>`;
+    const{used,total}=getUsage(c);const pct=total?Math.round(used/total*100):0;
+    const cc=col[c.plan];
+    const prog=total?`<div class="pw"><div class="pb"><div class="pf" style="width:${pct}%;background:${used===total?'var(--danger)':cc}"></div></div><span class="pl">${used}/${total}</span></div>`:'<span style="font-size:11px;color:var(--muted)">—</span>';
+    return`<tr><td class="td-name" title="${escH(c.nombre)}">${escH(c.nombre)}</td><td class="td-sm">${escH(c.cc)}</td><td class="td-pets" title="${escH(c.mascotas||'')}">${escH(c.mascotas||'—')}</td><td>${planBadge(c.plan)}</td><td class="td-sm">${fmtDate(c.inicio)}</td><td class="td-sm">${fmtDate(addYear(c.inicio))}</td><td>${statusBadge(c.inicio)}</td><td>${prog}</td><td><button class="btn-ghost" style="font-size:12px;padding:4px 9px" onclick="openRegisterModal('${c.id}')">✏️ Gestionar</button></td></tr>`;
   }).join('');
 }
-function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // ── PLANS ──
 function renderPlans(){
   const bp={SILVER:0,GOLD:0,MORADA:0};S.clients.forEach(c=>bp[c.plan]++);
   const isAdmin=S.session&&S.session.role==='admin';
   el('plans-grid').innerHTML=Object.entries(S.plans).map(([pid,plan])=>{
-    const consHTML=plan.consumables.length?`<div class="section-label" style="margin-bottom:9px">Servicios incluidos</div>${plan.consumables.map(c=>`<div class="plan-item">${c.icon} ${c.label}<span class="plan-qty" style="background:${plan.color}20;color:${plan.color}">${c.total}×</span></div>`).join('')}<div style="height:10px"></div>`:'';
-    const perksHTML=`<div class="section-label">Beneficios permanentes</div>${plan.perks.map(p=>`<div class="plan-perk"><span class="plan-perk-check">✓</span>${p}</div>`).join('')}`;
+    const cons=plan.consumables.length?`<div class="sec-lbl" style="margin-bottom:8px">Servicios incluidos</div>${plan.consumables.map(c=>`<div class="pi">${c.icon} ${c.label}<span class="pi-qty" style="background:${plan.color}20;color:${plan.color}">${c.total}×</span></div>`).join('')}<div style="height:9px"></div>`:'';
+    const perks=`<div class="sec-lbl">Beneficios permanentes</div>${plan.perks.map(p=>`<div class="pp"><span style="color:var(--green);font-weight:800">✓</span>${p}</div>`).join('')}`;
     const editBtn=isAdmin?`<button class="plan-edit-btn" onclick="openEditPlanModal('${pid}')">✏️ Editar plan</button>`:'';
-    return`<div class="plan-card">
-      <div class="plan-card-header" style="background:linear-gradient(135deg,${plan.color},${plan.colorDark})">
-        <div class="plan-emoji">${plan.emoji}</div>
-        <div class="plan-title">Animal Care ${plan.name}</div>
-        <div class="plan-price-val">$${plan.price.toLocaleString('es-CO')}</div>
-        <div class="plan-meta">anuales · ${bp[pid]||0} clientes activos</div>
-      </div>
-      <div class="plan-card-body">${consHTML}${perksHTML}${editBtn}</div>
-    </div>`;
+    return`<div class="plan-card"><div class="pc-hdr" style="background:linear-gradient(135deg,${plan.color},${plan.colorDark})"><div style="font-size:28px">${plan.emoji}</div><div style="font-weight:900;font-size:19px">Animal Care ${plan.name}</div><div style="font-size:24px;font-weight:900;margin-top:5px">$${plan.price.toLocaleString('es-CO')}</div><div style="opacity:.8;font-size:11px">anuales · ${bp[pid]||0} clientes</div></div><div class="pc-body">${cons}${perks}${editBtn}</div></div>`;
   }).join('');
 }
 
 // ── TERMS ──
-function renderTerms(){
-  el('terms-list').innerHTML=(S.terms||[]).map((t,i)=>`<div class="term-item"><div class="term-num">${i+1}</div><div class="term-text">${escH(t)}</div></div>`).join('');
+function renderTerms(){el('terms-list').innerHTML=(S.terms||[]).map((t,i)=>`<div class="term-item"><div class="term-num">${i+1}</div><div style="font-size:13px;color:var(--text2);line-height:1.65">${escH(t)}</div></div>`).join('');}
+
+// ═══════════════════ VENTAS DASHBOARD ═══════════════════
+let _ventasView='month'; // month | plan | list
+
+function renderVentas(){
+  const clients=S.clients;
+  const plans=S.plans;
+  const now=new Date();
+  const thisYear=now.getFullYear();
+  const thisMonth=now.getMonth(); // 0-based
+
+  // ── Revenue totals
+  function revenue(c){return(plans[c.plan]||{price:0}).price;}
+  const totalRevenue=clients.reduce((s,c)=>s+revenue(c),0);
+  const totalClients=clients.length;
+
+  // ── Monthly data (last 8 months)
+  const months=[];
+  for(let i=7;i>=0;i--){
+    const d=new Date(thisYear,thisMonth-i,1);
+    months.push({year:d.getFullYear(),month:d.getMonth(),label:MO[d.getMonth()]+' '+d.getFullYear().toString().slice(2)});
+  }
+  const monthData=months.map(m=>{
+    const sold=clients.filter(c=>{const d=new Date(c.inicio);return d.getFullYear()===m.year&&d.getMonth()===m.month;});
+    return{...m,count:sold.length,revenue:sold.reduce((s,c)=>s+revenue(c),0)};
+  });
+  const thisMonthData=monthData[monthData.length-1];
+  const lastMonthData=monthData[monthData.length-2]||{count:0,revenue:0};
+  const deltaCount=lastMonthData.count>0?Math.round((thisMonthData.count-lastMonthData.count)/lastMonthData.count*100):null;
+  const deltaRev=lastMonthData.revenue>0?Math.round((thisMonthData.revenue-lastMonthData.revenue)/lastMonthData.revenue*100):null;
+
+  // ── By plan
+  const byPlan={SILVER:{count:0,revenue:0},GOLD:{count:0,revenue:0},MORADA:{count:0,revenue:0}};
+  clients.forEach(c=>{if(byPlan[c.plan]){byPlan[c.plan].count++;byPlan[c.plan].revenue+=revenue(c);}});
+
+  // ── By year
+  const byYear={};
+  clients.forEach(c=>{const y=c.inicio.slice(0,4);byYear[y]=(byYear[y]||0)+1;});
+
+  // ── Status breakdown
+  const active=clients.filter(c=>getStatus(c.inicio)==='active').length;
+  const expiring=clients.filter(c=>getStatus(c.inicio)==='expiring').length;
+  const expired=clients.filter(c=>getStatus(c.inicio)==='expired').length;
+
+  // ── Recent 5 sales
+  const recent=[...clients].sort((a,b)=>b.inicio.localeCompare(a.inicio)).slice(0,8);
+
+  // Max monthly value for bar scaling
+  const maxRev=Math.max(...monthData.map(m=>m.revenue),1);
+  const planColors={SILVER:'var(--silver)',GOLD:'var(--gold)',MORADA:'var(--morada)'};
+
+  const html=`
+  <!-- KPI ROW -->
+  <div class="ventas-kpi">
+    <div class="kpi-card">
+      <div class="kpi-top">Ingresos totales</div>
+      <div class="kpi-val" style="color:var(--green-dark)">$${(totalRevenue/1000000).toFixed(1)}M</div>
+      <div class="kpi-sub">${totalClients} membresías vendidas</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top">Este mes</div>
+      <div class="kpi-val" style="color:var(--green)">${thisMonthData.count}</div>
+      <div class="kpi-sub">$${(thisMonthData.revenue/1000).toFixed(0)}K en ${MO[thisMonth]}</div>
+      ${deltaCount!==null?`<span class="kpi-delta ${deltaCount>=0?'delta-up':'delta-dn'}">${deltaCount>=0?'▲':'▼'} ${Math.abs(deltaCount)}% vs mes ant.</span>`:''}
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top">Membresías activas</div>
+      <div class="kpi-val" style="color:var(--green)">${active}</div>
+      <div class="kpi-sub">${expiring} por vencer · ${expired} vencidas</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top">Plan más vendido</div>
+      <div class="kpi-val" style="color:${planColors[Object.entries(byPlan).sort((a,b)=>b[1].count-a[1].count)[0][0]]}">
+        ${(plans[Object.entries(byPlan).sort((a,b)=>b[1].count-a[1].count)[0][0]]||{emoji:'',name:''}).emoji} ${(plans[Object.entries(byPlan).sort((a,b)=>b[1].count-a[1].count)[0][0]]||{emoji:'',name:''}).name}
+      </div>
+      <div class="kpi-sub">${Object.entries(byPlan).sort((a,b)=>b[1].count-a[1].count)[0][1].count} unidades vendidas</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top">Ingreso promedio</div>
+      <div class="kpi-val" style="color:var(--gold)">$${totalClients>0?Math.round(totalRevenue/totalClients).toLocaleString('es-CO'):'0'}</div>
+      <div class="kpi-sub">por membresía</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW -->
+  <div class="ventas-grid2">
+    <!-- Monthly bar chart -->
+    <div class="chart-card">
+      <h4>📅 Ingresos mensuales (últimos 8 meses)</h4>
+      <div class="bar-chart">
+        ${monthData.map(m=>{
+          const pct=Math.round(m.revenue/maxRev*100);
+          const isNow=m.year===thisYear&&m.month===thisMonth;
+          return`<div class="bar-row">
+            <span class="bar-lbl">${m.label}</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:${pct}%;background:${isNow?'var(--green)':'var(--green-mid)'}">
+                ${pct>15?'$'+(m.revenue/1000).toFixed(0)+'K':''}
+              </div>
+            </div>
+            <span class="bar-num">${m.count}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:9px;text-align:right">Barra = ingresos · Número = membresías vendidas</div>
+    </div>
+
+    <!-- Right column -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <!-- By plan -->
+      <div class="chart-card">
+        <h4>🏷️ Distribución por plan</h4>
+        ${['SILVER','GOLD','MORADA'].map(pid=>{
+          const p=plans[pid]||{name:pid,price:0};const d=byPlan[pid];
+          const pct=totalClients>0?Math.round(d.count/totalClients*100):0;
+          return`<div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+              <span style="font-weight:700">${p.emoji||''} ${p.name} <span style="color:var(--text3);font-weight:400">(${pct}%)</span></span>
+              <span style="color:var(--text3)">${d.count} · $${(d.revenue/1000).toFixed(0)}K</span>
+            </div>
+            <div style="background:var(--bg);border-radius:3px;height:8px;overflow:hidden">
+              <div style="width:${pct}%;height:100%;border-radius:3px;background:${planColors[pid]||'#888'}"></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <!-- By year -->
+      <div class="chart-card">
+        <h4>📆 Membresías por año</h4>
+        ${Object.entries(byYear).sort().map(([y,n])=>{
+          const pct=Math.round(n/totalClients*100);
+          return`<div class="bar-row" style="margin-bottom:5px">
+            <span class="bar-lbl">${y}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--info)">${pct>15?n:''}</div></div>
+            <span class="bar-num">${n}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>
+
+  <!-- RECENT SALES -->
+  <div class="chart-card">
+    <h4>🕐 Últimas membresías vendidas</h4>
+    <div class="recent-sales">
+      ${recent.map(c=>{
+        const p=plans[c.plan]||{name:c.plan,price:0,color:'#888'};
+        const colBg={SILVER:'var(--silver)',GOLD:'var(--gold)',MORADA:'var(--morada)'}[c.plan]||'#888';
+        return`<div class="sale-row">
+          <div class="sale-avatar" style="background:${colBg}">${p.emoji||'?'}</div>
+          <div class="sale-info">
+            <div class="sale-name" title="${escH(c.nombre)}">${escH(c.nombre)}</div>
+            <div class="sale-date">🐾 ${escH(c.mascotas||'—')} · ${fmtDate(c.inicio)}</div>
+          </div>
+          <span class="plan-badge" style="background:${colBg}">${p.name}</span>
+          <span class="sale-price">$${p.price.toLocaleString('es-CO')}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+  `;
+  el('ventas-content').innerHTML=html;
 }
 
-// ═══════════════════════════════════════════════
-//  CLIENT VIEW
-// ═══════════════════════════════════════════════
-function showClientView(){
-  hide('login-screen');hide('staff-view');show('client-view');
-  renderClientView();
+// ═══════════════════ AUDIT DASHBOARD ═══════════════════
+const AUDIT_TYPES=[['ALL','Todos'],['login','Login'],['crear-usuario','Usuarios'],['eliminar-usuario','Eliminados'],['crear-cliente','Clientes'],['registrar','Servicios']];
+const AUDIT_ROLES=[['ALL','Todos'],['admin','Admin'],['personal','Personal'],['cliente','Cliente']];
+
+function renderAuditDash(){
+  // Stats
+  const total=S.audit.length;
+  const logins=S.audit.filter(e=>auditClass(e.action)==='login').length;
+  const newUsers=S.audit.filter(e=>auditClass(e.action)==='crear-usuario').length;
+  const newClients=S.audit.filter(e=>auditClass(e.action)==='crear-cliente').length;
+  const services=S.audit.filter(e=>auditClass(e.action)==='registrar').length;
+  el('audit-stats').innerHTML=[
+    {i:'📋',v:total,l:'Total eventos',c:'var(--text)'},
+    {i:'🔑',v:logins,l:'Logins',c:'var(--green)'},
+    {i:'👤',v:newUsers,l:'Usuarios creados',c:'var(--info)'},
+    {i:'🐾',v:newClients,l:'Clientes nuevos',c:'var(--morada)'},
+    {i:'💊',v:services,l:'Servicios',c:'var(--gold)'}
+  ].map(s=>`<div class="stat-card"><div style="font-size:18px">${s.i}</div><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
+  // Type pills
+  el('audit-type-pills').innerHTML=AUDIT_TYPES.map(([v,l])=>`<button class="pill${S.auditTypeFilter===v?' act':''}" onclick="setAT('${v}')">${l}</button>`).join('');
+  // Role pills
+  el('audit-role-pills').innerHTML=AUDIT_ROLES.map(([v,l])=>`<button class="pill${S.auditRoleFilter===v?' act':''}" onclick="setAR('${v}')">${l}</button>`).join('');
+  renderAuditTable();
 }
+function setAT(v){S.auditTypeFilter=v;el('audit-type-pills').innerHTML=AUDIT_TYPES.map(([x,l])=>`<button class="pill${S.auditTypeFilter===x?' act':''}" onclick="setAT('${x}')">${l}</button>`).join('');renderAuditTable();}
+function setAR(v){S.auditRoleFilter=v;el('audit-role-pills').innerHTML=AUDIT_ROLES.map(([x,l])=>`<button class="pill${S.auditRoleFilter===x?' act':''}" onclick="setAR('${x}')">${l}</button>`).join('');renderAuditTable();}
+function clearAuditFilters(){S.auditTypeFilter='ALL';S.auditRoleFilter='ALL';el('audit-search').value='';el('audit-from').value='';el('audit-to').value='';renderAuditDash();}
+
+function renderAuditTable(){
+  const q=(el('audit-search').value||'').toLowerCase();
+  const from=el('audit-from').value;const to=el('audit-to').value;
+  const rows=[...S.audit].reverse().filter(e=>{
+    const mq=!q||e.userName.toLowerCase().includes(q)||e.action.toLowerCase().includes(q)||(e.detail||'').toLowerCase().includes(q);
+    const mt=S.auditTypeFilter==='ALL'||auditClass(e.action)===S.auditTypeFilter;
+    const mr=S.auditRoleFilter==='ALL'||e.userRole===S.auditRoleFilter;
+    const d=e.ts.slice(0,10);
+    const mf=!from||d>=from;const mto=!to||d<=to;
+    return mq&&mt&&mr&&mf&&mto;
+  });
+  el('audit-count').textContent=rows.length+' evento'+(rows.length!==1?'s':'');
+  const rcfg={admin:{l:'Admin',c:'#6b21a8',bg:'#f3e8ff'},personal:{l:'Personal',c:'var(--info)',bg:'var(--info-light)'},cliente:{l:'Cliente',c:'var(--green-dark)',bg:'var(--green-light)'}};
+  if(!rows.length){el('audit-tbody').innerHTML='<tr class="empty-td"><td colspan="6">Sin eventos para estos filtros</td></tr>';return;}
+  el('audit-tbody').innerHTML=rows.map(e=>{
+    const cls=auditClass(e.action);
+    const rm=rcfg[e.userRole]||{l:e.userRole,c:'#888',bg:'var(--bg)'};
+    const clientName=e.clientId?((S.clients.find(c=>c.id===e.clientId)||{}).nombre||e.clientId):'—';
+    return`<tr class="audit-row-tr ev-${cls}"><td class="td-sm" style="white-space:nowrap">${fmtDT(e.ts)}</td><td style="font-weight:700;font-size:13px">${escH(e.userName)}</td><td><span class="tag-xs" style="background:${rm.bg};color:${rm.c}">${rm.l}</span></td><td>${auditBadge(e.action)}</td><td style="font-size:12px;color:var(--text2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(e.detail)}">${escH(e.detail)}</td><td class="td-sm">${escH(clientName)}</td></tr>`;
+  }).join('');
+}
+
+// ═══════════════════ CLIENT VIEW ═══════════════════
+function showClientView(){el('login-screen').classList.add('hidden');el('staff-view').classList.add('hidden');el('client-view').classList.remove('hidden');renderClientView();}
 function renderClientView(){
-  const cid=S.session.clientId;
-  const client=S.clients.find(c=>c.id===cid);
-  if(!client){
-    el('cv-wrap').innerHTML='<div style="text-align:center;padding:3rem;color:var(--text3)">⚠️ Membresía no encontrada. Contacta al personal de Animal Center.</div>';return;
-  }
-  const plan=S.plans[client.plan];
-  const dl=daysLeft(client.inicio);
-  const st=getStatus(client.inicio);
+  const cid=S.session.clientId;const client=S.clients.find(c=>c.id===cid);
+  if(!client){el('cv-wrap').innerHTML='<div style="text-align:center;padding:3rem;color:var(--muted)">⚠️ Membresía no encontrada. Contacta al personal.</div>';return;}
+  const plan=S.plans[client.plan];const dl=daysLeft(client.inicio);const st=getStatus(client.inicio);
   const stL={active:'Activa',expiring:'Por vencer',expired:'Vencida'}[st];
   const{used,total}=getUsage(client);
-  const usageBar=total>0?`<div class="cv-usage-bar"><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-bottom:5px;font-weight:600"><span>Uso total</span><span style="color:${used===total?'var(--danger)':'var(--green)'}">${used}/${total}</span></div><div style="background:var(--border);border-radius:3px;height:7px;overflow:hidden"><div style="width:${total?Math.round(used/total*100):0}%;background:${used===total?'var(--danger)':'var(--green)'};height:100%;border-radius:3px"></div></div></div></div>`:'';
-  const svcsHTML=plan.consumables.length?`<div class="cv-section"><h4><span class="cv-icon" style="background:var(--green-light)">🎁</span>Servicios incluidos</h4><div class="svc-cards-grid">${plan.consumables.map(cs=>{const dates=client.consumed[cs.key]||[];const u=Math.min(dates.length,cs.total);const full=u>=cs.total;const pct=Math.round(u/cs.total*100);return`<div class="svc-card${full?' full':''}"><div class="svc-row"><span class="svc-name">${cs.icon} ${cs.label}</span><span class="svc-count" style="color:${full?'var(--danger)':u>0?'var(--green)':'var(--muted)'}">${u}/${cs.total}</span></div><div style="background:var(--border);border-radius:3px;height:5px;overflow:hidden"><div style="width:${pct}%;background:${full?'var(--danger)':'var(--green)'};height:100%;border-radius:3px"></div></div>${dates.length?`<div class="date-chips">${dates.slice(0,cs.total).map(d=>`<span class="date-chip">${fmtDate(d.split(' — ')[0])}</span>`).join('')}</div>`:''}${!full?`<div style="font-size:11px;color:var(--text3);margin-top:5px">${cs.total-u} disponible${cs.total-u!==1?'s':''}</div>`:''}</div>`;}).join('')}</div></div>`:'';
-  const perksHTML=`<div class="cv-section"><h4><span class="cv-icon" style="background:var(--orange-light)">✨</span>Beneficios permanentes</h4>${plan.perks.map(p=>`<div class="perk-row"><span class="perk-check">✓</span><span class="perk-text">${p}</span></div>`).join('')}</div>`;
-  const termsHTML=`<div class="cv-section"><h4><span class="cv-icon" style="background:#eef2ff">📋</span>Términos y condiciones</h4>${(S.terms||[]).map((t,i)=>`<div class="term-item"><div class="term-num">${i+1}</div><div class="term-text">${escH(t)}</div></div>`).join('')}</div>`;
-  el('cv-wrap').innerHTML=`
-    <div class="cv-hero">
-      <div class="cv-hero-top" style="background:linear-gradient(135deg,${plan.color},${plan.colorDark})">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
-          <div>
-            <div class="cv-memb-label">Mi membresía</div>
-            <div class="cv-memb-name">${plan.emoji} Animal Care ${plan.name}</div>
-            <div class="cv-client-name">${escH(client.nombre)}</div>
-          </div>
-          <div style="text-align:right">
-            <div class="cv-status-badge"><span style="width:6px;height:6px;border-radius:50%;background:#fff;flex-shrink:0"></span>${stL}</div>
-            ${st!=='expired'?`<div style="font-size:11px;opacity:.7;margin-top:4px">${dl} días restantes</div>`:''}
-          </div>
-        </div>
-        <div class="cv-dates">
-          <div><div class="cv-date-lbl">Inicio</div><div class="cv-date-val">${fmtDate(client.inicio)}</div></div>
-          <div><div class="cv-date-lbl">Renovación</div><div class="cv-date-val">${fmtDate(addYear(client.inicio))}</div></div>
-          ${client.mascotas?`<div><div class="cv-date-lbl">Mascota(s)</div><div class="cv-date-val">${escH(client.mascotas)}</div></div>`:''}
-        </div>
-      </div>
-      ${usageBar}
-    </div>
-    ${svcsHTML}${perksHTML}${termsHTML}`;
+  const usageBar=total?`<div style="background:#fff;padding:11px 19px;display:flex;align-items:center;gap:13px"><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-bottom:5px;font-weight:600"><span>Uso total</span><span style="color:${used===total?'var(--danger)':'var(--green)'}">${used}/${total}</span></div><div style="background:var(--border);border-radius:3px;height:6px;overflow:hidden"><div style="width:${total?Math.round(used/total*100):0}%;background:${used===total?'var(--danger)':'var(--green)'};height:100%;border-radius:3px"></div></div></div></div>`:'';
+  const svcs=plan.consumables.length?`<div class="cv-sec"><h4><span class="cv-icon" style="background:var(--green-light)">🎁</span>Servicios incluidos</h4><div class="svc-grid">${plan.consumables.map(cs=>{const dates=client.consumed[cs.key]||[];const u=Math.min(dates.length,cs.total);const full=u>=cs.total;const pct=Math.round(u/cs.total*100);return`<div class="svc-c${full?' full':''}"><div class="svc-row"><span style="font-weight:700;font-size:13px">${cs.icon} ${cs.label}</span><span style="font-size:15px;font-weight:800;color:${full?'var(--danger)':u>0?'var(--green)':'var(--muted)'}">${u}/${cs.total}</span></div><div style="background:var(--border);border-radius:3px;height:5px;overflow:hidden"><div style="width:${pct}%;background:${full?'var(--danger)':'var(--green)'};height:100%;border-radius:3px"></div></div>${dates.length?`<div class="date-chips">${dates.slice(0,cs.total).map(d=>`<span class="dc">${fmtDate(d.split(' — ')[0])}</span>`).join('')}</div>`:''}${!full?`<div style="font-size:11px;color:var(--text3);margin-top:4px">${cs.total-u} disponible${cs.total-u!==1?'s':''}</div>`:''}</div>`;}).join('')}</div></div>`:'';
+  const perks=`<div class="cv-sec"><h4><span class="cv-icon" style="background:var(--orange-light)">✨</span>Beneficios permanentes</h4>${plan.perks.map(p=>`<div class="perk-row"><span style="color:var(--green);font-weight:800">✓</span>${p}</div>`).join('')}</div>`;
+  const terms=`<div class="cv-sec"><h4><span class="cv-icon" style="background:#eef2ff">📋</span>Términos y condiciones</h4>${(S.terms||[]).map((t,i)=>`<div class="term-item"><div class="term-num">${i+1}</div><div style="font-size:13px;color:var(--text2);line-height:1.65">${escH(t)}</div></div>`).join('')}</div>`;
+  el('cv-wrap').innerHTML=`<div class="cv-hero"><div class="cv-top" style="background:linear-gradient(135deg,${plan.color},${plan.colorDark})"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:9px"><div><div style="font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Mi membresía</div><div style="font-weight:900;font-size:21px;letter-spacing:-.3px">${plan.emoji} Animal Care ${plan.name}</div><div style="font-size:13px;opacity:.85;margin-top:3px">${escH(client.nombre)}</div></div><div><span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700"><span style="width:6px;height:6px;border-radius:50%;background:#fff;flex-shrink:0"></span>${stL}</span>${st!=='expired'?`<div style="font-size:11px;opacity:.7;margin-top:3px">${dl} días restantes</div>`:''}</div></div><div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:13px;font-size:12px">${[['Inicio',fmtDate(client.inicio)],['Renovación',fmtDate(addYear(client.inicio))],client.mascotas?['Mascota(s)',client.mascotas]:null].filter(Boolean).map(([k,v])=>`<div><div style="font-size:10px;opacity:.65;text-transform:uppercase;letter-spacing:.4px">${k}</div><div style="font-weight:700">${escH(v)}</div></div>`).join('')}</div></div>${usageBar}</div>${svcs}${perks}${terms}`;
 }
 
-// ═══════════════════════════════════════════════
-//  REGISTER SERVICE MODAL
-// ═══════════════════════════════════════════════
-let _regClientId='',_selKey='';
-function openRegisterModal(clientId){
-  _regClientId=clientId;_selKey='';
-  el('modal-box').className='modal';
-  setModalTitle('Gestionar: '+getClientShortName(clientId));
-  renderRegisterBody();
+// ═══════════════════ MY PROFILE ═══════════════════
+function openMyProfile(){
+  setModal('modal');setModalTitle('⚙️ Mi cuenta — '+S.session.nombre);
+  el('modal-body').innerHTML=`
+    <div style="background:var(--green-light);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--green-dark)">
+      <strong>Usuario:</strong> ${escH(S.session.username)}<br>
+      <strong>Rol:</strong> ${S.session.role}<br>
+      <strong>Correo:</strong> ${escH(S.session.correo||'—')}
+    </div>
+    <div style="font-weight:700;font-size:13px;margin-bottom:10px">Cambiar contraseña</div>
+    <label>Contraseña actual</label><input type="password" id="cp-old" placeholder="••••••••">
+    <label>Nueva contraseña</label><input type="password" id="cp-new" placeholder="Mínimo 6 caracteres" oninput="checkPassStrength(this.value)">
+    <div class="pass-strength"><div class="ps-fill" id="ps-fill"></div></div>
+    <label>Confirmar nueva contraseña</label><input type="password" id="cp-confirm" placeholder="Repite la contraseña">
+    <div id="cp-err" style="color:var(--danger);font-size:12px;margin-top:6px"></div>
+  `;
+  el('modal-footer').innerHTML=`<button class="btn-sec" onclick="closeModal()">Cancelar</button><button class="btn-pri" onclick="saveMyPass()">Guardar contraseña</button>`;
   showOverlay();
 }
-function getClientShortName(id){const c=S.clients.find(x=>x.id===id);return c?c.nombre.split(' ').slice(0,2).join(' '):'—';}
-function renderRegisterBody(){
-  const client=S.clients.find(c=>c.id===_regClientId);if(!client)return;
-  const plan=S.plans[client.plan];
-  const hasHist=plan.consumables.some(cs=>(client.consumed[cs.key]||[]).length>0);
-  let histHTML='';
+function checkPassStrength(v){
+  const f=el('ps-fill');if(!f)return;
+  const s=v.length<4?10:v.length<7?35:v.length<10?65:100;
+  const c=s<35?'var(--danger)':s<65?'var(--warn)':'var(--green)';
+  f.style.width=s+'%';f.style.background=c;
+}
+function saveMyPass(){
+  const old=el('cp-old').value;const nw=el('cp-new').value;const conf=el('cp-confirm').value;
+  const errEl=el('cp-err');
+  if(!old||!nw||!conf){errEl.textContent='Completa todos los campos';return;}
+  if(S.session.password!==old){errEl.textContent='La contraseña actual no es correcta';return;}
+  if(nw.length<6){errEl.textContent='La nueva contraseña debe tener al menos 6 caracteres';return;}
+  if(nw!==conf){errEl.textContent='Las contraseñas nuevas no coinciden';return;}
+  const u=S.users.find(x=>x.id===S.session.id);if(u){u.password=nw;S.session.password=nw;save('users',S.users);}
+  addAudit('Cambiar contraseña propia','Usuario: '+S.session.username);
+  closeModal();alert('✅ Contraseña actualizada correctamente.');
+}
+
+// ═══════════════════ REGISTER SERVICE ═══════════════════
+let _cid='',_selKey='';
+function openRegisterModal(cid){
+  _cid=cid;_selKey='';
+  setModal('modal');
+  const c=S.clients.find(x=>x.id===cid);
+  setModalTitle('Gestionar: '+(c?c.nombre.split(' ').slice(0,2).join(' '):'—'));
+  renderRegBody();showOverlay();
+}
+function renderRegBody(){
+  const c=S.clients.find(x=>x.id===_cid);if(!c)return;
+  const plan=S.plans[c.plan];
+  const hasHist=plan.consumables.some(cs=>(c.consumed[cs.key]||[]).length>0);
+  let hist='';
   if(hasHist){
-    histHTML='<div class="section-label" style="margin-bottom:7px">Historial registrado</div>';
-    plan.consumables.forEach(cs=>{
-      const dates=client.consumed[cs.key]||[];if(!dates.length)return;
-      histHTML+=`<div style="margin-bottom:9px"><div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:4px">${cs.icon} ${cs.label} — ${dates.length}/${cs.total}</div>`;
-      dates.forEach((d,i)=>{histHTML+=`<div class="hist-item"><span>${escH(d)}</span><button class="hist-del" onclick="delEntry('${cs.key}',${i})">× Eliminar</button></div>`;});
-      histHTML+='</div>';
-    });
-    histHTML+='<hr class="section-divider">';
+    hist='<div class="sec-lbl" style="margin-bottom:7px">Historial registrado</div>';
+    plan.consumables.forEach(cs=>{const dates=c.consumed[cs.key]||[];if(!dates.length)return;hist+=`<div style="margin-bottom:9px"><div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:3px">${cs.icon} ${cs.label} — ${dates.length}/${cs.total}</div>${dates.map((d,i)=>`<div class="hist-item"><span>${escH(d)}</span><button class="hist-del" onclick="delEntry('${cs.key}',${i})">× Eliminar</button></div>`).join('')}</div>`;});
+    hist+='<hr class="divider">';
   }
   const svcBtns=plan.consumables.length?
-    `<div class="section-label" style="margin-bottom:7px">Registrar nuevo servicio</div>
-     <div class="svc-select-grid">${plan.consumables.map(cs=>{const u=(client.consumed[cs.key]||[]).length;const full=u>=cs.total;return`<button class="svc-sel-btn${_selKey===cs.key?' active':''}"${full?' disabled':''} onclick="selectKey('${cs.key}')">${cs.icon} ${cs.label} (${u}/${cs.total})</button>`;}).join('')}</div>
-     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+    `<div class="sec-lbl" style="margin-bottom:6px">Registrar nuevo servicio</div>
+     <div class="svc-sel-grid">${plan.consumables.map(cs=>{const u=(c.consumed[cs.key]||[]).length;const full=u>=cs.total;return`<button class="svc-sel-btn${_selKey===cs.key?' sel':''}"${full?' disabled':''} onclick="selKey('${cs.key}')">${cs.icon} ${cs.label} (${u}/${cs.total})</button>`;}).join('')}</div>
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px">
        <div><label>Fecha del servicio</label><input type="date" id="svc-date" value="${new Date().toISOString().slice(0,10)}"></div>
        <div><label>Nota / Factura</label><input type="text" id="svc-note" placeholder="Ej: Fact. 1234"></div>
      </div>`:
-    '<div class="notice notice-success" style="margin-top:4px">Plan Morada: solo aplican descuentos permanentes, sin servicios consumibles.</div>';
-  el('modal-body').innerHTML=histHTML+svcBtns;
-  el('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cerrar</button><button class="btn-primary" id="btn-save-svc" onclick="saveService()" ${_selKey?'':'disabled'}>✅ Registrar servicio</button>`;
+    '<div class="notice ns">Plan Morada: solo aplican descuentos, sin consumibles.</div>';
+  el('modal-body').innerHTML=hist+svcBtns;
+  el('modal-footer').innerHTML=`<button class="btn-sec" onclick="closeModal()">Cerrar</button><button class="btn-pri" id="btn-sv-svc" onclick="saveSvc()" ${_selKey?'':'disabled'}>✅ Registrar</button>`;
 }
-function selectKey(k){_selKey=k;renderRegisterBody();}
+function selKey(k){_selKey=k;renderRegBody();}
 function delEntry(k,i){
-  if(!confirm('¿Eliminar este registro? La acción quedará en el historial de auditoría.'))return;
-  const c=S.clients.find(x=>x.id===_regClientId);if(!c)return;
+  if(!confirm('¿Eliminar este registro?'))return;
+  const c=S.clients.find(x=>x.id===_cid);if(!c)return;
   const arr=[...(c.consumed[k]||[])];const del=arr.splice(i,1)[0];
-  c.consumed={...c.consumed,[k]:arr};
-  saveClients();
-  addAudit('Eliminar registro','Cliente: '+c.nombre+' | '+k+': '+del,_regClientId);
-  renderRegisterBody();renderTable();renderStats();
+  c.consumed={...c.consumed,[k]:arr};save('clients',S.clients);
+  addAudit('Eliminar registro','Cliente: '+c.nombre+' | '+k+': '+del,_cid);
+  renderRegBody();renderTable();renderStats();
 }
-function saveService(){
+function saveSvc(){
   if(!_selKey)return;
-  const c=S.clients.find(x=>x.id===_regClientId);if(!c)return;
-  const date=el('svc-date').value;
-  const note=el('svc-note')?el('svc-note').value:'';
+  const c=S.clients.find(x=>x.id===_cid);if(!c)return;
+  const date=el('svc-date').value;const note=(el('svc-note')||{}).value||'';
   const entry=date+(note?' — '+note:'');
   if(!c.consumed[_selKey])c.consumed[_selKey]=[];
   c.consumed[_selKey].push(entry);
-  saveClients();
+  save('clients',S.clients);
   const cs=S.plans[c.plan].consumables.find(x=>x.key===_selKey);
-  addAudit('Registrar: '+(cs?cs.label:_selKey),'Cliente: '+c.nombre+' | Fecha: '+date+(note?' | '+note:''),_regClientId);
-  _selKey='';
-  renderRegisterBody();renderTable();renderStats();
+  addAudit('Registrar: '+(cs?cs.label:_selKey),'Cliente: '+c.nombre+' | Fecha: '+date+(note?' | '+note:''),_cid);
+  _selKey='';renderRegBody();renderTable();renderStats();
 }
 
-// ═══════════════════════════════════════════════
-//  NEW CLIENT MODAL
-// ═══════════════════════════════════════════════
+// ═══════════════════ NEW CLIENT ═══════════════════
 let _ncPlan='SILVER';
 function openNewClientModal(){
-  el('modal-box').className='modal';
-  setModalTitle('Nuevo cliente');
-  _ncPlan='SILVER';
+  setModal('modal');setModalTitle('➕ Nuevo cliente');_ncPlan='SILVER';
   el('modal-body').innerHTML=`
     <label>Plan *</label>
-    <div class="plan-select-grid">
-      <button class="plan-sel-btn selected-SILVER" id="ps-MORADA" onclick="ncSelectPlan('MORADA')">💜 Morada</button>
-      <button class="plan-sel-btn selected-SILVER" id="ps-SILVER" onclick="ncSelectPlan('SILVER')">🥈 Silver</button>
-      <button class="plan-sel-btn selected-SILVER" id="ps-GOLD" onclick="ncSelectPlan('GOLD')">🥇 Gold</button>
+    <div class="plan-sel-grid">
+      <button class="ps-btn" id="ps-MORADA" onclick="ncPlan('MORADA')">💜 Morada</button>
+      <button class="ps-btn sel-SILVER" id="ps-SILVER" onclick="ncPlan('SILVER')">🥈 Silver</button>
+      <button class="ps-btn" id="ps-GOLD" onclick="ncPlan('GOLD')">🥇 Gold</button>
     </div>
-    <label>Nombre completo *</label><input type="text" id="nc-nombre" placeholder="Nombre y apellidos">
+    <label>Nombre completo *</label><input type="text" id="nc-nom" placeholder="Nombre y apellidos">
     <label>Cédula *</label><input type="text" id="nc-cc" placeholder="Número de documento">
     <label>Celular</label><input type="tel" id="nc-cel" placeholder="310 XXXXXXX">
-    <label>Correo</label><input type="email" id="nc-correo" placeholder="correo@email.com">
+    <label>Correo electrónico * <span style="font-size:10px;color:var(--text3)">(se enviarán las credenciales)</span></label>
+    <input type="email" id="nc-correo" placeholder="correo@email.com">
     <label>Mascota(s)</label><input type="text" id="nc-mascotas" placeholder="Nombre(s) de las mascotas">
     <label>Fecha de inicio *</label><input type="date" id="nc-inicio" value="${new Date().toISOString().slice(0,10)}">
+    <div class="notice ni" style="margin-top:10px">📧 Se generarán credenciales automáticamente y se enviarán al correo ingresado desde <strong>vet@animalcenter.com.co</strong></div>
   `;
-  ncSelectPlan('SILVER');
-  el('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="saveNewClient()">Guardar cliente</button>`;
+  el('modal-footer').innerHTML=`<button class="btn-sec" onclick="closeModal()">Cancelar</button><button class="btn-pri" onclick="saveNewClient()">Crear cliente y enviar bienvenida</button>`;
   showOverlay();
 }
-function ncSelectPlan(p){
+function ncPlan(p){
   _ncPlan=p;
-  ['MORADA','SILVER','GOLD'].forEach(x=>{
-    const btn=el('ps-'+x);
-    if(btn)btn.className='plan-sel-btn'+(x===p?' selected-'+p:'');
-  });
+  ['MORADA','SILVER','GOLD'].forEach(x=>{const b=el('ps-'+x);if(b)b.className='ps-btn'+(x===p?' sel-'+p:'');});
 }
 function saveNewClient(){
-  const n=(el('nc-nombre').value||'').trim();
-  const cc=(el('nc-cc').value||'').trim();
-  const ini=el('nc-inicio').value;
-  if(!n||!cc||!ini){alert('Nombre, cédula y fecha de inicio son obligatorios.');return;}
-  const newC={id:'c'+Date.now(),plan:_ncPlan,nombre:n,cc,celular:el('nc-cel').value||'',correo:el('nc-correo').value||'',mascotas:el('nc-mascotas').value||'',inicio:ini,consumed:{}};
-  S.clients.push(newC);saveClients();
-  addAudit('Crear cliente',n+' — CC: '+cc+' — Plan: '+_ncPlan);
+  const nom=(el('nc-nom').value||'').trim();const cc=(el('nc-cc').value||'').trim();
+  const ini=el('nc-inicio').value;const correo=(el('nc-correo').value||'').trim();
+  const mascotas=(el('nc-mascotas').value||'').trim();
+  if(!nom||!cc||!ini){alert('Nombre, cédula y fecha de inicio son obligatorios.');return;}
+  if(!correo){if(!confirm('No ingresaste correo. El cliente no recibirá sus credenciales. ¿Continuar?'))return;}
+  const newId='c'+Date.now();
+  const username=genUser(nom,cc);const password=genPass(mascotas);
+  const newC={id:newId,plan:_ncPlan,nombre:nom,cc,celular:(el('nc-cel').value||''),correo,mascotas,inicio:ini,consumed:{}};
+  const newU={id:'u'+Date.now(),username,password,role:'cliente',nombre:nom,correo,clientId:newId,active:true};
+  S.clients.push(newC);S.users.push(newU);
+  save('clients',S.clients);save('users',S.users);
+  addAudit('Crear cliente',nom+' — CC: '+cc+' — Plan: '+_ncPlan,newId);
+  addAudit('Crear usuario','@'+username+' (cliente) para: '+nom,newId);
+  // Send welcome email
+  if(correo){
+    const plan=S.plans[_ncPlan];
+    sendWelcomeEmail(correo,nom,mascotas||'tu mascota',plan.name,username,password);
+  }
   closeModal();renderTable();renderStats();renderPlans();
+  // Show generated credentials
+  setModal('modal');setModalTitle('✅ Cliente creado exitosamente');
+  el('modal-body').innerHTML=`
+    <div class="notice ns" style="margin-bottom:14px">El cliente fue creado y ${correo?'se envió el correo de bienvenida a <strong>'+escH(correo)+'</strong>':'no se pudo enviar el correo (sin dirección)'}.</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Credenciales generadas automáticamente:</div>
+    <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px 16px;font-family:monospace;font-size:14px">
+      <div>👤 Usuario: <strong>${escH(username)}</strong></div>
+      <div style="margin-top:6px">🔑 Contraseña: <strong>${escH(password)}</strong></div>
+    </div>
+    <div class="notice nw" style="margin-top:10px">Guarda esta contraseña. No se podrá recuperar más adelante (solo resetear).</div>
+  `;
+  el('modal-footer').innerHTML=`<button class="btn-pri" onclick="closeModal()">Entendido</button>`;
+  showOverlay();
 }
 
-// ═══════════════════════════════════════════════
-//  EDIT PLAN MODAL
-// ═══════════════════════════════════════════════
+// ═══════════════════ EDIT PLAN ═══════════════════
 function openEditPlanModal(pid){
-  const plan=S.plans[pid];
-  el('modal-box').className='modal modal-lg';
-  setModalTitle('Editar plan '+plan.emoji+' '+plan.name);
+  const plan=S.plans[pid];setModal('modal-lg');setModalTitle('✏️ Editar plan '+plan.emoji+' '+plan.name);
   el('modal-body').innerHTML=`
-    <label>Precio anual (COP)</label>
-    <input type="number" id="ep-price" value="${plan.price}">
-    <label>Beneficios permanentes (uno por línea)</label>
-    <textarea id="ep-perks" rows="4">${plan.perks.join('\n')}</textarea>
-    <label>Consumibles (JSON)</label>
-    <textarea id="ep-cons" rows="7" style="font-family:monospace;font-size:12px">${JSON.stringify(plan.consumables,null,2)}</textarea>
+    <label>Precio anual (COP)</label><input type="number" id="ep-price" value="${plan.price}">
+    <label>Beneficios permanentes (uno por línea)</label><textarea id="ep-perks" rows="4">${plan.perks.join('\n')}</textarea>
+    <label>Consumibles (JSON)</label><textarea id="ep-cons" rows="7" style="font-family:monospace;font-size:12px">${JSON.stringify(plan.consumables,null,2)}</textarea>
     <div id="ep-err"></div>
-    <div class="notice notice-warn" style="margin-top:10px">Cada consumible necesita los campos: <code>key</code>, <code>label</code>, <code>icon</code>, <code>total</code></div>
+    <div class="notice nw">Campos requeridos: <code>key</code>, <code>label</code>, <code>icon</code>, <code>total</code></div>
   `;
-  el('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="saveEditPlan('${pid}')">💾 Guardar</button>`;
+  el('modal-footer').innerHTML=`<button class="btn-sec" onclick="closeModal()">Cancelar</button><button class="btn-pri" onclick="saveEditPlan('${pid}')">💾 Guardar</button>`;
   showOverlay();
 }
 function saveEditPlan(pid){
   try{
     const cons=JSON.parse(el('ep-cons').value);
     S.plans[pid]={...S.plans[pid],price:Number(el('ep-price').value),perks:el('ep-perks').value.split('\n').map(s=>s.trim()).filter(Boolean),consumables:cons};
-    savePlans();
-    addAudit('Editar plan '+S.plans[pid].name,'Precio: $'+S.plans[pid].price.toLocaleString('es-CO'));
+    save('plans',S.plans);addAudit('Editar plan '+S.plans[pid].name,'Precio: $'+S.plans[pid].price.toLocaleString('es-CO'));
     closeModal();renderPlans();
-  }catch(e){el('ep-err').innerHTML='<div class="notice notice-danger" style="margin-top:6px">JSON inválido: '+escH(e.message)+'</div>';}
+  }catch(e){el('ep-err').innerHTML='<div class="notice nd">JSON inválido: '+escH(e.message)+'</div>';}
 }
 
-// ═══════════════════════════════════════════════
-//  EDIT TERMS MODAL
-// ═══════════════════════════════════════════════
+// ═══════════════════ EDIT TERMS ═══════════════════
 function openTermsModal(){
-  el('modal-box').className='modal modal-lg';
-  setModalTitle('Editar Términos y Condiciones');
+  setModal('modal-lg');setModalTitle('📋 Editar Términos y Condiciones');
   el('modal-body').innerHTML=`<label>Un término por línea</label><textarea id="terms-ta" rows="13">${S.terms.join('\n')}</textarea>`;
-  el('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="saveEditTerms()">💾 Guardar</button>`;
+  el('modal-footer').innerHTML=`<button class="btn-sec" onclick="closeModal()">Cancelar</button><button class="btn-pri" onclick="saveTerms()">💾 Guardar</button>`;
   showOverlay();
 }
-function saveEditTerms(){
+function saveTerms(){
   S.terms=el('terms-ta').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  saveTerms();
-  addAudit('Editar términos y condiciones',S.terms.length+' términos');
+  save('terms',S.terms);addAudit('Editar términos',S.terms.length+' términos');
   closeModal();renderTerms();
 }
 
-// ═══════════════════════════════════════════════
-//  USERS MODAL
-// ═══════════════════════════════════════════════
+// ═══════════════════ USERS MODAL ═══════════════════
+// State persisted across re-renders inside the modal
+const UM={q:'', sort:'az', showForm:false};
+
 function openUsersModal(){
-  el('modal-box').className='modal modal-lg';
-  setModalTitle('Gestión de Usuarios');
-  renderUsersBody();
+  UM.q=''; UM.sort='az'; UM.showForm=false;
+  setModal('modal-xl'); setModalTitle('👥 Gestión de Usuarios');
+  buildUsersModal();
   showOverlay();
 }
-function renderUsersBody(){
-  const rcfg={admin:{l:'Admin',c:'#6b21a8',bg:'#f3e8ff'},personal:{l:'Personal',c:'var(--info)',bg:'var(--info-light)'},cliente:{l:'Cliente',c:'var(--green-dark)',bg:'var(--green-light)'}};
-  const userRows=S.users.map(u=>{
-    const rm=rcfg[u.role]||{l:u.role,c:'#888',bg:'#f0f0f0'};
-    const initials=u.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-    return`<div class="user-row${u.active?'':' inactive'}">
-      <div class="user-avatar">${initials}</div>
-      <div class="user-info"><div class="user-name">${escH(u.nombre)}</div><div class="user-username">@${escH(u.username)}${u.clientId?' · '+u.clientId:''}</div></div>
-      <span class="tag-sm" style="background:${rm.bg};color:${rm.c}">${rm.l}</span>
-      <span class="tag-sm" style="background:${u.active?'var(--green-light)':'var(--danger-light)'};color:${u.active?'var(--green-dark)':'var(--danger)'}">${u.active?'Activo':'Inactivo'}</span>
-      ${u.id!==S.session.id?`<button class="btn-ghost" onclick="toggleUser('${u.id}')" style="font-size:11px;padding:3px 8px">${u.active?'Desactivar':'Activar'}</button>`:''}
-    </div>`;
-  }).join('');
-  el('modal-body').innerHTML=`
-    <div class="user-list">${userRows}</div>
-    <div class="section-label" style="margin-bottom:9px">Crear nuevo usuario</div>
-    <div class="new-user-grid">
-      <div><label>Nombre *</label><input type="text" id="nu-nombre" placeholder="Nombre completo"></div>
-      <div><label>Usuario *</label><input type="text" id="nu-user" placeholder="usuario.apellido"></div>
-      <div><label>Contraseña *</label><input type="password" id="nu-pass" placeholder="••••••••"></div>
-      <div><label>Rol</label><select id="nu-role"><option value="personal">Personal</option><option value="admin">Admin</option><option value="cliente">Cliente</option></select></div>
-      <div class="new-user-full"><label>ID de cliente (solo si rol = cliente)</label><select id="nu-client"><option value="">Sin vincular</option>${S.clients.map(c=>`<option value="${c.id}">${escH(c.nombre)} — ${c.cc}</option>`).join('')}</select></div>
-    </div>
-    <div class="notice notice-info" style="margin-top:12px">El usuario debe coincidir exactamente con el registrado en <strong>animalcentercuc.com</strong></div>
-  `;
-  el('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cerrar</button><button class="btn-primary" onclick="saveNewUser()">Crear usuario</button>`;
-}
-function toggleUser(id){
-  const u=S.users.find(x=>x.id===id);if(!u)return;
-  u.active=!u.active;saveUsers();
-  addAudit((u.active?'Activar':'Desactivar')+' usuario','@'+u.username);
-  renderUsersBody();
-}
-function saveNewUser(){
-  const n=(el('nu-nombre').value||'').trim();
-  const us=(el('nu-user').value||'').trim();
-  const pw=el('nu-pass').value;
-  if(!n||!us||!pw){alert('Nombre, usuario y contraseña son obligatorios.');return;}
-  const nu={id:'u'+Date.now(),username:us,password:pw,nombre:n,role:el('nu-role').value,clientId:el('nu-client').value,active:true};
-  S.users.push(nu);saveUsers();
-  addAudit('Crear usuario','@'+us+' ('+nu.role+')');
-  renderUsersBody();
-}
 
-// ═══════════════════════════════════════════════
-//  AUDIT MODAL
-// ═══════════════════════════════════════════════
-function openAuditModal(){
-  el('modal-box').className='modal modal-lg';
-  setModalTitle('Historial de Auditoría');
-  const rcfg={admin:{l:'Admin',c:'#6b21a8',bg:'#f3e8ff'},personal:{l:'Personal',c:'var(--info)',bg:'var(--info-light)'},cliente:{l:'Cliente',c:'var(--green-dark)',bg:'var(--green-light)'}};
-  const rows=[...S.audit].reverse().map(e=>{
-    const rm=rcfg[e.userRole]||{l:e.userRole,c:'#888',bg:'#f0f0f0'};
-    return`<div class="audit-row">
-      <div class="audit-time">${fmtDT(e.ts)}</div>
-      <div class="audit-content">
-        <div class="audit-meta"><span class="tag-sm" style="background:${rm.bg};color:${rm.c}">${rm.l}</span><span class="audit-action">${escH(e.userName)}</span></div>
-        <div class="audit-action">${escH(e.action)}</div>
-        <div class="audit-detail">${escH(e.detail)}</div>
+function buildUsersModal(){
+  const isAdmin=S.session&&S.session.role==='admin';
+  const rcfg={
+    admin:   {l:'Admin',   c:'#6b21a8', bg:'#f3e8ff', av:'#ede9fe'},
+    personal:{l:'Personal',c:'var(--info)',  bg:'var(--info-light)',  av:'#bae6fd'},
+    cliente: {l:'Cliente', c:'var(--green-dark)', bg:'var(--green-light)', av:'#bbf7d0'}
+  };
+
+  // ── sort helpers
+  function sortUsers(arr){
+    if(UM.sort==='az')   return[...arr].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+    if(UM.sort==='za')   return[...arr].sort((a,b)=>b.nombre.localeCompare(a.nombre,'es'));
+    if(UM.sort==='new')  return[...arr].sort((a,b)=>b.id.localeCompare(a.id));
+    if(UM.sort==='old')  return[...arr].sort((a,b)=>a.id.localeCompare(b.id));
+    return arr;
+  }
+
+  // ── filter by global search
+  const q=UM.q.toLowerCase().trim();
+  function matchQ(u){return !q||u.nombre.toLowerCase().includes(q)||u.username.toLowerCase().includes(q)||(u.correo||'').toLowerCase().includes(q)||(u.clientId||'').includes(q);}
+
+  // ── build a user row
+  function rowHTML(u){
+    const rm=rcfg[u.role]||{l:u.role,c:'#888',bg:'var(--bg)',av:'#e5e7eb'};
+    const init=u.nombre.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const canDel=isAdmin&&u.id!==S.session.id;
+    const canDeact=u.id!==S.session.id;
+    const isSelf=u.id===S.session.id;
+    const linkedClient=u.clientId?S.clients.find(c=>c.id===u.clientId):null;
+    return`<div class="user-row-item${u.active?'':' inactive'}" style="gap:10px;flex-wrap:wrap">
+      <div style="width:36px;height:36px;border-radius:50%;background:${rm.av};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${rm.c};flex-shrink:0;opacity:${u.active?1:.5}">${init}</div>
+      <div style="flex:1;min-width:120px">
+        <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px">
+          ${escH(u.nombre)}
+          ${isSelf?'<span style="font-size:10px;background:#fef9c3;color:#854d0e;padding:1px 6px;border-radius:20px;font-weight:700">tú</span>':''}
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1px">
+          @${escH(u.username)}
+          ${u.correo?' · '+escH(u.correo):''}
+          ${linkedClient?' · 🐾 '+escH(linkedClient.nombre.split(' ')[0]):''}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+        <span class="tag-xs" style="background:${rm.bg};color:${rm.c}">${rm.l}</span>
+        <span class="tag-xs" style="background:${u.active?'var(--green-light)':'var(--danger-light)'};color:${u.active?'var(--green-dark)':'var(--danger)'}">${u.active?'Activo':'Inactivo'}</span>
+        ${canDeact?`<button class="btn-sm" onclick="umToggle('${u.id}')" title="${u.active?'Desactivar':'Activar'} usuario">${u.active?'⏸':'▶'} ${u.active?'Desactivar':'Activar'}</button>`:''}
+        ${isAdmin?`<button class="btn-sm" style="border-color:#fde68a;color:#b45309" onclick="umReset('${u.id}')" title="Restablecer contraseña">🔑</button>`:''}
+        ${canDel?`<button class="btn-sm" style="border-color:#fca5a5;color:var(--danger)" onclick="umDelete('${u.id}')" title="Eliminar usuario">🗑</button>`:''}
       </div>
     </div>`;
-  }).join('');
-  el('modal-body').innerHTML=`<div class="audit-list">${rows||'<div style="text-align:center;padding:2rem;color:var(--muted)">Sin eventos registrados</div>'}</div>`;
-  el('modal-footer').innerHTML=`<button class="btn-secondary" onclick="closeModal()">Cerrar</button>`;
-  showOverlay();
+  }
+
+  // ── Sections
+  const staffUsers  = sortUsers(S.users.filter(u=>(u.role==='admin'||u.role==='personal')&&matchQ(u)));
+  const clientUsers = sortUsers(S.users.filter(u=>u.role==='cliente'&&matchQ(u)));
+  const totalFiltered = staffUsers.length + clientUsers.length;
+
+  // ── Sort buttons helper
+  const SORTS=[['az','A → Z'],['za','Z → A'],['new','Más nuevos'],['old','Más antiguos']];
+  const sortBtns=SORTS.map(([v,l])=>`<button class="pill${UM.sort===v?' act':''}" onclick="umSort('${v}')" style="font-size:11px">${l}</button>`).join('');
+
+  // ── New user form (collapsible)
+  const newUserForm=UM.showForm?`
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-top:14px">
+      <div style="font-weight:800;font-size:13px;margin-bottom:11px;color:var(--text)">➕ Crear nuevo usuario</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><label>Nombre completo *</label><input type="text" id="nu-nom" placeholder="Nombre y apellidos"></div>
+        <div><label>Usuario * <span style="font-size:10px;color:var(--text3)">(mismo que tienda)</span></label><input type="text" id="nu-user" placeholder="usuario.apellido"></div>
+        <div><label>Contraseña *</label><input type="password" id="nu-pass" placeholder="••••••••"></div>
+        <div><label>Correo electrónico</label><input type="email" id="nu-correo" placeholder="correo@email.com"></div>
+        <div><label>Rol</label>
+          <select id="nu-role" onchange="umToggleClient()">
+            ${isAdmin?'<option value="admin">👑 Admin</option>':''}
+            <option value="personal">👤 Personal</option>
+            <option value="cliente">🐾 Cliente</option>
+          </select>
+        </div>
+        <div id="nu-client-wrap" style="display:none"><label>Vincular a cliente</label>
+          <select id="nu-client">
+            <option value="">Sin vincular</option>
+            ${S.clients.map(c=>`<option value="${c.id}">${escH(c.nombre)} — ${c.cc}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="notice ni" style="margin-top:10px">El usuario debe coincidir exactamente con el registrado en <strong>animalcentercuc.com</strong></div>
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+        <button class="btn-sec" onclick="umToggleForm()">Cancelar</button>
+        <button class="btn-pri" onclick="saveNewUser()">Crear usuario</button>
+      </div>
+    </div>`
+  :`<button class="btn-add" onclick="umToggleForm()" style="width:100%;margin-top:12px;padding:10px;border-radius:var(--radius);font-size:13px">＋ Crear nuevo usuario</button>`;
+
+  el('modal-body').innerHTML=`
+    <!-- TOOLBAR: search + sort -->
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;padding:12px 14px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border)">
+      <div style="position:relative;flex:1;min-width:180px">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px">🔍</span>
+        <input type="text" id="um-search" value="${escH(UM.q)}" placeholder="Buscar por nombre, usuario, correo o ID cliente..." oninput="umSearch(this.value)"
+          style="width:100%;padding:8px 10px 8px 32px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif">
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        ${sortBtns}
+      </div>
+      <div style="font-size:12px;color:var(--text3);white-space:nowrap">
+        ${totalFiltered} usuario${totalFiltered!==1?'s':''}
+      </div>
+    </div>
+
+    <!-- STAFF SECTION -->
+    <div style="margin-bottom:4px">
+      <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--green-dark);padding:7px 12px;background:var(--green-light);border-radius:var(--radius) var(--radius) 0 0;border:1px solid var(--green-mid);display:flex;justify-content:space-between;align-items:center">
+        <span>👑 Admin y Personal</span>
+        <span style="font-weight:400;font-size:11px">${staffUsers.length} usuario${staffUsers.length!==1?'s':''}</span>
+      </div>
+      <div style="border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:hidden">
+        ${staffUsers.length
+          ? staffUsers.map(rowHTML).join('')
+          : `<div style="padding:14px;text-align:center;color:var(--muted);font-size:13px">${q?'Sin coincidencias':'Sin usuarios de staff'}</div>`}
+      </div>
+    </div>
+
+    <!-- CLIENT SECTION -->
+    <div style="margin-top:12px;margin-bottom:4px">
+      <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--green-dark);padding:7px 12px;background:var(--green-light);border-radius:var(--radius) var(--radius) 0 0;border:1px solid var(--green-mid);display:flex;justify-content:space-between;align-items:center">
+        <span>🐾 Clientes con acceso al portal</span>
+        <span style="font-weight:400;font-size:11px">${clientUsers.length} de ${S.users.filter(u=>u.role==='cliente').length} total</span>
+      </div>
+      <div style="border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:hidden;max-height:320px;overflow-y:auto">
+        ${clientUsers.length
+          ? clientUsers.map(rowHTML).join('')
+          : `<div style="padding:14px;text-align:center;color:var(--muted);font-size:13px">${q?'Sin coincidencias para "'+escH(UM.q)+'"':'Sin clientes con usuario registrado'}</div>`}
+      </div>
+    </div>
+
+    ${newUserForm}
+  `;
+
+  el('modal-footer').innerHTML=`<button class="btn-sec" onclick="closeModal()">Cerrar</button>`;
+
+  // re-focus search to keep typing flow
+  const si=el('um-search');if(si&&UM.q)setTimeout(()=>{si.focus();si.setSelectionRange(si.value.length,si.value.length);},30);
 }
 
-// ═══════════════════════════════════════════════
-//  MODAL UTILS
-// ═══════════════════════════════════════════════
+// ── UM controls
+function umSearch(v){UM.q=v; buildUsersModal();}
+function umSort(v){UM.sort=v; buildUsersModal();}
+function umToggleForm(){UM.showForm=!UM.showForm; buildUsersModal();}
+function umToggleClient(){const r=el('nu-role');const w=el('nu-client-wrap');if(w)w.style.display=r&&r.value==='cliente'?'':'none';}
+function toggleClientSelect(){umToggleClient();}
+
+function umToggle(id){
+  const u=S.users.find(x=>x.id===id);if(!u)return;
+  u.active=!u.active;save('users',S.users);
+  addAudit((u.active?'Activar':'Desactivar')+' usuario','@'+u.username);
+  buildUsersModal();
+}
+function toggleUser(id){umToggle(id);}
+
+function umDelete(id){
+  const u=S.users.find(x=>x.id===id);if(!u)return;
+  if(!confirm('¿ELIMINAR definitivamente al usuario @'+u.username+'?\nEsta acción es permanente y no se puede deshacer.'))return;
+  S.users=S.users.filter(x=>x.id!==id);save('users',S.users);
+  addAudit('Eliminar usuario','@'+u.username+' ('+u.role+')');
+  buildUsersModal();
+}
+function deleteUser(id){umDelete(id);}
+
+function umReset(id){
+  const u=S.users.find(x=>x.id===id);if(!u)return;
+  const mascota=u.clientId?(S.clients.find(c=>c.id===u.clientId)||{mascotas:''}).mascotas:'';
+  const newPass=genPass(mascota);
+  if(!confirm('¿Restablecer contraseña de @'+u.username+'?\nNueva contraseña: '+newPass))return;
+  u.password=newPass;save('users',S.users);
+  addAudit('Resetear contraseña','@'+u.username);
+  if(u.correo)sendResetEmail(u.correo,u.nombre,newPass);
+  alert('🔑 Contraseña restablecida para @'+u.username+':\n\n'+newPass+'\n\n'+(u.correo?'Se envió a '+u.correo:'Sin correo registrado'));
+  buildUsersModal();
+}
+function resetUserPass(id){umReset(id);}
+
+function saveNewUser(){
+  const nom=(el('nu-nom').value||'').trim();
+  const us=(el('nu-user').value||'').trim();
+  const pw=el('nu-pass').value;
+  const role=el('nu-role').value;
+  const correo=(el('nu-correo').value||'').trim();
+  if(!nom||!us||!pw){alert('Nombre, usuario y contraseña son obligatorios.');return;}
+  if(S.users.find(x=>x.username===us)){alert('Ya existe un usuario con ese nombre de usuario.');return;}
+  const clientId=role==='cliente'?(el('nu-client').value||''):'';
+  const nu={id:'u'+Date.now(),username:us,password:pw,role,nombre:nom,correo,clientId,active:true};
+  S.users.push(nu);save('users',S.users);
+  addAudit('Crear usuario','@'+us+' ('+role+')');
+  UM.showForm=false;
+  buildUsersModal();
+}
+
+// ═══════════════════ MODAL UTILS ═══════════════════
+function setModal(cls){el('modal-box').className='modal '+cls;}
 function setModalTitle(t){el('modal-title').textContent=t;}
 function showOverlay(){el('overlay').classList.add('show');}
 function closeModal(){el('overlay').classList.remove('show');}
 function overlayClick(e){if(e.target===el('overlay'))closeModal();}
 
-// ═══════════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════════
-initState();
+// ═══════════════════ INIT ═══════════════════
+// Add connection status badge to topbar after login
+function showConnectionStatus(){
+  const tb=el('tb-right')||el('topbar-right');
+  if(!tb)return;
+  const existing=document.getElementById('sheets-status');
+  if(existing)existing.remove();
+  const badge=document.createElement('span');
+  badge.id='sheets-status';
+  badge.style.cssText='font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;';
+  if(S.sheetsConnected){
+    badge.style.background='#c8e6c9';badge.style.color='#1b5e20';
+    badge.textContent='☁️ Google Sheets';
+  }else{
+    badge.style.background='#fff3e0';badge.style.color='#e65100';
+    badge.textContent='💾 Local';
+    badge.title='Sin conexión a Google Sheets. Los cambios se guardan en este navegador.';
+  }
+  tb.insertBefore(badge,tb.firstChild);
+}
+
+initState().then(()=>{
+  el('login-screen').classList.remove('hidden');
+});
 </script>
 </body>
 </html>
