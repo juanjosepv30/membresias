@@ -598,16 +598,144 @@ const CLIENTS_DEF=[
   {id:"m61",plan:"MORADA",nombre:"NORA MANTILLA",cc:"60308521",celular:"3202323432",correo:"NORAMANTILLA@GMAIL.COM",mascotas:"MU\u00d1ECA",inicio:"2026-04-30",consumed:{}}
 ];
 
-// ═══════════════════ CONFIGURACIÓN GOOGLE SHEETS ═══════════════════
-// ⚠️  REEMPLAZA esta URL con la URL de tu Google Apps Script desplegado
-// La obtienes en Apps Script → Implementar → Gestionar implementaciones → copiar URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbyetB55p-_zJoXOAEkfGXdlduE2haRyYQQ5iln6hTX76OqSbwVpJUqfFNd3_JxeErUX/exec';
-const API_TOKEN = 'animalcenter2024secret'; // debe coincidir con SECRET_TOKEN en Apps Script
+// ═══════════════════════════════════════════════════════════════════
+//  CONFIGURACIÓN — Google Sheets
+//  El Sheet ID se extrae automáticamente del Apps Script URL
+// ═══════════════════════════════════════════════════════════════════
 
-// Modo offline: true = usa datos locales (localStorage), false = usa Google Sheets
-// Cambia a false una vez que tengas Apps Script configurado
+// ID de tu Google Sheet (el que tiene las pestañas Clientes, Consumos, etc.)
+// Encuéntralo en la URL de tu Sheet: docs.google.com/spreadsheets/d/[ESTE_ID]/edit
+const SHEET_ID = '1ecwBlSL_Qud0_PJRhkJX_AUt6hnytrUVBLpaH31rmp4';
+
+// URL del Apps Script (para escritura)
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyetB55p-_zJoXOAEkfGXdlduE2haRyYQQ5iln6hTX76OqSbwVpJUqfFNd3_JxeErUX/exec';
+const API_TOKEN = 'animalcenter2024secret';
+
+// false = conectar a Sheets | true = solo datos locales
 const OFFLINE_MODE = false;
 
+// ── localStorage ──────────────────────────────────────────────────
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k));}catch{return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+
+// ── CSV Parser ────────────────────────────────────────────────────
+function parseCSV(text){
+  if(!text||!text.trim())return[];
+  const lines=text.trim().split('\n');
+  if(lines.length<2)return[];
+  const headers=splitCSVLine(lines[0]).map(h=>h.replace(/^"|"$/g,'').trim());
+  const rows=[];
+  for(let i=1;i<lines.length;i++){
+    const vals=splitCSVLine(lines[i]);
+    if(!vals[0]||vals[0].trim()==='')continue;
+    const obj={};
+    headers.forEach((h,j)=>{obj[h]=(vals[j]||'').replace(/^"|"$/g,'').trim();});
+    rows.push(obj);
+  }
+  return rows;
+}
+function splitCSVLine(line){
+  const r=[];let c='';let q=false;
+  for(let i=0;i<line.length;i++){
+    if(line[i]==='"'){q=!q;}
+    else if(line[i]===','&&!q){r.push(c);c='';}
+    else{c+=line[i];}
+  }
+  r.push(c);return r;
+}
+
+// ── Fetch una pestaña del Sheet como CSV ─────────────────────────
+// Usa el endpoint gviz/tq que funciona sin CORS cuando el Sheet es público
+async function fetchTab(tabName){
+  const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}&t=${Date.now()}`;
+  try{
+    const res=await fetch(url,{cache:'no-store'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const text=await res.text();
+    if(text.includes('Signin')||text.includes('accounts.google'))throw new Error('Sheet no es público');
+    return parseCSV(text);
+  }catch(e){
+    console.warn('fetchTab '+tabName+' error:',e.message);
+    return[];
+  }
+}
+
+// ── Escribir en Sheets via Image beacon (sin CORS) ────────────────
+function writeToSheets(action,data){
+  if(OFFLINE_MODE||!APPS_SCRIPT_URL)return;
+  try{
+    const params=new URLSearchParams({
+      action,token:API_TOKEN,
+      data:JSON.stringify(data)
+    });
+    // Image beacon: no tiene restricción CORS
+    const img=new Image();
+    img.src=APPS_SCRIPT_URL+'?'+params.toString();
+  }catch(e){console.warn('writeToSheets:',e);}
+}
+
+function saveClientToSheets(c){writeToSheets('saveClient',c);}
+function saveUserToSheets(u){writeToSheets('saveUser',u);}
+function saveConsumoToSheets(c){writeToSheets('addConsumo',c);}
+function deleteConsumoFromSheets(id){writeToSheets('deleteConsumo',{id});}
+
+// ── SAVE (local) ──────────────────────────────────────────────────
+function save(k,v){lsSet('ac:'+k,v);}
+
+// ── INIT ──────────────────────────────────────────────────────────
+async function initState(){
+  showLoadingScreen(true);
+  let loaded=false;
+
+  if(!OFFLINE_MODE&&SHEET_ID){
+    try{
+      el('loading-msg')&&(el('loading-msg').textContent='Conectando con Google Sheets...');
+      const [clientes,consumos,usuarios,planes,terminos,auditoria]=await Promise.all([
+        fetchTab('Clientes'),fetchTab('Consumos'),fetchTab('Usuarios'),
+        fetchTab('Planes'),fetchTab('Terminos'),fetchTab('Auditoria')
+      ]);
+      if(clientes&&clientes.length>0){
+        S.clients=sheetsToClients(clientes,consumos||[]);
+        S.users=sheetsToUsers(usuarios||[]);
+        S.plans=planes&&planes.length>0?sheetsToPlans(planes):PLANS_DEF;
+        S.terms=(terminos||[]).map(r=>String(r.texto||'')).filter(Boolean);
+        if(!S.terms.length)S.terms=TERMS_DEF;
+        S.audit=sheetsToAudit(auditoria||[]);
+        S.sheetsConnected=true;
+        console.log('✅ Google Sheets conectado. Clientes:',S.clients.length);
+        // Guardar en caché local
+        lsSet('ac:clients',S.clients);lsSet('ac:users',S.users);
+        lsSet('ac:plans',S.plans);lsSet('ac:terms',S.terms);lsSet('ac:audit',S.audit);
+        loaded=true;
+      }else{
+        console.warn('Sheet vacío o no público. Usando datos locales.');
+      }
+    }catch(e){console.warn('Sheets error:',e);}
+  }
+
+  if(!loaded){
+    const VER='2026-05-16-v2';
+    if(lsGet('ac:version')!==VER){
+      ['clients','users','plans','terms'].forEach(k=>localStorage.removeItem('ac:'+k));
+      lsSet('ac:version',VER);
+    }
+    S.clients=lsGet('ac:clients')||CLIENTS_DEF;
+    S.users=lsGet('ac:users')||USERS_DEF;
+    S.plans=lsGet('ac:plans')||PLANS_DEF;
+    S.terms=lsGet('ac:terms')||TERMS_DEF;
+    S.audit=lsGet('ac:audit')||[];
+    S.sheetsConnected=false;
+    console.log('💾 Modo local. Clientes:',S.clients.length);
+  }
+  showLoadingScreen(false);
+}
+
+function addAudit(action,detail,clientId=''){
+  if(!S.session)return;
+  const entry={id:'a'+Date.now(),ts:new Date().toISOString(),userId:S.session.id,userName:S.session.nombre,userRole:S.session.role,action,detail,clientId};
+  S.audit.push(entry);lsSet('ac:audit',S.audit);
+  if(S.sheetsConnected)writeToSheets('addAudit',entry);
+}
 // ═══════════════════ STATE ═══════════════════
 const S={
   clients:[],users:[],plans:{},terms:[],audit:[],
@@ -621,51 +749,8 @@ function lsGet(k){try{return JSON.parse(localStorage.getItem(k));}catch{return n
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
 
 // ── JSONP: bypasses CORS — único método que funciona con Apps Script ──
-function jsonpGet(action){
-  return new Promise((resolve,reject)=>{
-    if(OFFLINE_MODE||!API_URL||API_URL.startsWith('TU_')){resolve(null);return;}
-    const cbName='_ac_cb_'+Date.now();
-    const timeout=setTimeout(()=>{
-      delete window[cbName];
-      const s=document.getElementById(cbName);
-      if(s)s.remove();
-      reject(new Error('timeout'));
-    },15000);
-    window[cbName]=function(data){
-      clearTimeout(timeout);
-      delete window[cbName];
-      const s=document.getElementById(cbName);
-      if(s)s.remove();
-      resolve(data&&data.ok?data:null);
-    };
-    const s=document.createElement('script');
-    s.id=cbName;
-    s.src=`${API_URL}?action=${action}&token=${API_TOKEN}&callback=${cbName}`;
-    s.onerror=()=>{clearTimeout(timeout);delete window[cbName];s.remove();reject(new Error('script error'));};
-    document.head.appendChild(s);
-  });
-}
 
 // ── POST via fetch (funciona para escritura, CORS no es problema en POST simple) ──
-async function apiGet(action){
-  if(OFFLINE_MODE||!API_URL||API_URL.startsWith('TU_'))return null;
-  try{
-    // Intentar JSONP primero
-    const data=await jsonpGet(action);
-    return data;
-  }catch(e){
-    console.warn('JSONP falló, intentando fetch:',e);
-    try{
-      const url=`${API_URL}?action=${action}&token=${API_TOKEN}`;
-      const res=await fetch(url,{redirect:'follow'});
-      const text=await res.text();
-      const match=text.match(/\{[\s\S]*\}/);
-      if(!match)return null;
-      const data=JSON.parse(match[0]);
-      return data.ok?data:null;
-    }catch(e2){console.warn('fetch también falló:',e2);return null;}
-  }
-}
 
 async function apiPost(body){
   if(OFFLINE_MODE||!API_URL||API_URL.startsWith('TU_'))return null;
@@ -828,32 +913,6 @@ async function initState(){
 }
 
 // ── JSONP write — único método que cruza CORS con Apps Script ──
-function jsonpPost(params){
-  return new Promise((resolve)=>{
-    if(OFFLINE_MODE||!API_URL||API_URL.startsWith('TU_')){resolve(null);return;}
-    const cbName='_ac_w_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-    const timeout=setTimeout(()=>{
-      delete window[cbName];
-      const s=document.getElementById(cbName);
-      if(s)s.remove();
-      resolve(null);
-    },10000);
-    window[cbName]=function(data){
-      clearTimeout(timeout);
-      delete window[cbName];
-      const s=document.getElementById(cbName);
-      if(s)s.remove();
-      resolve(data);
-    };
-    // Codificar parámetros como GET para evitar CORS
-    const encoded=encodeURIComponent(JSON.stringify(params));
-    const s=document.createElement('script');
-    s.id=cbName;
-    s.src=`${API_URL}?token=${API_TOKEN}&callback=${cbName}&data=${encoded}`;
-    s.onerror=()=>{clearTimeout(timeout);delete window[cbName];s.remove();resolve(null);};
-    document.head.appendChild(s);
-  });
-}
 
 // ── SAVE: escribe en Sheets el registro específico + caché local ──
 function save(k,v){
@@ -861,28 +920,16 @@ function save(k,v){
 }
 
 // Guardar un cliente específico en Sheets
-function saveClientToSheets(c){
-  if(!S.sheetsConnected)return;
-  jsonpPost({action:'saveClient',data:c}).catch(()=>{});
-}
+
 
 // Guardar un usuario específico en Sheets
-function saveUserToSheets(u){
-  if(!S.sheetsConnected)return;
-  jsonpPost({action:'saveUser',data:u}).catch(()=>{});
-}
+
 
 // Guardar consumo específico en Sheets
-function saveConsumoToSheets(consumo){
-  if(!S.sheetsConnected)return;
-  jsonpPost({action:'addConsumo',data:consumo}).catch(()=>{});
-}
+
 
 // Eliminar consumo específico en Sheets
-function deleteConsumoFromSheets(id){
-  if(!S.sheetsConnected)return;
-  jsonpPost({action:'deleteConsumo',id}).catch(()=>{});
-}
+
 
 // ── Loading screen ──
 function showLoadingScreen(show){
@@ -965,13 +1012,7 @@ function auditBadge(action){
   return`<span class="ev-badge" style="background:${v.bg};color:${v.c}">${v.l}</span>`;
 }
 
-function addAudit(action,detail,clientId=''){
-  if(!S.session)return;
-  const entry={id:'a'+Date.now(),ts:new Date().toISOString(),userId:S.session.id,userName:S.session.nombre,userRole:S.session.role,action,detail,clientId};
-  S.audit.push(entry);
-  lsSet('ac:audit',S.audit);
-  if(S.sheetsConnected)apiPost({action:'addAudit',data:entry}).catch(()=>{});
-}
+// addAudit defined above
 
 // ═══════════════════ EMAIL SIMULATION ═══════════════════
 function simulateEmail(to,subject,htmlBody){
