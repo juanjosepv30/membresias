@@ -752,22 +752,6 @@ function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
 
 // ── POST via fetch (funciona para escritura, CORS no es problema en POST simple) ──
 
-async function apiPost(body){
-  if(OFFLINE_MODE||!API_URL||API_URL.startsWith('TU_'))return null;
-  try{
-    const res=await fetch(API_URL,{
-      method:'POST',
-      redirect:'follow',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({...body,token:API_TOKEN})
-    });
-    const text=await res.text();
-    const match=text.match(/\{[\s\S]*\}/);
-    if(!match)return null;
-    const data=JSON.parse(match[0]);
-    return data.ok?data:null;
-  }catch(e){console.warn('API POST error:',e);return null;}
-}
 
 // ── Normalizar fecha desde Sheets (puede venir como Date object, string ISO, o texto) ──
 function normalizeDate(val){
@@ -869,55 +853,8 @@ function sheetsToAudit(rows){
 }
 
 // ── INIT: load from Sheets or fallback to localStorage/seed ──
-async function initState(){
-  showLoadingScreen(true);
 
-  // Try Google Sheets first
-  if(!OFFLINE_MODE&&API_URL&&!API_URL.startsWith('TU_')){
-    try{
-      const res=await apiGet('getAll');
-      if(res){
-        console.log('Sheets raw clientes count:',res.clientes?.length);
-        console.log('Primer cliente raw:',JSON.stringify(res.clientes?.[0]));
-        S.clients = sheetsToClients(res.clientes||[], res.consumos||[]);
-        console.log('Clientes procesados:',S.clients.length);
-        console.log('Primer cliente procesado:',JSON.stringify(S.clients[0]));
-        S.users   = sheetsToUsers(res.usuarios||[]);
-        S.plans   = Object.keys(res.planes||{}).length>0 ? sheetsToPlans(res.planes) : PLANS_DEF;
-        S.terms   = (res.terminos||[]).map(r=>String(r.texto||r));
-        S.audit   = sheetsToAudit(res.auditoria||[]);
-        S.sheetsConnected=true;
-        // Cache locally as backup
-        lsSet('ac:clients',S.clients);lsSet('ac:users',S.users);
-        lsSet('ac:plans',S.plans);lsSet('ac:terms',S.terms);lsSet('ac:audit',S.audit);
-        showLoadingScreen(false);
-        return;
-      }
-    }catch(e){console.warn('Sheets load failed, falling back:',e);}
-  }
-
-  // Fallback: localStorage or seed data
-  const DATA_VERSION='2026-05-16-v1';
-  if(lsGet('ac:version')!==DATA_VERSION){
-    localStorage.removeItem('ac:clients');localStorage.removeItem('ac:users');
-    localStorage.removeItem('ac:plans');localStorage.removeItem('ac:terms');
-    lsSet('ac:version',DATA_VERSION);
-  }
-  S.clients = lsGet('ac:clients')||CLIENTS_DEF;
-  S.users   = lsGet('ac:users')||USERS_DEF;
-  S.plans   = lsGet('ac:plans')||PLANS_DEF;
-  S.terms   = lsGet('ac:terms')||TERMS_DEF;
-  S.audit   = lsGet('ac:audit')||[];
-  S.sheetsConnected=false;
-  showLoadingScreen(false);
-}
-
-// ── JSONP write — único método que cruza CORS con Apps Script ──
-
-// ── SAVE: escribe en Sheets el registro específico + caché local ──
-function save(k,v){
-  lsSet('ac:'+k,v); // siempre guarda localmente
-}
+/ ── SAVE: escribe en Sheets el registro específico + caché local ──
 
 // Guardar un cliente específico en Sheets
 
