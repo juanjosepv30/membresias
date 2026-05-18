@@ -601,12 +601,12 @@ const CLIENTS_DEF=[
 // ═══════════════════ CONFIGURACIÓN GOOGLE SHEETS ═══════════════════
 // ⚠️  REEMPLAZA esta URL con la URL de tu Google Apps Script desplegado
 // La obtienes en Apps Script → Implementar → Gestionar implementaciones → copiar URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbzdp7AcvPqImgQAVeSrLTYvZtBGSCx1EuciV9PRZJTDB-_iHWbk8ImW48Y_Eu02YiSr/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyetB55p-_zJoXOAEkfGXdlduE2haRyYQQ5iln6hTX76OqSbwVpJUqfFNd3_JxeErUX/exec';
 const API_TOKEN = 'animalcenter2024secret'; // debe coincidir con SECRET_TOKEN en Apps Script
 
 // Modo offline: true = usa datos locales (localStorage), false = usa Google Sheets
 // Cambia a false una vez que tengas Apps Script configurado
-const OFFLINE_MODE = true;
+const OFFLINE_MODE = false;
 
 // ═══════════════════ STATE ═══════════════════
 const S={
@@ -827,19 +827,61 @@ async function initState(){
   showLoadingScreen(false);
 }
 
-// ── SAVE: write to Sheets AND local cache ──
-function save(k,v){
-  // Always keep local cache
-  lsSet('ac:'+k,v);
+// ── JSONP write — único método que cruza CORS con Apps Script ──
+function jsonpPost(params){
+  return new Promise((resolve)=>{
+    if(OFFLINE_MODE||!API_URL||API_URL.startsWith('TU_')){resolve(null);return;}
+    const cbName='_ac_w_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    const timeout=setTimeout(()=>{
+      delete window[cbName];
+      const s=document.getElementById(cbName);
+      if(s)s.remove();
+      resolve(null);
+    },10000);
+    window[cbName]=function(data){
+      clearTimeout(timeout);
+      delete window[cbName];
+      const s=document.getElementById(cbName);
+      if(s)s.remove();
+      resolve(data);
+    };
+    // Codificar parámetros como GET para evitar CORS
+    const encoded=encodeURIComponent(JSON.stringify(params));
+    const s=document.createElement('script');
+    s.id=cbName;
+    s.src=`${API_URL}?token=${API_TOKEN}&callback=${cbName}&data=${encoded}`;
+    s.onerror=()=>{clearTimeout(timeout);delete window[cbName];s.remove();resolve(null);};
+    document.head.appendChild(s);
+  });
+}
 
-  // Also push to Sheets asynchronously (fire and forget)
-  if(S.sheetsConnected){
-    if(k==='clients') v.forEach(c=>apiPost({action:'saveClient',data:c}));
-    if(k==='users')   v.forEach(u=>apiPost({action:'saveUser',data:u}));
-    if(k==='plans')   Object.values(v).forEach(p=>apiPost({action:'savePlan',data:p}));
-    if(k==='terms')   apiPost({action:'saveTerminos',data:v});
-    if(k==='audit')   {/* audit uses addAudit directly */}
-  }
+// ── SAVE: escribe en Sheets el registro específico + caché local ──
+function save(k,v){
+  lsSet('ac:'+k,v); // siempre guarda localmente
+}
+
+// Guardar un cliente específico en Sheets
+function saveClientToSheets(c){
+  if(!S.sheetsConnected)return;
+  jsonpPost({action:'saveClient',data:c}).catch(()=>{});
+}
+
+// Guardar un usuario específico en Sheets
+function saveUserToSheets(u){
+  if(!S.sheetsConnected)return;
+  jsonpPost({action:'saveUser',data:u}).catch(()=>{});
+}
+
+// Guardar consumo específico en Sheets
+function saveConsumoToSheets(consumo){
+  if(!S.sheetsConnected)return;
+  jsonpPost({action:'addConsumo',data:consumo}).catch(()=>{});
+}
+
+// Eliminar consumo específico en Sheets
+function deleteConsumoFromSheets(id){
+  if(!S.sheetsConnected)return;
+  jsonpPost({action:'deleteConsumo',id}).catch(()=>{});
 }
 
 // ── Loading screen ──
@@ -1409,6 +1451,9 @@ function saveNewClient(){
   const newU={id:'u'+Date.now(),username,password,role:'cliente',nombre:nom,correo,clientId:newId,active:true};
   S.clients.push(newC);S.users.push(newU);
   save('clients',S.clients);save('users',S.users);
+  // Guardar en Google Sheets solo los registros nuevos
+  saveClientToSheets(newC);
+  saveUserToSheets(newU);
   addAudit('Crear cliente',nom+' — CC: '+cc+' — Plan: '+_ncPlan,newId);
   addAudit('Crear usuario','@'+username+' (cliente) para: '+nom,newId);
   // Send welcome email
