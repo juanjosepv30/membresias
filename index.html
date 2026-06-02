@@ -389,7 +389,7 @@ tbody tr:hover{background:var(--cream)}
 // ════════════════════════════════════════════
 // CONFIG — cambia estas dos líneas
 // ════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMEXq-UxK1IGxQCi8NldF7IRHjlj5es5rNaE_WeIXJUqNauphG-jJ8Q8tW7mV64jZZ/exec'; // pega tu URL de Apps Script
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMEXq-UxK1IGxQCi8NldF7IRHjlj5es5rNaE_WeIXJUqNauphG-jJ8Q8tW7mV64jZZ/exec';
 const API_TOKEN  = 'animalcenter2024secret';
 
 // ════════════════════════════════════════════
@@ -824,9 +824,16 @@ function openNuevoCliente(){
         <input type="date" id="nc-inicio" value="${new Date().toISOString().slice(0,10)}">
       </div>
     </div>
-    <div class="form-group">
-      <label>Teléfono</label>
-      <input type="text" id="nc-tel" placeholder="3XX XXX XXXX">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="text" id="nc-tel" placeholder="3XX XXX XXXX">
+      </div>
+      <div class="form-group">
+        <label>Correo electrónico *</label>
+        <input type="email" id="nc-email" placeholder="cliente@correo.com">
+        <div class="form-hint">Se usará para enviar notificaciones de consumo</div>
+      </div>
     </div>
     <div id="plan-info-box"></div>
     <div class="modal-footer">
@@ -857,15 +864,16 @@ async function guardarCliente(){
   const plan    = document.getElementById('nc-plan').value;
   const inicio  = document.getElementById('nc-inicio').value;
   const tel     = document.getElementById('nc-tel').value.trim();
+  const email   = document.getElementById('nc-email').value.trim();
 
-  if(!nombre||!cedula||!mascota||!inicio){
+  if(!nombre||!cedula||!mascota||!inicio||!email){
     toast('Completa los campos obligatorios (*)','error'); return;
   }
 
   const creds = genCredenciales(nombre, cedula, mascota);
   const cliente = {
     id: genId(),
-    nombre, cedula, mascota, especie, plan, tel,
+    nombre, cedula, mascota, especie, plan, tel, email,
     fechaInicio: inicio,
     fechaFin: addDays(inicio, 365),
     usuario: creds.usuario,
@@ -881,13 +889,14 @@ async function guardarCliente(){
     hideLoading();
     // Mostrar credenciales
     openModal('✅ Cliente registrado', `
-      <p style="margin-bottom:12px">El cliente fue registrado exitosamente en 365 días de membresía.</p>
+      <p style="margin-bottom:12px">El cliente fue registrado exitosamente con 365 días de membresía.</p>
       <div class="cred-box">
         <h4>Credenciales de acceso al portal</h4>
         <div class="cred-row"><span class="cred-label">Usuario</span><span class="cred-value">${creds.usuario}</span></div>
         <div class="cred-row"><span class="cred-label">Contraseña</span><span class="cred-value">${creds.password}</span></div>
+        <div class="cred-row"><span class="cred-label">Correo</span><span class="cred-value" style="font-size:.8rem">${email}</span></div>
       </div>
-      <p style="font-size:.78rem;color:var(--muted);margin-top:12px">Comparte estas credenciales con el cliente para que pueda ver sus servicios.</p>
+      <p style="font-size:.78rem;color:var(--muted);margin-top:12px">Las notificaciones de consumo se enviarán automáticamente a este correo.</p>
       <div class="modal-footer" style="margin-top:16px">
         <button class="btn-save" onclick="closeModal();renderPage('clientes')">Entendido</button>
       </div>
@@ -991,22 +1000,29 @@ function openRegistrarConsumo(clienteId){
     return `<button class="service-btn ${depleted||noIncluded?'depleted':''}" 
       id="svc-btn-${k}"
       ${depleted||noIncluded?'disabled':''}
-      onclick="selectSvc('${k}')">
-      <div class="svc-name">${v.icon} ${v.label}</div>
-      <div class="svc-left ${noIncluded?'none':depleted?'none':''}">${
-        noIncluded?'No incluido en este plan':
-        depleted?'Sin usos disponibles':
-        `${r} de ${v.total} restantes`
-      }</div>
+      onclick="toggleSvc('${k}',${depleted||noIncluded})">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="svc-check" id="svc-check-${k}" style="width:18px;height:18px;border-radius:4px;
+          border:2px solid var(--border);display:flex;align-items:center;justify-content:center;
+          flex-shrink:0;font-size:.7rem;background:var(--white)"></span>
+        <div>
+          <div class="svc-name">${v.icon} ${v.label}</div>
+          <div class="svc-left ${noIncluded?'none':depleted?'none':''}">${
+            noIncluded?'No incluido en este plan':
+            depleted?'Sin usos disponibles':
+            `${r} de ${v.total} restantes`
+          }</div>
+        </div>
+      </div>
     </button>`;
   }).join('');
 
-  openModal(`Registrar servicio — ${c.nombre}`, `
+  openModal(`Registrar servicios — ${c.nombre}`, `
     <p style="color:var(--muted);margin-bottom:16px;font-size:.88rem">
-      ${pillPlan(c.plan)} · ${c.mascota}
+      ${pillPlan(c.plan)} · ${c.mascota} · Puedes seleccionar varios servicios a la vez
     </p>
     <div class="form-group">
-      <label>Selecciona el servicio</label>
+      <label>Selecciona los servicios <span id="svc-count-label" style="color:var(--plum-mid);font-size:.8rem"></span></label>
       <div class="service-grid">${btns}</div>
     </div>
     <div class="form-group">
@@ -1017,29 +1033,53 @@ function openRegistrarConsumo(clienteId){
       <label>Notas (opcional)</label>
       <textarea id="svc-notas" placeholder="Observaciones, medicamentos, etc."></textarea>
     </div>
-    <input type="hidden" id="svc-selected" value="">
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-      <button class="btn-save" id="btn-guardar-svc" onclick="guardarConsumo('${clienteId}')" disabled>Guardar servicio</button>
+      <button class="btn-save" id="btn-guardar-svc" onclick="guardarConsumo('${clienteId}')" disabled>
+        Guardar <span id="btn-svc-label">servicios</span>
+      </button>
     </div>
   `);
+  // set de seleccionados
+  window._svcSeleccionados = new Set();
 }
 
-function selectSvc(k){
-  document.querySelectorAll('.service-btn').forEach(b=>b.classList.remove('selected'));
-  const btn = document.getElementById('svc-btn-'+k);
-  if(btn) btn.classList.add('selected');
-  document.getElementById('svc-selected').value = k;
-  document.getElementById('btn-guardar-svc').disabled = false;
+function toggleSvc(k, disabled){
+  if(disabled) return;
+  const sel = window._svcSeleccionados;
+  const check = document.getElementById('svc-check-'+k);
+  const btn   = document.getElementById('svc-btn-'+k);
+  if(sel.has(k)){
+    sel.delete(k);
+    btn.classList.remove('selected');
+    check.textContent='';
+    check.style.background='var(--white)';
+    check.style.borderColor='var(--border)';
+  } else {
+    sel.add(k);
+    btn.classList.add('selected');
+    check.textContent='✓';
+    check.style.background='var(--plum)';
+    check.style.borderColor='var(--plum)';
+    check.style.color='white';
+  }
+  const n = sel.size;
+  document.getElementById('btn-guardar-svc').disabled = n===0;
+  document.getElementById('svc-count-label').textContent = n>0?`(${n} seleccionado${n>1?'s':''})` : '';
+  document.getElementById('btn-svc-label').textContent = n>1?`${n} servicios`:'servicio';
 }
 
 async function guardarConsumo(clienteId){
-  const svc   = document.getElementById('svc-selected').value;
+  const svcs  = Array.from(window._svcSeleccionados||[]);
   const fecha = document.getElementById('svc-fecha').value;
   const notas = document.getElementById('svc-notas').value.trim();
-  if(!svc){ toast('Selecciona un servicio','error'); return; }
+  if(!svcs.length){ toast('Selecciona al menos un servicio','error'); return; }
 
-  const consumo = {
+  const cliente = state.clientes.find(x=>x.id===clienteId);
+  const plan    = PLANES[cliente?.plan];
+
+  // Crear un consumo por cada servicio seleccionado
+  const nuevos = svcs.map(svc=>({
     id: genId(),
     clienteId,
     servicio: svc,
@@ -1047,15 +1087,17 @@ async function guardarConsumo(clienteId){
     notas,
     registradoPor: state.session.nombre,
     creadoEn: new Date().toISOString()
-  };
+  }));
 
   showLoading();
   try {
-    await apiCall('addConsumo', {consumo});
-    state.consumos.push(consumo);
+    // Guardar todos en paralelo
+    await Promise.all(nuevos.map(co=>apiCall('addConsumo',{consumo:co, notificarEmail:true})));
+    nuevos.forEach(co=>state.consumos.push(co));
+
     closeModal();
     hideLoading();
-    toast('✅ Servicio registrado correctamente');
+    toast(`✅ ${svcs.length} servicio${svcs.length>1?'s':''} registrado${svcs.length>1?'s':''} · Notificación enviada al cliente`);
     renderClientTable();
   } catch(e){
     hideLoading();
