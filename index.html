@@ -399,26 +399,24 @@ const PLANES = {
   Gold: {
     label:'Gold', icon:'🥇', pill:'pill-gold',
     color:'gold', precio:0,
-    // Excel (izq→der): CONS1,CONS2,CONS3,CONS4 | CONS_ESP1,CONS_ESP2 | PARCIAL_ORINA | ECO | RX | CHEM10 | VACUNA
     servicios:{
       consultas:    {label:'Consultas',              icon:'🩺',  total:4},
       consultaEsp:  {label:'Consulta especializada', icon:'👨‍⚕️', total:2},
       parcialOrina: {label:'Parcial de orina',       icon:'🧫',  total:1},
       ecografias:   {label:'Ecografía',              icon:'🔬',  total:1},
       rayosX:       {label:'Rayos X',                icon:'☢️',  total:1},
-      laboratorio:  {label:'Exámenes de sangre',     icon:'🧪',  total:1},
+      laboratorio:  {label:'Exámenes de sangre',     icon:'🧪',  total:10, cantidadVariable:true},
       vacunas:      {label:'Vacuna',                 icon:'💉',  total:1},
     }
   },
   Silver: {
     label:'Silver', icon:'🥈', pill:'pill-silver',
     color:'silver', precio:0,
-    // Excel (izq→der): CONS1,CONS2,CONS3 | CONS_ESP1 | ECO | CHEM6 | VACUNA
     servicios:{
       consultas:    {label:'Consultas',              icon:'🩺',  total:3},
       consultaEsp:  {label:'Consulta especializada', icon:'👨‍⚕️', total:1},
       ecografias:   {label:'Ecografía',              icon:'🔬',  total:1},
-      laboratorio:  {label:'Exámenes de sangre',     icon:'🧪',  total:1},
+      laboratorio:  {label:'Exámenes de sangre',     icon:'🧪',  total:6, cantidadVariable:true},
       vacunas:      {label:'Vacuna',                 icon:'💉',  total:1},
     }
   },
@@ -611,7 +609,11 @@ function consumosPorCliente(clienteId){
 function serviciosUsados(clienteId){
   const usados = {};
   consumosPorCliente(clienteId).forEach(c=>{
-    usados[c.servicio] = (usados[c.servicio]||0) + 1;
+    // Para laboratorio sumamos la cantidad; para el resto cuenta como 1
+    const plan = state.clientes.find(x=>x.id===clienteId)?.plan;
+    const svcDef = plan ? PLANES[plan]?.servicios[c.servicio] : null;
+    const inc = (svcDef?.cantidadVariable && c.cantidad) ? Number(c.cantidad) : 1;
+    usados[c.servicio] = (usados[c.servicio]||0) + inc;
   });
   return usados;
 }
@@ -1007,13 +1009,13 @@ function openRegistrarConsumo(clienteId){
     return `<button class="service-btn ${depleted||noIncluded?'depleted':''}" 
       id="svc-btn-${k}"
       ${depleted||noIncluded?'disabled':''}
-      onclick="toggleSvc('${k}',${depleted||noIncluded})">
+      onclick="toggleSvc('${k}',${depleted||noIncluded},${!!v.cantidadVariable},${r||0})">
       <div style="display:flex;align-items:center;gap:8px">
         <span class="svc-check" id="svc-check-${k}" style="width:18px;height:18px;border-radius:4px;
           border:2px solid var(--border);display:flex;align-items:center;justify-content:center;
           flex-shrink:0;font-size:.7rem;background:var(--white)"></span>
         <div>
-          <div class="svc-name">${v.icon} ${v.label}</div>
+          <div class="svc-name">${v.icon} ${v.label}${v.cantidadVariable?' <span style="font-size:.7rem;background:var(--plum);color:#fff;padding:1px 6px;border-radius:8px;margin-left:4px">cantidad variable</span>':''}</div>
           <div class="svc-left ${noIncluded?'none':depleted?'none':''}">${
             noIncluded?'No incluido en este plan':
             depleted?'Sin usos disponibles':
@@ -1032,6 +1034,22 @@ function openRegistrarConsumo(clienteId){
       <label>Selecciona los servicios <span id="svc-count-label" style="color:var(--plum-mid);font-size:.8rem"></span></label>
       <div class="service-grid">${btns}</div>
     </div>
+    <div id="lab-cantidad-box" style="display:none;margin-bottom:16px">
+      <div style="background:var(--morada-lt);border:1px solid var(--lavender);border-radius:10px;padding:14px 16px">
+        <label style="display:block;font-size:.78rem;font-weight:700;color:var(--plum);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">
+          🧪 ¿Cuántos exámenes de sangre se realizaron?
+        </label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button onclick="ajustarLab(-1)" style="width:34px;height:34px;border-radius:8px;border:2px solid var(--plum-lt);background:var(--white);font-size:1.2rem;cursor:pointer;color:var(--plum);font-weight:700;display:flex;align-items:center;justify-content:center">−</button>
+          <input type="number" id="lab-cantidad" min="1" max="10" value="1"
+            style="width:64px;text-align:center;border:2px solid var(--plum-lt);border-radius:8px;
+            padding:6px;font-size:1.1rem;font-weight:700;color:var(--plum);font-family:'DM Sans',sans-serif"
+            oninput="validarLab()">
+          <button onclick="ajustarLab(1)" style="width:34px;height:34px;border-radius:8px;border:2px solid var(--plum-lt);background:var(--white);font-size:1.2rem;cursor:pointer;color:var(--plum);font-weight:700;display:flex;align-items:center;justify-content:center">+</button>
+          <span id="lab-restantes-info" style="font-size:.82rem;color:var(--muted);margin-left:4px"></span>
+        </div>
+      </div>
+    </div>
     <div class="form-group">
       <label>Fecha del servicio</label>
       <input type="date" id="svc-fecha" value="${new Date().toISOString().slice(0,10)}">
@@ -1047,11 +1065,31 @@ function openRegistrarConsumo(clienteId){
       </button>
     </div>
   `);
-  // set de seleccionados
   window._svcSeleccionados = new Set();
+  window._labMaxRestantes = 0;
 }
 
-function toggleSvc(k, disabled){
+function ajustarLab(delta){
+  const inp = document.getElementById('lab-cantidad');
+  if(!inp) return;
+  const max = window._labMaxRestantes || 10;
+  inp.value = Math.min(max, Math.max(1, (parseInt(inp.value)||1) + delta));
+  validarLab();
+}
+
+function validarLab(){
+  const inp = document.getElementById('lab-cantidad');
+  const max = window._labMaxRestantes || 10;
+  if(!inp) return;
+  let v = parseInt(inp.value)||1;
+  if(v < 1) v = 1;
+  if(v > max) v = max;
+  inp.value = v;
+  const info = document.getElementById('lab-restantes-info');
+  if(info) info.textContent = `máx. disponibles: ${max}`;
+}
+
+function toggleSvc(k, disabled, esVariable, restantes){
   if(disabled) return;
   const sel = window._svcSeleccionados;
   const check = document.getElementById('svc-check-'+k);
@@ -1070,6 +1108,18 @@ function toggleSvc(k, disabled){
     check.style.borderColor='var(--plum)';
     check.style.color='white';
   }
+  // Mostrar/ocultar campo de cantidad para laboratorio
+  const labBox = document.getElementById('lab-cantidad-box');
+  if(labBox){
+    const labSeleccionado = sel.has('laboratorio');
+    labBox.style.display = labSeleccionado ? 'block' : 'none';
+    if(labSeleccionado && esVariable){
+      window._labMaxRestantes = restantes;
+      const inp = document.getElementById('lab-cantidad');
+      if(inp){ inp.max = restantes; inp.value = 1; }
+      validarLab();
+    }
+  }
   const n = sel.size;
   document.getElementById('btn-guardar-svc').disabled = n===0;
   document.getElementById('svc-count-label').textContent = n>0?`(${n} seleccionado${n>1?'s':''})` : '';
@@ -1085,26 +1135,28 @@ async function guardarConsumo(clienteId){
   const cliente = state.clientes.find(x=>x.id===clienteId);
   const plan    = PLANES[cliente?.plan];
 
-  // Crear un consumo por cada servicio seleccionado
-  const nuevos = svcs.map(svc=>({
-    id: genId(),
-    clienteId,
-    servicio: svc,
-    fecha,
-    notas,
-    registradoPor: state.session.nombre,
-    creadoEn: new Date().toISOString()
-  }));
+  const nuevos = svcs.map(svc=>{
+    const svcDef = plan?.servicios[svc];
+    // Para laboratorio, leer la cantidad digitada
+    const cantidad = (svcDef?.cantidadVariable && svcs.includes('laboratorio') && svc==='laboratorio')
+      ? (parseInt(document.getElementById('lab-cantidad')?.value)||1)
+      : 1;
+    return {
+      id: genId(), clienteId, servicio: svc, fecha,
+      cantidad, notas,
+      registradoPor: state.session.nombre,
+      creadoEn: new Date().toISOString()
+    };
+  });
 
   showLoading();
   try {
-    // Guardar todos en paralelo
     await Promise.all(nuevos.map(co=>apiCall('addConsumo',{consumo:co, notificarEmail:true})));
     nuevos.forEach(co=>state.consumos.push(co));
-
-    closeModal();
-    hideLoading();
-    toast(`✅ ${svcs.length} servicio${svcs.length>1?'s':''} registrado${svcs.length>1?'s':''} · Notificación enviada al cliente`);
+    closeModal(); hideLoading();
+    const labNuevo = nuevos.find(c=>c.servicio==='laboratorio');
+    const labMsg   = labNuevo && labNuevo.cantidad>1 ? ` (${labNuevo.cantidad} exámenes de sangre)` : '';
+    toast(`✅ ${svcs.length} servicio${svcs.length>1?'s':''} registrado${svcs.length>1?'s':''}${labMsg} · Notificación enviada`);
     renderClientTable();
   } catch(e){
     hideLoading();
