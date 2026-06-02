@@ -399,35 +399,34 @@ const PLANES = {
   Gold: {
     label:'Gold', icon:'🥇', pill:'pill-gold',
     color:'gold', precio:0,
+    // Excel (izq→der): CONS1,CONS2,CONS3,CONS4 | CONS_ESP1,CONS_ESP2 | PARCIAL_ORINA | ECO | RX | CHEM10 | VACUNA
     servicios:{
-      consultas:{label:'Consultas',icon:'🩺',total:4},
-      ecografias:{label:'Ecografías',icon:'🔬',total:2},
-      laboratorio:{label:'Laboratorio',icon:'🧪',total:2},
-      vacunas:{label:'Vacunas',icon:'💉',total:2},
-      rayosX:{label:'Rayos X',icon:'☢️',total:1}
+      consultas:    {label:'Consultas',              icon:'🩺',  total:4},
+      consultaEsp:  {label:'Consulta especializada', icon:'👨‍⚕️', total:2},
+      parcialOrina: {label:'Parcial de orina',       icon:'🧫',  total:1},
+      ecografias:   {label:'Ecografía',              icon:'🔬',  total:1},
+      rayosX:       {label:'Rayos X',                icon:'☢️',  total:1},
+      laboratorio:  {label:'Exámenes de sangre',     icon:'🧪',  total:1},
+      vacunas:      {label:'Vacuna',                 icon:'💉',  total:1},
     }
   },
   Silver: {
     label:'Silver', icon:'🥈', pill:'pill-silver',
     color:'silver', precio:0,
+    // Excel (izq→der): CONS1,CONS2,CONS3 | CONS_ESP1 | ECO | CHEM6 | VACUNA
     servicios:{
-      consultas:{label:'Consultas',icon:'🩺',total:3},
-      ecografias:{label:'Ecografías',icon:'🔬',total:1},
-      laboratorio:{label:'Laboratorio',icon:'🧪',total:1},
-      vacunas:{label:'Vacunas',icon:'💉',total:1},
-      rayosX:{label:'Rayos X',icon:'☢️',total:0}
+      consultas:    {label:'Consultas',              icon:'🩺',  total:3},
+      consultaEsp:  {label:'Consulta especializada', icon:'👨‍⚕️', total:1},
+      ecografias:   {label:'Ecografía',              icon:'🔬',  total:1},
+      laboratorio:  {label:'Exámenes de sangre',     icon:'🧪',  total:1},
+      vacunas:      {label:'Vacuna',                 icon:'💉',  total:1},
     }
   },
   Morada: {
     label:'Morada', icon:'💜', pill:'pill-morada',
     color:'morada', precio:0,
-    servicios:{
-      consultas:{label:'Consultas',icon:'🩺',total:2},
-      ecografias:{label:'Ecografías',icon:'🔬',total:0},
-      laboratorio:{label:'Laboratorio',icon:'🧪',total:0},
-      vacunas:{label:'Vacunas',icon:'💉',total:1},
-      rayosX:{label:'Rayos X',icon:'☢️',total:0}
-    }
+    soloDescuentos: true,
+    servicios:{} // Sin servicios incluidos — plan de descuentos
   }
 };
 
@@ -773,7 +772,7 @@ function renderClientTable(){
       <td>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn-icon" onclick="verCliente('${c.id}')">👁 Ver</button>
-          ${isStaff?`<button class="btn-icon" onclick="openRegistrarConsumo('${c.id}')">＋ Servicio</button>`:''}
+          ${isStaff && !PLANES[c.plan]?.soloDescuentos ?`<button class="btn-icon" onclick="openRegistrarConsumo('${c.id}')">＋ Servicio</button>`:''}
           ${state.session.rol==='admin'?`<button class="btn-icon danger" onclick="eliminarCliente('${c.id}')">🗑</button>`:''}
         </div>
       </td>
@@ -920,23 +919,31 @@ function verCliente(id){
   const usados = serviciosUsados(id);
   const consumos = consumosPorCliente(id).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
 
-  const svcsHTML = Object.entries(plan.servicios).map(([k,v])=>{
-    const usado = usados[k]||0;
-    const resto = Math.max(0, v.total-usado);
-    const pct   = v.total ? Math.round((resto/v.total)*100) : 0;
-    const depleted = resto===0 && v.total>0;
-    const fillClass = pct<=25?'danger':pct<=60?'warn':'';
-    return `<div class="svc-card ${depleted?'depleted':''}">
-      <div class="svc-icon">${v.icon}</div>
-      <div class="svc-title">${v.label}</div>
-      ${v.total===0
-        ? `<div class="svc-count" style="font-size:1rem;color:var(--muted)">No incluido</div>`
-        : `<div class="svc-count">${resto}</div>
-           <div class="svc-total">de ${v.total} restantes</div>
-           <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${pct}%"></div></div>`
-      }
-    </div>`;
-  }).join('');
+  const esMorada = plan.soloDescuentos;
+
+  const svcsHTML = esMorada
+    ? `<div style="background:var(--morada-lt);border:1px solid var(--lavender);border-radius:12px;
+          padding:20px 24px;display:flex;align-items:center;gap:14px;margin-bottom:4px">
+        <div style="font-size:2rem">💜</div>
+        <div>
+          <div style="font-weight:700;color:var(--plum);margin-bottom:4px">Plan Morada · Membresía de descuentos</div>
+          <div style="font-size:.85rem;color:var(--muted)">Este plan incluye descuentos especiales en productos y servicios de Animal Center. No incluye servicios prepagados.</div>
+        </div>
+      </div>`
+    : Object.entries(plan.servicios).map(([k,v])=>{
+        const usado = usados[k]||0;
+        const resto = Math.max(0, v.total-usado);
+        const pct   = v.total ? Math.round((resto/v.total)*100) : 0;
+        const depleted = resto===0 && v.total>0;
+        const fillClass = pct<=25?'danger':pct<=60?'warn':'';
+        return `<div class="svc-card ${depleted?'depleted':''}">
+          <div class="svc-icon">${v.icon}</div>
+          <div class="svc-title">${v.label}</div>
+          <div class="svc-count">${resto}</div>
+          <div class="svc-total">de ${v.total} restantes</div>
+          <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('');
 
   const histHTML = consumos.length ? `
     <table>
@@ -969,14 +976,14 @@ function verCliente(id){
         </p>
       </div>
     </div>
-    <div class="section-title">Servicios incluidos</div>
-    <div class="services-grid">${svcsHTML}</div>
-    <div class="section-title">Historial de consumos</div>
-    <div class="table-card">${histHTML}</div>
+    <div class="section-title">${esMorada ? 'Beneficios del plan' : 'Servicios incluidos'}</div>
+    <div class="${esMorada ? '' : 'services-grid'}">${svcsHTML}</div>
+    ${!esMorada ? `<div class="section-title">Historial de consumos</div>
+    <div class="table-card">${histHTML}</div>` : ''}
     ${state.session.rol!=='cliente'?`
     <div class="modal-footer" style="margin-top:16px">
       <button class="btn-cancel" onclick="closeModal()">Cerrar</button>
-      <button class="btn-save" onclick="closeModal();openRegistrarConsumo('${c.id}')">＋ Registrar servicio</button>
+      ${!esMorada?`<button class="btn-save" onclick="closeModal();openRegistrarConsumo('${c.id}')">＋ Registrar servicio</button>`:''}
     </div>`:`
     <div class="modal-footer" style="margin-top:16px">
       <button class="btn-save" onclick="closeModal()">Cerrar</button>
@@ -1345,22 +1352,31 @@ function renderMiMembresia(c){
   const usados = serviciosUsados(clienteId);
   const consumos = consumosPorCliente(clienteId).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
 
-  const svcsHTML = Object.entries(plan.servicios).map(([k,v])=>{
-    const usado = usados[k]||0;
-    const resto = Math.max(0, v.total-usado);
-    const pct   = v.total ? Math.round((resto/v.total)*100) : 0;
-    const depleted = resto===0 && v.total>0;
-    const fillClass = pct<=25?'danger':pct<=60?'warn':'';
-    return `<div class="svc-card ${depleted?'depleted':''}">
-      <div class="svc-icon">${v.icon}</div>
-      <div class="svc-title">${v.label}</div>
-      ${v.total===0
-        ? `<div class="svc-count" style="font-size:1rem;color:var(--muted)">No incluido</div>`
-        : `<div class="svc-count">${resto}</div>
-           <div class="svc-total">de ${v.total} restantes</div>
-           <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${pct}%"></div></div>`}
-    </div>`;
-  }).join('');
+  const esMorada = plan.soloDescuentos;
+
+  const svcsHTML = esMorada
+    ? `<div style="background:var(--morada-lt);border:1px solid var(--lavender);border-radius:12px;
+          padding:20px 24px;display:flex;align-items:center;gap:14px;margin-bottom:4px">
+        <div style="font-size:2rem">💜</div>
+        <div>
+          <div style="font-weight:700;color:var(--plum);margin-bottom:4px">Plan Morada · Membresía de descuentos</div>
+          <div style="font-size:.85rem;color:var(--muted)">Tu membresía incluye descuentos especiales en productos y servicios de Animal Center. Preséntala en cada visita para aplicar tu beneficio.</div>
+        </div>
+      </div>`
+    : Object.entries(plan.servicios).map(([k,v])=>{
+        const usado = usados[k]||0;
+        const resto = Math.max(0, v.total-usado);
+        const pct   = v.total ? Math.round((resto/v.total)*100) : 0;
+        const depleted = resto===0 && v.total>0;
+        const fillClass = pct<=25?'danger':pct<=60?'warn':'';
+        return `<div class="svc-card ${depleted?'depleted':''}">
+          <div class="svc-icon">${v.icon}</div>
+          <div class="svc-title">${v.label}</div>
+          <div class="svc-count">${resto}</div>
+          <div class="svc-total">de ${v.total} restantes</div>
+          <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('');
 
   c.innerHTML = `
     <div class="detail-header">
@@ -1380,10 +1396,10 @@ function renderMiMembresia(c){
       </div>
     </div>
 
-    <div class="section-title">Mis servicios</div>
-    <div class="services-grid">${svcsHTML}</div>
+    <div class="section-title">${esMorada ? 'Beneficios del plan' : 'Mis servicios'}</div>
+    <div class="${esMorada ? '' : 'services-grid'}">${svcsHTML}</div>
 
-    <div class="section-title">Historial</div>
+    ${!esMorada ? `<div class="section-title">Historial</div>
     <div class="table-card">
       ${consumos.length?`
       <table>
@@ -1394,7 +1410,7 @@ function renderMiMembresia(c){
           <td style="font-size:.82rem;color:var(--muted)">${co.notas||'—'}</td>
         </tr>`).join('')}</tbody>
       </table>`:`<div class="empty-state" style="padding:32px"><div class="empty-icon">📋</div><p>Sin servicios registrados aún</p></div>`}
-    </div>
+    </div>` : ''}
   `;
 }
 </script>
