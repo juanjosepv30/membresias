@@ -329,7 +329,10 @@ tbody tr:hover{background:var(--cream)}
     </div>
     <div class="input-group">
       <label>Contraseña</label>
-      <input type="password" id="login-pass" placeholder="Tu contraseña" autocomplete="current-password">
+      <div style="position:relative">
+        <input type="password" id="login-pass" placeholder="Tu contraseña" autocomplete="current-password" style="width:100%;padding-right:62px">
+        <button type="button" onclick="togglePw('login-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.78rem;font-weight:700;color:rgba(255,255,255,.85)">Ver</button>
+      </div>
     </div>
     <button class="btn-primary" onclick="doLogin()">Ingresar</button>
     <p class="login-err" id="login-err"></p>
@@ -439,46 +442,32 @@ let state = {
 // AUTH (local — usuarios admin en código, 
 // clientes se cargan de Sheets)
 // ════════════════════════════════════════════
+// Staff ya NO se autentica aquí: las credenciales viven seguras en el backend (Code.gs).
+// Esta lista es SOLO para mostrar nombres en la pestaña Usuarios (sin contraseñas).
 const STAFF_USERS = [
-  {username:'admin',   pass:'admin2024',    rol:'admin',    nombre:'Administrador'},
-  {username:'personal',pass:'staff2024',   rol:'personal', nombre:'Personal'},
+  {username:'admin',    rol:'admin',    nombre:'Administrador'},
+  {username:'personal', rol:'personal', nombre:'Personal'},
 ];
 
-function doLogin(){
-  const u = document.getElementById('login-user').value.trim().toLowerCase();
+async function doLogin(){
+  const u = document.getElementById('login-user').value.trim();
   const p = document.getElementById('login-pass').value;
   const err = document.getElementById('login-err');
-  err.textContent = '';
-
-  // Staff
-  const staff = STAFF_USERS.find(x=>x.username===u && x.pass===p);
-  if(staff){
-    state.session = staff;
-    startApp();
-    return;
-  }
-
-  // Cliente — busca en clientes cargados
-  // (solo si ya se cargaron; si no, carga primero)
-  const tryClientLogin = () => {
-    const c = state.clientes.find(x=>
-      x.usuario && x.usuario.toLowerCase()===u && x.password===p
-    );
-    if(c){
-      state.session = {username:u, rol:'cliente', nombre:c.nombre, clienteId:c.id};
-      startApp();
+  err.textContent = 'Verificando…';
+  try {
+    // El SERVIDOR valida usuario y contraseña. Si es cliente, devuelve SOLO sus datos.
+    const r = await apiCall('login', { usuario: u, password: p });
+    if(r.role === 'cliente'){
+      state.session = { username:u.toLowerCase(), rol:'cliente', nombre:r.profile.nombre, clienteId:r.profile.id, token:r.token };
+      state.clientes = [r.profile];        // únicamente su propia ficha
+      state.consumos = r.consumos || [];   // únicamente sus consumos
     } else {
-      err.textContent = 'Usuario o contraseña incorrectos.';
+      state.session = { username:u.toLowerCase(), rol:r.role, nombre:r.nombre, token:r.token };
     }
-  };
-
-  if(state.clientes.length > 0){
-    tryClientLogin();
-  } else {
-    err.textContent = 'Verificando…';
-    loadFromSheets().then(()=>tryClientLogin()).catch(()=>{
-      err.textContent = 'Error de conexión. Verifica la configuración.';
-    });
+    err.textContent = '';
+    startApp();
+  } catch(e){
+    err.textContent = 'Usuario o contraseña incorrectos.';
   }
 }
 
@@ -498,8 +487,9 @@ function doLogout(){
 // GOOGLE SHEETS — API
 // ════════════════════════════════════════════
 async function apiCall(action, data={}){
-  const body = JSON.stringify({action, token: API_TOKEN, ...data});
-  // Usamos fetch normal — el Apps Script nuevo tiene headers CORS correctos
+  // Mandamos el token de SESIÓN (lo entrega el login). En el propio login aún no hay, va vacío.
+  const token = (state.session && state.session.token) ? state.session.token : '';
+  const body = JSON.stringify({action, token, ...data});
   const res = await fetch(SCRIPT_URL, {
     method:'POST',
     headers:{'Content-Type':'text/plain'}, // text/plain evita preflight
@@ -540,9 +530,15 @@ async function startApp(){
   document.getElementById('app').style.flexDirection = 'column';
   document.getElementById('topbar-user').textContent = state.session.nombre;
 
-  await loadFromSheets();
-  buildNav();
-  renderPage('clientes');
+  if(state.session.rol === 'cliente'){
+    // El cliente ya recibió SOLO sus datos en el login. No se pide getAll.
+    buildNav();
+    renderPage('mi-membresia');
+  } else {
+    await loadFromSheets();   // staff: trae todo, autorizado por su token de sesión
+    buildNav();
+    renderPage('clientes');
+  }
 }
 
 function buildNav(){
@@ -751,6 +747,14 @@ function renderClientTable(){
     const matchStatus = !clientFilter.status || st===clientFilter.status;
     return matchQ && matchPlan && matchStatus;
   });
+
+  // Ordenar por servicio cargado MÁS RECIENTE (desc); los que no tienen servicios van al final
+  const ultimoConsumo = {};
+  (state.consumos||[]).forEach(co=>{
+    const f = co.fecha ? new Date(co.fecha).getTime() : 0;
+    if(!isNaN(f) && (!ultimoConsumo[co.clienteId] || f > ultimoConsumo[co.clienteId])) ultimoConsumo[co.clienteId] = f;
+  });
+  list.sort((a,b)=> (ultimoConsumo[b.id]||0) - (ultimoConsumo[a.id]||0));
 
   document.getElementById('client-count').textContent = list.length;
   const tbody = document.getElementById('client-tbody');
@@ -1354,7 +1358,7 @@ function renderUsuarios(c){
               <td><code style="font-size:.85rem">${u.username}</code></td>
               <td>${u.nombre}</td>
               <td><span class="pill ${u.rol==='admin'?'pill-gold':'pill-silver'}">${u.rol}</span></td>
-              <td><code style="font-size:.82rem;color:var(--muted)">${u.pass}</code></td>
+              <td><code style="font-size:.82rem;color:var(--muted)">•••• (en backend)</code></td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -1378,7 +1382,7 @@ function renderUsuarios(c){
               <td>${c.nombre}</td>
               <td>${pillPlan(c.plan)}</td>
               <td><code style="font-size:.85rem">${c.usuario}</code></td>
-              <td><code style="font-size:.82rem;color:var(--muted)">${c.password}</code></td>
+              <td><code style="font-size:.82rem;color:var(--muted)">••••••</code></td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -1466,7 +1470,44 @@ function renderMiMembresia(c){
         </tr>`).join('')}</tbody>
       </table>`:`<div class="empty-state" style="padding:32px"><div class="empty-icon">📋</div><p>Sin servicios registrados aún</p></div>`}
     </div>` : ''}
+
+    <div class="section-title">Seguridad</div>
+    <div class="table-card" style="padding:20px 24px;max-width:460px">
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px">Cambiá tu contraseña cuando quieras. Mínimo 6 caracteres.</p>
+      <div class="form-group" style="margin-bottom:10px"><label>Contraseña actual</label><div style="position:relative"><input type="password" id="pw-actual" autocomplete="current-password" style="width:100%;padding-right:62px"><button type="button" onclick="togglePw('pw-actual',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--plum,#6B2FA0)">Ver</button></div></div>
+      <div class="form-group" style="margin-bottom:10px"><label>Nueva contraseña</label><div style="position:relative"><input type="password" id="pw-nueva" autocomplete="new-password" style="width:100%;padding-right:62px"><button type="button" onclick="togglePw('pw-nueva',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--plum,#6B2FA0)">Ver</button></div></div>
+      <div class="form-group" style="margin-bottom:14px"><label>Repetir nueva contraseña</label><div style="position:relative"><input type="password" id="pw-nueva2" autocomplete="new-password" style="width:100%;padding-right:62px"><button type="button" onclick="togglePw('pw-nueva2',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--plum,#6B2FA0)">Ver</button></div></div>
+      <button class="btn-primary" onclick="cambiarMiClave()">Cambiar contraseña</button>
+      <div id="pw-msg" style="font-size:.82rem;margin-top:10px"></div>
+    </div>
   `;
+}
+
+async function cambiarMiClave(){
+  const actual = document.getElementById('pw-actual').value;
+  const nueva  = document.getElementById('pw-nueva').value;
+  const nueva2 = document.getElementById('pw-nueva2').value;
+  const msg = document.getElementById('pw-msg');
+  if(!actual || !nueva){ msg.style.color='#C0392B'; msg.textContent='Completá los campos.'; return; }
+  if(nueva.length < 6){ msg.style.color='#C0392B'; msg.textContent='La nueva contraseña debe tener al menos 6 caracteres.'; return; }
+  if(nueva !== nueva2){ msg.style.color='#C0392B'; msg.textContent='Las contraseñas nuevas no coinciden.'; return; }
+  msg.style.color='var(--muted)'; msg.textContent='Guardando…';
+  try{
+    await apiCall('changePassword', { actual, nueva });
+    msg.style.color='#2D9B6F'; msg.textContent='Contraseña actualizada correctamente.';
+    ['pw-actual','pw-nueva','pw-nueva2'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
+  }catch(e){
+    msg.style.color='#C0392B';
+    msg.textContent = e.message==='clave_actual_incorrecta' ? 'La contraseña actual es incorrecta.' : ('Error: '+e.message);
+  }
+}
+
+function togglePw(id, btn){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const mostrar = el.type === 'password';
+  el.type = mostrar ? 'text' : 'password';
+  btn.textContent = mostrar ? 'Ocultar' : 'Ver';
 }
 </script>
 </body>
