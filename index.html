@@ -496,7 +496,13 @@ async function apiCall(action, data={}){
     body
   });
   const json = await res.json();
-  if(!json.ok) throw new Error(json.error || 'Error desconocido');
+  if(!json.ok){
+    if(json.error === 'no_autorizado'){
+      doLogout();
+      throw new Error('Sesión expirada. Iniciá sesión de nuevo.');
+    }
+    throw new Error(json.error || 'Error desconocido');
+  }
   return json;
 }
 
