@@ -357,6 +357,7 @@ tbody tr:hover{background:var(--cream)}
     </div>
     <div class="topbar-right">
       <span class="topbar-user" id="topbar-user"></span>
+      <button id="btn-cambiar-clave" class="btn-logout" onclick="openCambiarMiClave()" style="display:none">🔑 Mi clave</button>
       <button class="btn-logout" onclick="doLogout()">Salir</button>
     </div>
   </div>
@@ -571,6 +572,8 @@ async function startApp(){
   document.getElementById('app').style.display = 'flex';
   document.getElementById('app').style.flexDirection = 'column';
   document.getElementById('topbar-user').textContent = state.session.nombre;
+  const btnClave = document.getElementById('btn-cambiar-clave');
+  if(btnClave) btnClave.style.display = (state.session.rol === 'personal') ? '' : 'none';
 
   const rol = state.session.rol;
   if(rol === 'cliente'){
@@ -889,6 +892,9 @@ function renderClientTable(){
           ${(state.session.rol==='admin' || state.session.rol==='personal') ? `
             <button class="btn-icon" onclick="openEditarCliente('${c.id}')">✏️ Editar</button>
           ` : ''}
+          ${state.session.rol==='personal' ? `
+            <button class="btn-icon" onclick="verCredencialCliente('${c.id}')">🔑 Acceso</button>
+          ` : ''}
           ${state.session.rol==='admin' ? `
             <button class="btn-icon danger" onclick="eliminarCliente('${c.id}')">🗑</button>
           ` : ''}
@@ -1056,7 +1062,7 @@ function verCliente(id){
           <div class="svc-icon">${v.icon}</div>
           <div class="svc-title">${v.label}</div>
           <div class="svc-count">${resto}</div>
-          <div class="svc-total">de ${v.total} restantes</div>
+          <div class="svc-total">${resto} restante${resto!==1?'s':''} de ${v.total}</div>
           <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${pct}%"></div></div>
         </div>`;
       }).join('');
@@ -1409,7 +1415,7 @@ function openRegistrarConsumo(clienteId){
           <div class="svc-left ${noIncluded?'none':depleted?'none':''}">${
             noIncluded?'No incluido en este plan':
             depleted?'Sin usos disponibles':
-            `${r} de ${v.total} restantes`
+            `${r} restante${r!==1?'s':''} de ${v.total}`
           }</div>
         </div>
       </div>
@@ -2102,7 +2108,7 @@ function renderMiMembresia(c){
           <div class="svc-icon">${v.icon}</div>
           <div class="svc-title">${v.label}</div>
           <div class="svc-count">${resto}</div>
-          <div class="svc-total">de ${v.total} restantes</div>
+          <div class="svc-total">${resto} restante${resto!==1?'s':''} de ${v.total}</div>
           <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${pct}%"></div></div>
         </div>`;
       }).join('');
@@ -2169,6 +2175,77 @@ async function cambiarMiClave(){
   }catch(e){
     msg.style.color='#C0392B';
     msg.textContent = e.message==='clave_actual_incorrecta' ? 'La contraseña actual es incorrecta.' : ('Error: '+e.message);
+  }
+}
+
+function verCredencialCliente(id){
+  const c = state.clientes.find(x=>x.id===id);
+  if(!c) return;
+  const usuario = c.usuario || c.email || '—';
+  const pw = c.password || '(sin contraseña asignada)';
+  openModal(`🔑 Acceso — ${c.nombre}`, `
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:20px">Compartí estos datos con el cliente para que pueda ingresar al portal.</p>
+    <div style="background:var(--plum);border-radius:12px;padding:20px 24px;color:#fff">
+      <div style="font-size:.75rem;font-weight:600;opacity:.7;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px">Credenciales de acceso</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:.85rem;opacity:.8">Usuario</span>
+        <code style="background:rgba(255,255,255,.15);padding:4px 12px;border-radius:6px;font-size:.9rem">${usuario}</code>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:.85rem;opacity:.8">Contraseña</span>
+        <code id="cred-pw-${id}" style="background:rgba(255,255,255,.15);padding:4px 12px;border-radius:6px;font-size:.9rem">••••••••</code>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button class="btn-icon" style="flex:1;justify-content:center" onclick="
+        const el=document.getElementById('cred-pw-${id}');
+        const showing=el.textContent!=='••••••••';
+        el.textContent=showing?'••••••••':'${pw.replace(/'/g,"\\'")}';
+        this.textContent=showing?'👁 Ver contraseña':'🙈 Ocultar';
+      ">👁 Ver contraseña</button>
+      <button class="btn-cancel" onclick="closeModal()">Cerrar</button>
+    </div>
+  `);
+}
+
+function openCambiarMiClave(){
+  openModal('🔑 Cambiar mi contraseña', `
+    <div class="form-group">
+      <label>Contraseña actual</label>
+      <input type="password" id="mc-actual" autocomplete="current-password">
+    </div>
+    <div class="form-group">
+      <label>Nueva contraseña *</label>
+      <input type="password" id="mc-nueva" autocomplete="new-password" placeholder="Mínimo 6 caracteres">
+    </div>
+    <div class="form-group">
+      <label>Repetir nueva contraseña *</label>
+      <input type="password" id="mc-nueva2" autocomplete="new-password">
+    </div>
+    <div id="mc-msg" style="font-size:.82rem;margin-bottom:4px"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="guardarMiClaveStaff()">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarMiClaveStaff(){
+  const actual = document.getElementById('mc-actual').value;
+  const nueva  = document.getElementById('mc-nueva').value;
+  const nueva2 = document.getElementById('mc-nueva2').value;
+  const msg    = document.getElementById('mc-msg');
+  if(!actual || !nueva){ msg.style.color='var(--danger)'; msg.textContent='Completá todos los campos.'; return; }
+  if(nueva.length < 6){ msg.style.color='var(--danger)'; msg.textContent='Mínimo 6 caracteres.'; return; }
+  if(nueva !== nueva2){ msg.style.color='var(--danger)'; msg.textContent='Las contraseñas nuevas no coinciden.'; return; }
+  msg.style.color='var(--muted)'; msg.textContent='Guardando…';
+  try {
+    await apiCall('updateStaffPassword', { username: state.session.username, actual, nueva });
+    msg.style.color='var(--success)'; msg.textContent='✅ Contraseña actualizada correctamente.';
+    setTimeout(closeModal, 1500);
+  } catch(e){
+    msg.style.color='var(--danger)';
+    msg.textContent = e.message === 'clave_actual_incorrecta' ? 'La contraseña actual es incorrecta.' : 'Error: '+e.message;
   }
 }
 
