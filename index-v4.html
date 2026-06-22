@@ -597,7 +597,9 @@ function buildNav(){
     tabs.push({id:'terapias',label:'Pacientes',icon:'🐾'});
   } else {
     tabs.push({id:'clientes',label:'Clientes',icon:'👥'});
-    tabs.push({id:'vencimientos',label:'Vencimientos',icon:'⏰'});
+    if(rol==='personal'){
+      tabs.push({id:'vencimientos',label:'Vencimientos',icon:'⏰'});
+    }
     if(rol==='admin'){
       tabs.push({id:'terapias',label:'Terapias',icon:'🐾'});
       tabs.push({id:'dashboard',label:'Dashboard',icon:'📊'});
@@ -1901,44 +1903,87 @@ function renderDashboard(c, view){
 // PAGE: USUARIOS (admin)
 // ════════════════════════════════════════════
 function renderUsuarios(c){
+  // Staff comes from state.usuarios (returned by getAll from the Sheet)
+  const staff = (state.usuarios || []).filter(u => u.rol && u.rol !== 'cliente' && u.rol !== 'cliente_terapia');
+  const clientes = state.clientes.filter(cl => cl.usuario || cl.email);
+
+  const rolPill = rol => {
+    const map = { admin:'pill-gold', personal:'pill-silver', terapista:'pill-morada' };
+    return `<span class="pill ${map[rol]||'pill-silver'}">${rol}</span>`;
+  };
+
   c.innerHTML = `
-    <div class="table-card">
+    <!-- STAFF -->
+    <div class="table-card" style="margin-bottom:24px">
       <div class="table-header">
-        <h2>Gestión de usuarios staff</h2>
+        <h2>👥 Usuarios Staff · ${staff.length}</h2>
+        <div style="font-size:.8rem;color:var(--muted)">Credenciales guardadas en Google Sheets (pestaña Staff)</div>
       </div>
       <div style="overflow-x:auto">
         <table>
-          <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Contraseña</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Rol</th>
+              <th>Usuario</th>
+              <th>Contraseña</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
           <tbody>
-            ${STAFF_USERS.map(u=>`<tr>
-              <td><code style="font-size:.85rem">${u.username}</code></td>
-              <td>${u.nombre}</td>
-              <td><span class="pill ${u.rol==='admin'?'pill-gold':'pill-silver'}">${u.rol}</span></td>
-              <td><code style="font-size:.82rem;color:var(--muted)">•••• (en backend)</code></td>
-            </tr>`).join('')}
+            ${staff.length ? staff.map(u=>`<tr>
+              <td style="font-weight:600">${u.nombre||u.username||'—'}</td>
+              <td>${rolPill(u.rol)}</td>
+              <td><code style="font-size:.85rem;background:var(--cream);padding:2px 8px;border-radius:4px">${u.username||u.usuario||'—'}</code></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <code id="pw-staff-${u.username}" style="font-size:.85rem;background:var(--cream);padding:2px 8px;border-radius:4px;letter-spacing:.1em">${u.password ? '••••••••' : '(en Sheets)'}</code>
+                  ${u.password ? `<button class="btn-icon" onclick="toggleStaffPw('${u.username}','${u.password}',this)" style="font-size:.75rem">Ver</button>` : ''}
+                </div>
+              </td>
+              <td><button class="btn-icon" onclick="openCambiarClaveStaff('${u.username}','${u.nombre||u.username}')">🔑 Cambiar</button></td>
+            </tr>`).join('') : `<tr><td colspan="5">
+              <div class="empty-state" style="padding:32px">
+                <div class="empty-icon">👥</div>
+                <p>No se cargaron usuarios staff. Verificá que el sheet Staff tenga datos.</p>
+              </div>
+            </td></tr>`}
           </tbody>
         </table>
       </div>
     </div>
-    <div style="margin-top:20px;padding:16px;background:var(--morada-lt);border-radius:12px;
-      border:1px solid var(--lavender);font-size:.85rem;color:var(--plum)">
-      💡 Los usuarios de clientes se crean automáticamente al registrar un nuevo cliente. 
-      Para cambiar usuarios staff, edita el archivo HTML (sección STAFF_USERS).
-    </div>
-    <div class="table-card" style="margin-top:20px">
+
+    <!-- CLIENTES -->
+    <div class="table-card">
       <div class="table-header">
-        <h2>Clientes con acceso al portal · ${state.clientes.filter(c=>c.usuario).length}</h2>
-        <input class="search-box" placeholder="🔍 Buscar…" oninput="filterUsuariosCliente(this.value)">
+        <h2>🐾 Clientes con acceso al portal · ${clientes.length}</h2>
+        <input class="search-box" placeholder="🔍 Buscar nombre, email…" oninput="filterUsuariosCliente(this.value)">
       </div>
       <div style="overflow-x:auto">
         <table>
-          <thead><tr><th>Nombre</th><th>Plan</th><th>Usuario</th><th>Contraseña</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Plan</th>
+              <th>Mascota</th>
+              <th>Usuario (email)</th>
+              <th>Contraseña</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
           <tbody id="usuarios-tbody">
-            ${state.clientes.filter(c=>c.usuario).map(c=>`<tr>
-              <td>${c.nombre}</td>
-              <td>${pillPlan(c.plan)}</td>
-              <td><code style="font-size:.85rem">${c.usuario}</code></td>
-              <td><code style="font-size:.82rem;color:var(--muted)">••••••</code></td>
+            ${clientes.map(cl=>`<tr>
+              <td style="font-weight:600">${cl.nombre}</td>
+              <td>${pillPlan(cl.plan)}</td>
+              <td style="font-size:.82rem">${cl.mascota||'—'}</td>
+              <td><code style="font-size:.82rem;background:var(--cream);padding:2px 8px;border-radius:4px">${cl.usuario||cl.email||'—'}</code></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <code id="pw-cl-${cl.id}" style="font-size:.82rem;background:var(--cream);padding:2px 8px;border-radius:4px;letter-spacing:.1em">${cl.password ? '••••••••' : '—'}</code>
+                  ${cl.password ? `<button class="btn-icon" onclick="toggleClientePw('${cl.id}','${cl.password.replace(/'/g,"\\'")}',this)" style="font-size:.75rem">Ver</button>` : ''}
+                </div>
+              </td>
+              <td><button class="btn-icon" onclick="openResetClientePw('${cl.id}','${cl.nombre}')">🔑 Resetear</button></td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -1947,9 +1992,78 @@ function renderUsuarios(c){
   `;
 }
 
+function toggleStaffPw(username, pw, btn){
+  const el = document.getElementById('pw-staff-'+username);
+  if(!el) return;
+  const showing = btn.textContent === 'Ocultar';
+  el.textContent = showing ? '••••••••' : pw;
+  btn.textContent = showing ? 'Ver' : 'Ocultar';
+}
+
+function toggleClientePw(id, pw, btn){
+  const el = document.getElementById('pw-cl-'+id);
+  if(!el) return;
+  const showing = btn.textContent === 'Ocultar';
+  el.textContent = showing ? '••••••••' : pw;
+  btn.textContent = showing ? 'Ver' : 'Ocultar';
+}
+
+function openCambiarClaveStaff(username, nombre){
+  openModal(`🔑 Cambiar clave — ${nombre}`, `
+    <div class="form-group">
+      <label>Nueva contraseña *</label>
+      <input type="text" id="cs-nueva" placeholder="Mínimo 6 caracteres">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="guardarClaveStaff('${username}')">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarClaveStaff(username){
+  const nueva = document.getElementById('cs-nueva')?.value.trim();
+  if(!nueva || nueva.length < 6){ toast('Mínimo 6 caracteres','error'); return; }
+  showLoading();
+  try {
+    await apiCall('updateStaffPassword', { username, nueva });
+    closeModal(); hideLoading();
+    toast('✅ Contraseña actualizada');
+    await loadFromSheets();
+    renderPage('usuarios');
+  } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
+}
+
+function openResetClientePw(clienteId, nombre){
+  openModal(`🔑 Resetear clave — ${nombre}`, `
+    <p style="color:var(--muted);font-size:.88rem;margin-bottom:16px">Se asignará una contraseña temporal. Informale al cliente para que la cambie desde su portal.</p>
+    <div class="form-group">
+      <label>Nueva contraseña temporal *</label>
+      <input type="text" id="rp-nueva" placeholder="Ej: animal2024">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="guardarResetCliente('${clienteId}')">Guardar</button>
+    </div>
+  `);
+}
+
+async function guardarResetCliente(clienteId){
+  const nueva = document.getElementById('rp-nueva')?.value.trim();
+  if(!nueva || nueva.length < 4){ toast('Ingresá una contraseña válida','error'); return; }
+  showLoading();
+  try {
+    await apiCall('resetClientePassword', { clienteId, nueva });
+    const idx = state.clientes.findIndex(x=>x.id===clienteId);
+    if(idx>=0) state.clientes[idx].password = nueva;
+    closeModal(); hideLoading();
+    toast('✅ Contraseña reseteada');
+    renderPage('usuarios');
+  } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
+}
+
 function filterUsuariosCliente(q){
-  const rows = document.querySelectorAll('#usuarios-tbody tr');
-  rows.forEach(r=>{
+  document.querySelectorAll('#usuarios-tbody tr').forEach(r=>{
     r.style.display = r.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
   });
 }
