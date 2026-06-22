@@ -894,6 +894,7 @@ function renderClientTable(){
           ` : ''}
           ${state.session.rol==='personal' ? `
             <button class="btn-icon" onclick="verCredencialCliente('${c.id}')">🔑 Acceso</button>
+            <button class="btn-icon danger" onclick="eliminarCliente('${c.id}')">🗑</button>
           ` : ''}
           ${state.session.rol==='admin' ? `
             <button class="btn-icon danger" onclick="eliminarCliente('${c.id}')">🗑</button>
@@ -1067,15 +1068,17 @@ function verCliente(id){
         </div>`;
       }).join('');
 
+  const canManageConsumo = ['admin','personal'].includes(state.session.rol);
   const histHTML = consumos.length ? `
     <table>
-      <thead><tr><th>Fecha</th><th>Servicio</th><th>Notas</th><th>Registrado por</th></tr></thead>
+      <thead><tr><th>Fecha</th><th>Servicio</th><th>Notas</th><th>Registrado por</th>${canManageConsumo?'<th></th>':''}</tr></thead>
       <tbody>${consumos.map(co=>`
         <tr>
           <td style="font-size:.82rem">${formatDate(co.fecha)}</td>
           <td>${plan.servicios[co.servicio]?.icon||''} ${plan.servicios[co.servicio]?.label||co.servicio}</td>
           <td style="font-size:.82rem;color:var(--muted)">${co.notas||'—'}</td>
           <td style="font-size:.78rem;color:var(--muted)">${co.registradoPor||'—'}</td>
+          ${canManageConsumo?`<td><button class="btn-icon danger" style="padding:2px 7px;font-size:.75rem" onclick="eliminarConsumo('${co.id}','${c.id}')">🗑</button></td>`:''}
         </tr>`).join('')}
       </tbody>
     </table>` : `<div class="empty-state" style="padding:24px"><div class="empty-icon">📋</div><p>Sin consumos registrados</p></div>`;
@@ -1585,6 +1588,19 @@ async function confirmarEliminar(id){
     toast('🗑 Cliente eliminado');
     renderClientTable();
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
+}
+
+function eliminarConsumo(consumoId, clienteId){
+  openConfirm('¿Eliminar este servicio del historial?', async ()=>{
+    showLoading();
+    try {
+      await apiCall('deleteConsumo', { consumoId });
+      state.consumos = state.consumos.filter(c=>c.id!==consumoId);
+      hideLoading();
+      toast('🗑 Servicio eliminado del historial');
+      verCliente(clienteId);
+    } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
+  }, { confirmLabel:'Eliminar', danger:true });
 }
 
 // ════════════════════════════════════════════
