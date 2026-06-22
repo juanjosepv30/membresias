@@ -543,8 +543,7 @@ async function loadFromSheets(){
       state.clientes = r.clientes || [];
       state.consumos = r.consumos || [];
       state.usuarios = r.usuarios || [];
-      if(rol === 'admin'){
-        // admin también ve terapias en el dashboard
+      if(rol === 'admin' || rol === 'personal'){
         const rt = await apiCall('getAllTerapias');
         state.pacientesTerapia = rt.pacientes || [];
         state.combos = rt.combos || [];
@@ -599,10 +598,9 @@ function buildNav(){
   } else {
     tabs.push({id:'clientes',label:'Clientes',icon:'👥'});
     tabs.push({id:'vencimientos',label:'Vencimientos',icon:'⏰'});
-    tabs.push({id:'terapias',label:'Terapias',icon:'🐾'});
-    tabs.push({id:'dashboard',label:'Dashboard',icon:'📊'});
     if(rol==='admin'){
-      tabs.push({id:'solicitudes',label:'Solicitudes',icon:'📋'});
+      tabs.push({id:'terapias',label:'Terapias',icon:'🐾'});
+      tabs.push({id:'dashboard',label:'Dashboard',icon:'📊'});
       tabs.push({id:'historial',label:'Historial',icon:'🕐'});
       tabs.push({id:'usuarios',label:'Usuarios',icon:'🔐'});
     }
@@ -752,15 +750,45 @@ function pillPlan(plan){
 // PAGE: CLIENTES
 // ════════════════════════════════════════════
 let clientFilter = {q:'', plan:'', status:'', sort:'reciente'};
+let clientesView = 'membresias'; // 'membresias' | 'terapias'
 
-function renderClientes(c){
-  const isAdmin = state.session.rol==='admin';
+function renderClientes(c, view){
+  const rol = state.session.rol;
+  const isAdmin = rol === 'admin';
+  const isPersonal = rol === 'personal';
+  if(view) clientesView = view;
+
+  // Personal sees both views; admin only sees membresías here (terapias has its own tab)
+  const showToggle = isPersonal;
+
+  if(showToggle && clientesView === 'terapias'){
+    c.innerHTML = `
+      <div style="display:flex;gap:8px;margin-bottom:20px">
+        <button onclick="renderClientes(document.getElementById('page-content'),'membresias')" style="padding:8px 20px;border-radius:20px;border:2px solid var(--plum);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;background:transparent;color:var(--plum)">💳 Membresías</button>
+        <button onclick="renderClientes(document.getElementById('page-content'),'terapias')" style="padding:8px 20px;border-radius:20px;border:2px solid var(--plum);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;background:var(--plum);color:#fff">🐾 Terapia Física</button>
+      </div>
+      <div id="terapias-list"></div>`;
+    const list = document.getElementById('terapias-list');
+    const pacientes = state.pacientesTerapia || [];
+    if(!pacientes.length){
+      list.innerHTML = '<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">🐾</div><p>No hay pacientes de terapia registrados.</p></div>';
+    } else {
+      list.innerHTML = pacientes.map(p => renderPacienteCard(p)).join('');
+    }
+    return;
+  }
+
   c.innerHTML = `
+    ${showToggle ? `
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <button onclick="renderClientes(document.getElementById('page-content'),'membresias')" style="padding:8px 20px;border-radius:20px;border:2px solid var(--plum);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;background:var(--plum);color:#fff">💳 Membresías</button>
+      <button onclick="renderClientes(document.getElementById('page-content'),'terapias')" style="padding:8px 20px;border-radius:20px;border:2px solid var(--plum);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;background:transparent;color:var(--plum)">🐾 Terapia Física</button>
+    </div>` : ''}
     <div class="table-card">
       <div class="table-header">
         <h2>Clientes · <span id="client-count">${state.clientes.length}</span></h2>
         <div class="table-controls">
-          <input class="search-box" placeholder="🔍 Buscar nombre, cédula, mascota…" 
+          <input class="search-box" placeholder="🔍 Buscar nombre, cédula, mascota…"
             oninput="clientFilter.q=this.value;renderClientTable()" id="client-search">
           <select class="filter-select" onchange="clientFilter.plan=this.value;renderClientTable()">
             <option value="">Todos los planes</option>
@@ -856,12 +884,11 @@ function renderClientTable(){
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn-icon" onclick="verCliente('${c.id}')">👁 Ver</button>
           ${isStaff && !PLANES[c.plan]?.soloDescuentos ? `<button class="btn-icon" onclick="openRegistrarConsumo('${c.id}')">＋ Servicio</button>` : ''}
-          ${state.session.rol==='admin' ? `
+          ${(state.session.rol==='admin' || state.session.rol==='personal') ? `
             <button class="btn-icon" onclick="openEditarCliente('${c.id}')">✏️ Editar</button>
-            <button class="btn-icon danger" onclick="eliminarCliente('${c.id}')">🗑</button>
           ` : ''}
-          ${state.session.rol==='personal' ? `
-            <button class="btn-icon" onclick="openSolicitarEdicion('${c.id}')">✏️</button>
+          ${state.session.rol==='admin' ? `
+            <button class="btn-icon danger" onclick="eliminarCliente('${c.id}')">🗑</button>
           ` : ''}
         </div>
       </td>
@@ -1168,51 +1195,71 @@ async function guardarEdicion(id){
 // ════════════════════════════════════════════
 // SOLICITUDES (personal → aprobación admin)
 // ════════════════════════════════════════════
+
+// Store original values for change detection
+let _solOriginal = {};
+
 function openSolicitarEdicion(id){
   const c = state.clientes.find(x=>x.id===id);
   if(!c) return;
+  _solOriginal = { nombre: c.nombre||'', cedula: c.cedula||'', mascota: c.mascota||'', tel: c.tel||'', email: c.email||'' };
+
   const consumos = consumosPorCliente(id).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
   const plan = PLANES[c.plan];
   const consumosOpts = consumos.map(co=>`
     <option value="${co.id}">${formatDate(co.fecha)} — ${plan?.servicios[co.servicio]?.label||co.servicio}</option>
   `).join('');
 
-  openModal(`✏️ Solicitar cambio — ${c.nombre}`, `
+  openModal(`✏️ Solicitar corrección — ${c.nombre}`, `
     <div class="page-tabs" style="margin-bottom:20px">
-      <div class="page-tab active" id="sol-tab-datos" onclick="solSwitchTab('datos')">Datos del cliente</div>
-      <div class="page-tab" id="sol-tab-servicio" onclick="solSwitchTab('servicio')">Corregir servicio</div>
-      <div class="page-tab" id="sol-tab-eliminar" onclick="solSwitchTab('eliminar')">Eliminar cliente</div>
+      <div class="page-tab active" id="sol-tab-datos" onclick="solSwitchTab('datos')">✏️ Corregir datos</div>
+      <div class="page-tab" id="sol-tab-servicio" onclick="solSwitchTab('servicio')">🩺 Corregir servicio</div>
+      <div class="page-tab" id="sol-tab-eliminar" onclick="solSwitchTab('eliminar')">🗑 Eliminar</div>
     </div>
 
     <!-- TAB: datos -->
     <div id="sol-panel-datos">
-      <div class="form-row">
+      <div style="background:var(--morada-lt);border:1px solid var(--lavender);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:.83rem;color:var(--plum)">
+        💡 Modificá <strong>solo los campos que tienen un error</strong>. Los que no toques quedan igual. El administrador verá exactamente qué cambió.
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 14px">
+
         <div class="form-group">
           <label>Nombre completo</label>
-          <input type="text" id="sol-nombre" value="${c.nombre||''}">
+          <div style="font-size:.75rem;color:var(--muted);margin-bottom:4px">Actual: <strong>${c.nombre||'—'}</strong></div>
+          <input type="text" id="sol-nombre" placeholder="Dejar vacío si no cambia" oninput="solMarkChanged(this,'${c.nombre||''}')">
         </div>
         <div class="form-group">
           <label>Cédula</label>
-          <input type="text" id="sol-cedula" value="${c.cedula||''}">
+          <div style="font-size:.75rem;color:var(--muted);margin-bottom:4px">Actual: <strong>${c.cedula||'—'}</strong></div>
+          <input type="text" id="sol-cedula" placeholder="Dejar vacío si no cambia" oninput="solMarkChanged(this,'${c.cedula||''}')">
         </div>
-      </div>
-      <div class="form-row">
         <div class="form-group">
-          <label>Mascota</label>
-          <input type="text" id="sol-mascota" value="${c.mascota||''}">
+          <label>Nombre de mascota</label>
+          <div style="font-size:.75rem;color:var(--muted);margin-bottom:4px">Actual: <strong>${c.mascota||'—'}</strong></div>
+          <input type="text" id="sol-mascota" placeholder="Dejar vacío si no cambia" oninput="solMarkChanged(this,'${c.mascota||''}')">
         </div>
         <div class="form-group">
           <label>Teléfono</label>
-          <input type="text" id="sol-tel" value="${c.tel||''}">
+          <div style="font-size:.75rem;color:var(--muted);margin-bottom:4px">Actual: <strong>${c.tel||'—'}</strong></div>
+          <input type="text" id="sol-tel" placeholder="Dejar vacío si no cambia" oninput="solMarkChanged(this,'${c.tel||''}')">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Correo electrónico</label>
+          <div style="font-size:.75rem;color:var(--muted);margin-bottom:4px">Actual: <strong>${c.email||'—'}</strong></div>
+          <input type="email" id="sol-email" placeholder="Dejar vacío si no cambia" oninput="solMarkChanged(this,'${c.email||''}')">
         </div>
       </div>
-      <div class="form-group">
-        <label>Correo electrónico</label>
-        <input type="email" id="sol-email" value="${c.email||''}">
+
+      <div id="sol-cambios-preview" style="display:none;background:var(--success-lt);border:1px solid var(--success);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:.82rem">
+        <strong style="color:var(--success)">Cambios detectados:</strong>
+        <div id="sol-cambios-lista" style="margin-top:4px;color:var(--ink)"></div>
       </div>
+
       <div class="form-group">
-        <label>Motivo del cambio *</label>
-        <textarea id="sol-motivo-datos" placeholder="Ej: error al registrar la cédula…"></textarea>
+        <label>Motivo de la corrección *</label>
+        <textarea id="sol-motivo-datos" placeholder="Ej: la cédula fue digitada incorrectamente, el nombre tiene un error tipográfico…" style="min-height:60px"></textarea>
       </div>
       <div class="modal-footer">
         <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
@@ -1222,20 +1269,23 @@ function openSolicitarEdicion(id){
 
     <!-- TAB: servicio -->
     <div id="sol-panel-servicio" style="display:none">
+      <div style="background:var(--morada-lt);border:1px solid var(--lavender);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:.83rem;color:var(--plum)">
+        💡 Seleccioná el servicio que fue registrado con error y explicá qué hay que corregir. El administrador lo ajustará.
+      </div>
       ${consumos.length ? `
       <div class="form-group">
-        <label>Seleccioná el servicio a corregir *</label>
-        <select id="sol-consumo-id">${consumosOpts}</select>
+        <label>Servicio a corregir *</label>
+        <select id="sol-consumo-id" style="width:100%">${consumosOpts}</select>
       </div>
       <div class="form-group">
-        <label>¿Qué hay que corregir? *</label>
-        <textarea id="sol-motivo-servicio" placeholder="Ej: se registró una consulta pero fue una ecografía, fecha incorrecta, etc."></textarea>
+        <label>¿Qué está mal y cómo debe quedar? *</label>
+        <textarea id="sol-motivo-servicio" placeholder="Ej: se registró Consulta pero fue una Ecografía · Ej: la fecha debería ser 15/06 no 10/06" style="min-height:70px"></textarea>
       </div>
       <div class="modal-footer">
         <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
         <button class="btn-save" onclick="submitSolicitud('editConsumo','${id}','servicio')">Enviar solicitud</button>
       </div>` : `
-      <div class="empty-state" style="padding:32px">
+      <div class="empty-state" style="padding:40px">
         <div class="empty-icon">📋</div>
         <p>Este cliente no tiene servicios registrados aún.</p>
       </div>`}
@@ -1243,19 +1293,47 @@ function openSolicitarEdicion(id){
 
     <!-- TAB: eliminar -->
     <div id="sol-panel-eliminar" style="display:none">
-      <div style="background:var(--danger-lt);border:1px solid #E8A0A0;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:.88rem;color:var(--danger)">
-        ⚠️ Esta solicitud eliminará permanentemente a <strong>${c.nombre}</strong> y todos sus registros. El administrador deberá aprobarla antes de ejecutarse.
+      <div style="background:var(--danger-lt);border:1px solid #E8A0A0;border-radius:10px;padding:14px 16px;margin-bottom:18px;font-size:.88rem;color:var(--danger)">
+        ⚠️ <strong>Acción irreversible.</strong> Esta solicitud eliminará permanentemente a <strong>${c.nombre}</strong> y todos sus consumos. Solo se ejecutará si el administrador la aprueba.
       </div>
       <div class="form-group">
         <label>Motivo de la eliminación *</label>
-        <textarea id="sol-motivo-eliminar" placeholder="Explicá el motivo…"></textarea>
+        <textarea id="sol-motivo-eliminar" placeholder="Ej: cliente duplicado, error de registro, solicitud del cliente…" style="min-height:70px"></textarea>
       </div>
       <div class="modal-footer">
         <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-        <button class="btn-save" style="background:var(--danger)" onclick="submitSolicitud('deleteCliente','${id}','eliminar')">Enviar solicitud</button>
+        <button class="btn-save" style="background:var(--danger)" onclick="submitSolicitud('deleteCliente','${id}','eliminar')">Solicitar eliminación</button>
       </div>
     </div>
   `);
+}
+
+function solMarkChanged(input, original){
+  const val = input.value.trim();
+  const changed = val !== '' && val !== original;
+  input.style.borderColor = changed ? 'var(--success)' : '';
+  input.style.background  = changed ? 'var(--success-lt)' : '';
+  // Update the changes preview
+  const cambios = [];
+  const fields = [
+    {id:'sol-nombre',  label:'Nombre',   orig: _solOriginal.nombre},
+    {id:'sol-cedula',  label:'Cédula',   orig: _solOriginal.cedula},
+    {id:'sol-mascota', label:'Mascota',  orig: _solOriginal.mascota},
+    {id:'sol-tel',     label:'Teléfono', orig: _solOriginal.tel},
+    {id:'sol-email',   label:'Correo',   orig: _solOriginal.email},
+  ];
+  fields.forEach(f=>{
+    const el = document.getElementById(f.id);
+    if(!el) return;
+    const v = el.value.trim();
+    if(v && v !== f.orig) cambios.push(`<strong>${f.label}:</strong> "${f.orig||'vacío'}" → "${v}"`);
+  });
+  const preview = document.getElementById('sol-cambios-preview');
+  const lista   = document.getElementById('sol-cambios-lista');
+  if(preview && lista){
+    preview.style.display = cambios.length ? '' : 'none';
+    lista.innerHTML = cambios.join('<br>');
+  }
 }
 
 function solSwitchTab(tab){
@@ -1269,22 +1347,26 @@ async function submitSolicitud(tipo, clienteId, panel){
   let datos = {};
   if(panel === 'datos'){
     const motivo = document.getElementById('sol-motivo-datos')?.value.trim();
-    if(!motivo){ toast('El motivo es obligatorio','error'); return; }
-    datos = {
-      nombre:  document.getElementById('sol-nombre')?.value.trim(),
-      cedula:  document.getElementById('sol-cedula')?.value.trim(),
-      mascota: document.getElementById('sol-mascota')?.value.trim(),
-      tel:     document.getElementById('sol-tel')?.value.trim(),
-      email:   document.getElementById('sol-email')?.value.trim(),
-      motivo,
-    };
+    if(!motivo){ toast('Explicá el motivo de la corrección','error'); return; }
+    // Only send fields that actually changed
+    const cambios = {};
+    const fields = [
+      {id:'sol-nombre',  key:'nombre',  orig: _solOriginal.nombre},
+      {id:'sol-cedula',  key:'cedula',  orig: _solOriginal.cedula},
+      {id:'sol-mascota', key:'mascota', orig: _solOriginal.mascota},
+      {id:'sol-tel',     key:'tel',     orig: _solOriginal.tel},
+      {id:'sol-email',   key:'email',   orig: _solOriginal.email},
+    ];
+    fields.forEach(f=>{
+      const v = document.getElementById(f.id)?.value.trim();
+      if(v && v !== f.orig) cambios[f.key] = v;
+    });
+    if(!Object.keys(cambios).length){ toast('No detecté cambios — modificá al menos un campo','error'); return; }
+    datos = { cambios, motivo };
   } else if(panel === 'servicio'){
     const motivo = document.getElementById('sol-motivo-servicio')?.value.trim();
     if(!motivo){ toast('Describí qué hay que corregir','error'); return; }
-    datos = {
-      consumoId: document.getElementById('sol-consumo-id')?.value,
-      motivo,
-    };
+    datos = { consumoId: document.getElementById('sol-consumo-id')?.value, motivo };
   } else if(panel === 'eliminar'){
     const motivo = document.getElementById('sol-motivo-eliminar')?.value.trim();
     if(!motivo){ toast('El motivo es obligatorio','error'); return; }
@@ -2162,12 +2244,26 @@ async function aprobarSolicitud(solicitudId){
   }, { danger: false, label: 'Aprobar' });
 }
 
-async function rechazarSolicitud(solicitudId){
-  const motivo = prompt('Motivo del rechazo (opcional):') || '';
+function rechazarSolicitud(solicitudId){
+  openModal('Rechazar solicitud', `
+    <p style="color:var(--muted);font-size:.88rem;margin-bottom:16px">Podés indicar el motivo del rechazo para que el personal lo sepa.</p>
+    <div class="form-group">
+      <label>Motivo del rechazo (opcional)</label>
+      <textarea id="rechazo-motivo" placeholder="Ej: los datos ya están correctos, el servicio fue el indicado…" style="min-height:70px"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" style="background:var(--danger)" onclick="confirmarRechazo('${solicitudId}')">Rechazar</button>
+    </div>
+  `);
+}
+
+async function confirmarRechazo(solicitudId){
+  const motivo = document.getElementById('rechazo-motivo')?.value.trim() || '';
   showLoading();
   try {
     await apiCall('rechazarSolicitud', { solicitudId, motivo });
-    hideLoading();
+    closeModal(); hideLoading();
     toast('Solicitud rechazada');
     renderPage('solicitudes');
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
