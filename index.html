@@ -818,7 +818,7 @@ function renderClientes(c, view){
             <option value="inicio-asc">Fecha inicio (antigua)</option>
           </select>
           ${(isAdmin||isPersonal)?`<button class="btn-add" onclick="openNuevoCliente()">＋ Nuevo cliente</button>`:''}
-          ${(isAdmin||isPersonal)?`<button onclick="confirmarEnvioCredenciales()" style="padding:8px 16px;border-radius:8px;border:2px solid var(--plum);background:transparent;color:var(--plum);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer">&#128231; Enviar credenciales</button>`:''}
+
         </div>
       </div>
       <div style="overflow-x:auto">
@@ -1707,32 +1707,6 @@ async function confirmarEliminarPermanente(id){
     closeModal(); hideLoading();
     toast('🗑 Cliente eliminado permanentemente');
     renderPage('descartados');
-  } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
-}
-
-function confirmarEnvioCredenciales(){
-  openModal('Enviar credenciales a todos', `
-    <p style="margin:0 0 16px;color:#555;font-size:.9rem;line-height:1.6">
-      Esto va a <strong>resetear la contrase&ntilde;a de TODOS los clientes</strong> al formato
-      <code style="background:#F5F0FF;padding:2px 6px;border-radius:4px">teamo+mascota</code>
-      y enviarles un correo con sus credenciales.<br><br>
-      Los clientes sin email ser&aacute;n omitidos.
-    </p>
-    <div style="display:flex;gap:10px;justify-content:flex-end">
-      <button onclick="closeModal()" style="padding:10px 20px;border-radius:8px;border:1px solid #ddd;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar</button>
-      <button onclick="ejecutarEnvioCredenciales()" style="padding:10px 20px;border-radius:8px;border:none;background:var(--plum);color:#fff;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Confirmar y enviar</button>
-    </div>
-  `);
-}
-
-async function ejecutarEnvioCredenciales(){
-  closeModal(); showLoading();
-  try {
-    const r = await apiCall('generarCredenciales', { commit: true, force: true, sendEmails: true });
-    hideLoading();
-    if(!r.ok) return toast('Error: '+(r.error||'desconocido'),'error');
-    toast(`Listo — ${r.totalAfectados} clientes actualizados, ${r.sinEmail} sin email omitidos`);
-    await loadData();
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
 
