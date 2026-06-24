@@ -1006,24 +1006,33 @@ async function guardarCliente(){
 
   showLoading();
   try {
-    await apiCall('addCliente', {cliente, sendWelcome: true});
+    const res = await apiCall('addCliente', {cliente, sendWelcome: !!email});
+    const usuario  = res.usuario  || email;
+    const password = res.password || '—';
+    cliente.usuario  = usuario;
+    cliente.password = password;
     state.clientes.push(cliente);
     closeModal();
     hideLoading();
     openModal('✅ Cliente registrado', `
-      <p style="margin-bottom:12px">El cliente fue registrado exitosamente con 365 días de membresía.</p>
-      <div style="background:var(--success-lt);border:1px solid var(--success);border-radius:12px;padding:16px 20px;margin-top:16px;display:flex;gap:14px;align-items:center">
-        <div style="font-size:2rem">📧</div>
-        <div>
-          <div style="font-weight:700;color:var(--success);margin-bottom:4px">Correo de bienvenida enviado</div>
-          <div style="font-size:.85rem;color:var(--ink)">Se envió un enlace a <strong>${email}</strong> para que el cliente configure su contraseña de acceso al portal.</div>
-        </div>
+      <p style="margin-bottom:12px">El cliente fue registrado con 365 días de membresía.</p>
+      <div style="background:var(--morada-lt);border:1px solid var(--lavender);border-radius:12px;padding:16px 20px;margin-bottom:12px">
+        <div style="font-weight:700;color:var(--plum);margin-bottom:10px">🔑 Credenciales de acceso</div>
+        <table style="width:100%;border-collapse:collapse;font-size:.9rem">
+          <tr><td style="color:var(--muted);padding:4px 0;width:100px">Usuario</td><td style="font-weight:600">${usuario}</td></tr>
+          <tr><td style="color:var(--muted);padding:4px 0">Contraseña</td><td style="font-weight:700;color:var(--plum);letter-spacing:2px;font-size:1rem">${password}</td></tr>
+        </table>
       </div>
+      ${email ? `
+      <div style="background:var(--success-lt);border:1px solid var(--success);border-radius:10px;padding:12px 16px;display:flex;gap:10px;align-items:center;font-size:.85rem">
+        <div>📧</div>
+        <div>Correo con credenciales enviado a <strong>${email}</strong></div>
+      </div>` : ''}
       <div class="modal-footer" style="margin-top:16px">
         <button class="btn-save" onclick="closeModal();renderPage('clientes')">Entendido</button>
       </div>
     `);
-    toast('✅ Cliente guardado en Google Sheets');
+    toast('✅ Cliente guardado');
     renderClientTable();
   } catch(e){
     hideLoading();
