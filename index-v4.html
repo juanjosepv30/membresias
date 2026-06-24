@@ -602,12 +602,14 @@ function buildNav(){
     tabs.push({id:'clientes',label:'Clientes',icon:'👥'});
     if(rol==='personal'){
       tabs.push({id:'vencimientos',label:'Vencimientos',icon:'⏰'});
+      tabs.push({id:'descartados',label:'Descartados',icon:'🗑'});
     }
     if(rol==='admin'){
       tabs.push({id:'terapias',label:'Terapias',icon:'🐾'});
       tabs.push({id:'dashboard',label:'Dashboard',icon:'📊'});
       tabs.push({id:'historial',label:'Historial',icon:'🕐'});
       tabs.push({id:'usuarios',label:'Usuarios',icon:'🔐'});
+      tabs.push({id:'descartados',label:'Descartados',icon:'🗑'});
     }
   }
   const nav = document.getElementById('nav-tabs');
@@ -636,6 +638,7 @@ function renderPage(page){
     case 'solicitudes':   c.innerHTML = ''; renderSolicitudes(c); break;
     case 'historial':     c.innerHTML = ''; renderHistorial(c); break;
     case 'usuarios':      c.innerHTML = ''; renderUsuarios(c); break;
+    case 'descartados':   c.innerHTML = ''; renderDescartados(c); break;
     case 'mi-membresia':  c.innerHTML = ''; renderMiMembresia(c); break;
     case 'terapias':      c.innerHTML = ''; renderTerapias(c); break;
     case 'mis-terapias':  c.innerHTML = ''; renderMisTerapias(c); break;
@@ -1578,11 +1581,12 @@ async function guardarConsumo(clienteId){
 function eliminarCliente(id){
   const c = state.clientes.find(x=>x.id===id);
   if(!c) return;
-  openModal('⚠️ Eliminar cliente', `
-    <p>¿Seguro que quieres eliminar a <strong>${c.nombre}</strong>? Esta acción no se puede deshacer.</p>
+  openModal('🗑 Descartar cliente', `
+    <p>¿Mover a <strong>${c.nombre}</strong> a Descartados?</p>
+    <p style="color:var(--muted);font-size:.85rem;margin-top:6px">El cliente se elimina del panel principal. Podés restaurarlo desde el módulo <strong>Descartados</strong>.</p>
     <div class="modal-footer" style="margin-top:20px">
       <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-      <button class="btn-save" style="background:var(--danger)" onclick="confirmarEliminar('${id}')">Sí, eliminar</button>
+      <button class="btn-save" style="background:var(--danger)" onclick="confirmarEliminar('${id}')">Sí, descartar</button>
     </div>
   `);
 }
@@ -1590,11 +1594,10 @@ function eliminarCliente(id){
 async function confirmarEliminar(id){
   showLoading();
   try {
-    await apiCall('deleteCliente',{clienteId:id});
+    await apiCall('deleteCliente', {clienteId: id});
     state.clientes = state.clientes.filter(c=>c.id!==id);
-    state.consumos = state.consumos.filter(c=>c.clienteId!==id);
     closeModal(); hideLoading();
-    toast('🗑 Cliente eliminado');
+    toast('🗑 Cliente movido a Descartados');
     renderClientTable();
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
@@ -1610,6 +1613,100 @@ function eliminarConsumo(consumoId, clienteId){
       verCliente(clienteId);
     } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
   }, { confirmLabel:'Eliminar', danger:true });
+}
+
+// ════════════════════════════════════════════
+// PAGE: DESCARTADOS
+// ════════════════════════════════════════════
+async function renderDescartados(c){
+  c.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted)">Cargando...</div>`;
+  let descartados = [];
+  try {
+    const res = await apiCall('getPapelera');
+    descartados = res.descartados || [];
+  } catch(e){
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><p>Error al cargar: ${e.message}</p></div>`;
+    return;
+  }
+
+  const isAdmin = state.session.rol === 'admin';
+
+  if(!descartados.length){
+    c.innerHTML = `
+      <div class="page-header"><h1 class="page-title">🗑 Descartados</h1></div>
+      <div class="empty-state" style="padding:60px 0">
+        <div class="empty-icon">✅</div>
+        <p>No hay clientes descartados</p>
+      </div>`;
+    return;
+  }
+
+  const cards = descartados.map(d=>{
+    const plan = PLANES[d.plan] || {};
+    const fecha = d.descartadoEn ? formatDate(d.descartadoEn.slice(0,10)) : '—';
+    const por   = d.descartadoPor || '—';
+    return `
+      <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:44px;height:44px;border-radius:50%;background:var(--danger-lt);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">${plan.icon||'👤'}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;color:var(--ink);font-size:1rem">${d.nombre}</div>
+            <div style="font-size:.8rem;color:var(--muted)">${d.mascota||''} · ${d.plan||''}</div>
+          </div>
+          <span class="pill pill-inactive" style="flex-shrink:0">Descartado</span>
+        </div>
+        <div style="font-size:.78rem;color:var(--muted);border-top:1px solid var(--border);padding-top:8px">
+          Descartado el <strong>${fecha}</strong> por <strong>${por}</strong>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-icon" style="color:var(--success);border-color:var(--success)" onclick="restaurarCliente('${d.id}')">♻️ Restaurar</button>
+          ${isAdmin ? `<button class="btn-icon danger" onclick="eliminarPermanente('${d.id}','${d.nombre}')">🗑 Eliminar permanente</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  c.innerHTML = `
+    <div class="page-header">
+      <h1 class="page-title">🗑 Descartados</h1>
+      <p class="page-subtitle">${descartados.length} cliente${descartados.length!==1?'s':''} descartado${descartados.length!==1?'s':''}</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+      ${cards}
+    </div>`;
+}
+
+async function restaurarCliente(id){
+  openConfirm('¿Restaurar este cliente?', async ()=>{
+    showLoading();
+    try {
+      await apiCall('restoreCliente', { clienteId: id });
+      hideLoading();
+      toast('♻️ Cliente restaurado al panel principal');
+      await loadFromSheets();
+      renderPage('descartados');
+    } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
+  }, { confirmLabel: 'Restaurar' });
+}
+
+function eliminarPermanente(id, nombre){
+  openModal('⚠️ Eliminación permanente', `
+    <p>¿Eliminar definitivamente a <strong>${nombre}</strong>?</p>
+    <p style="color:var(--danger);font-size:.85rem;margin-top:8px">Esta acción <strong>no se puede deshacer</strong>. Se borrarán también todos sus consumos.</p>
+    <div class="modal-footer" style="margin-top:20px">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" style="background:var(--danger)" onclick="confirmarEliminarPermanente('${id}')">Sí, eliminar para siempre</button>
+    </div>
+  `);
+}
+
+async function confirmarEliminarPermanente(id){
+  showLoading();
+  try {
+    await apiCall('permanentDeleteCliente', { clienteId: id });
+    closeModal(); hideLoading();
+    toast('🗑 Cliente eliminado permanentemente');
+    renderPage('descartados');
+  } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
 
 // ════════════════════════════════════════════
