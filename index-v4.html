@@ -814,7 +814,7 @@ function renderClientes(c, view){
             <option value="inicio-desc">Fecha inicio (nueva)</option>
             <option value="inicio-asc">Fecha inicio (antigua)</option>
           </select>
-          ${isAdmin?`<button class="btn-add" onclick="openNuevoCliente()">＋ Nuevo cliente</button>`:''}
+          ${(isAdmin||isPersonal)?`<button class="btn-add" onclick="openNuevoCliente()">＋ Nuevo cliente</button>`:''}
         </div>
       </div>
       <div style="overflow-x:auto">
