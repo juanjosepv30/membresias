@@ -2616,9 +2616,10 @@ async function renderHistorial(c){
                   const detalle = typeof h.detalle==='string' ? JSON.parse(h.detalle||'{}') : (h.detalle||{});
                   const icon = accionIcon[h.accion]||'📌';
                   const displayUser = detalle.usuario || (h.usuario||'').replace(/^(cli:|tp:)/,'') || '—';
-                  const rolPill = h.rol==='admin' ? 'pill-blue'
-                    : (h.rol==='cliente'||h.rol==='cliente_terapia') ? 'pill-active'
-                    : h.rol ? 'pill-expired' : 'pill-silver';
+                  const rol = h.rol || detalle.rol || '';
+                  const rolPill = rol==='admin' ? 'pill-blue'
+                    : (rol==='cliente'||rol==='cliente_terapia') ? 'pill-active'
+                    : rol ? 'pill-expired' : 'pill-silver';
                   const displayDetail = h.accion==='addConsumo'
                     ? (detalle.clienteNombre||('ID:'+detalle.clienteId)||'') + (detalle.servicio ? ' — '+detalle.servicio : '')
                     : detalle.clienteNombre||detalle.nombre||detalle.email||detalle.motivo||JSON.stringify(detalle).slice(0,60)||'—';
@@ -2626,7 +2627,7 @@ async function renderHistorial(c){
                     <td style="font-size:.8rem;white-space:nowrap">${formatDate(h.fecha)}</td>
                     <td><span style="display:flex;align-items:center;gap:6px;font-size:.85rem">${icon} ${h.accion}</span></td>
                     <td style="font-size:.82rem">${displayUser}</td>
-                    <td><span class="pill ${rolPill}" style="font-size:.72rem">${h.rol||'—'}</span></td>
+                    <td><span class="pill ${rolPill}" style="font-size:.72rem">${rol||'—'}</span></td>
                     <td style="font-size:.78rem;color:var(--muted);max-width:220px">${displayDetail}</td>
                   </tr>`;
                 }).join('')
