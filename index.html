@@ -145,6 +145,7 @@ tbody tr:hover{background:var(--cream)}
 .pill-active{background:var(--success-lt);color:var(--success)}
 .pill-expiring{background:var(--warn-lt);color:var(--warn)}
 .pill-expired{background:var(--danger-lt);color:var(--danger)}
+.pill-blue{background:#DBEAFE;color:#1D4ED8}
 .pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 
 /* ── ACTION BTNS ── */
@@ -2614,12 +2615,19 @@ async function renderHistorial(c){
               ? state.historial.map(h=>{
                   const detalle = typeof h.detalle==='string' ? JSON.parse(h.detalle||'{}') : (h.detalle||{});
                   const icon = accionIcon[h.accion]||'📌';
+                  const displayUser = detalle.usuario || (h.usuario||'').replace(/^(cli:|tp:)/,'') || '—';
+                  const rolPill = h.rol==='admin' ? 'pill-blue'
+                    : (h.rol==='cliente'||h.rol==='cliente_terapia') ? 'pill-active'
+                    : h.rol ? 'pill-expired' : 'pill-silver';
+                  const displayDetail = h.accion==='addConsumo'
+                    ? (detalle.clienteNombre||('ID:'+detalle.clienteId)||'') + (detalle.servicio ? ' — '+detalle.servicio : '')
+                    : detalle.clienteNombre||detalle.nombre||detalle.email||detalle.motivo||JSON.stringify(detalle).slice(0,60)||'—';
                   return `<tr>
                     <td style="font-size:.8rem;white-space:nowrap">${formatDate(h.fecha)}</td>
                     <td><span style="display:flex;align-items:center;gap:6px;font-size:.85rem">${icon} ${h.accion}</span></td>
-                    <td style="font-size:.82rem">${h.usuario||'—'}</td>
-                    <td><span class="pill ${h.rol==='admin'?'pill-gold':'pill-silver'}" style="font-size:.72rem">${h.rol||'—'}</span></td>
-                    <td style="font-size:.78rem;color:var(--muted);max-width:220px">${detalle.nombre||detalle.email||detalle.motivo||JSON.stringify(detalle).slice(0,60)||'—'}</td>
+                    <td style="font-size:.82rem">${displayUser}</td>
+                    <td><span class="pill ${rolPill}" style="font-size:.72rem">${h.rol||'—'}</span></td>
+                    <td style="font-size:.78rem;color:var(--muted);max-width:220px">${displayDetail}</td>
                   </tr>`;
                 }).join('')
               : `<tr><td colspan="5"><div class="empty-state" style="padding:40px"><div class="empty-icon">📂</div><p>Sin registros aún</p></div></td></tr>`}
