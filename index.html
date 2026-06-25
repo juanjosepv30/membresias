@@ -2620,9 +2620,7 @@ async function renderHistorial(c){
                   const rolPill = rol==='admin' ? 'pill-blue'
                     : (rol==='cliente'||rol==='cliente_terapia') ? 'pill-active'
                     : rol ? 'pill-expired' : 'pill-silver';
-                  const displayDetail = h.accion==='addConsumo'
-                    ? (detalle.clienteNombre||('ID:'+detalle.clienteId)||'') + (detalle.servicio ? ' — '+detalle.servicio : '')
-                    : detalle.clienteNombre||detalle.nombre||detalle.email||detalle.motivo||JSON.stringify(detalle).slice(0,60)||'—';
+                  const displayDetail = formatDetalle(h.accion, detalle);
                   const hora = h.fecha ? new Date(h.fecha).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}) : '—';
                   return `<tr>
                     <td style="font-size:.8rem;white-space:nowrap">${formatDate(h.fecha)}</td>
@@ -2645,6 +2643,37 @@ function filterHistorial(q){
   document.querySelectorAll('#historial-tbody tr').forEach(r=>{
     r.style.display = r.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
   });
+}
+
+function formatDetalle(accion, d){
+  const svc = {
+    consultas:'Consultas', consultaEsp:'Consulta especializada',
+    parcialOrina:'Parcial de orina', ecografias:'Ecografía',
+    rayosX:'Rayos X', laboratorio:'Exámenes de sangre', vacunas:'Vacuna'
+  };
+  const svcLabel = svc[d.servicio] || d.servicio || '—';
+  switch(accion){
+    case 'login':               return `Ingresó al sistema como ${d.rol||'—'}`;
+    case 'addCliente':          return `${d.nombre||'—'} registrado · Plan ${d.plan||'—'}`;
+    case 'addConsumo':          return `${d.clienteNombre||('ID:'+d.clienteId)||'—'} · ${svcLabel}${d.cantidad>1?' (x'+d.cantidad+')':''}`;
+    case 'softDeleteCliente':   return `${d.nombre||('ID:'+d.clienteId)||'—'} desactivado`;
+    case 'restoreCliente':      return `Cliente ID ${d.clienteId||'—'} restaurado`;
+    case 'permanentDeleteCliente': return `${d.nombre||('ID:'+d.clienteId)||'—'} eliminado definitivamente`;
+    case 'deleteConsumo':       return `Servicio eliminado: ${svcLabel}`;
+    case 'updateCliente':       return `Campos editados: ${Array.isArray(d.campos)?d.campos.join(', '):(d.campos||'—')}`;
+    case 'addSolicitud':        return `Solicitud de ${d.tipo||'—'} enviada`;
+    case 'aprobarSolicitud':    return `Solicitud de ${d.tipo||'—'} aprobada`;
+    case 'rechazarSolicitud':   return `Solicitud rechazada${d.motivo?' — '+d.motivo:''}`;
+    case 'forgotPassword':      return `Recuperación de contraseña para ${d.email||'—'}`;
+    case 'resetPassword':       return `Contraseña restablecida`;
+    case 'changePassword':      return `${d.nombre||'—'} cambió su contraseña`;
+    case 'addPacienteTerapia':  return `Paciente registrado: ${d.nombre||'—'}`;
+    case 'addCombo':            return `Combo ${d.tipo||'—'} creado`;
+    case 'addSesion':           return `Sesión de terapia registrada`;
+    case 'deleteCombo':         return `Combo de terapia eliminado`;
+    case 'deleteSesion':        return `Sesión de terapia eliminada`;
+    default:                    return d.nombre||d.email||d.motivo||'—';
+  }
 }
 
 // ════════════════════════════════════════════
