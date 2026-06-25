@@ -2609,7 +2609,7 @@ async function renderHistorial(c){
       </div>
       <div style="overflow-x:auto">
         <table>
-          <thead><tr><th>Fecha</th><th>Acción</th><th>Usuario</th><th>Rol</th><th>Detalle</th></tr></thead>
+          <thead><tr><th>Fecha</th><th>Hora</th><th>Acción</th><th>Usuario</th><th>Rol</th><th>Detalle</th></tr></thead>
           <tbody id="historial-tbody">
             ${state.historial.length
               ? state.historial.map(h=>{
@@ -2623,15 +2623,17 @@ async function renderHistorial(c){
                   const displayDetail = h.accion==='addConsumo'
                     ? (detalle.clienteNombre||('ID:'+detalle.clienteId)||'') + (detalle.servicio ? ' — '+detalle.servicio : '')
                     : detalle.clienteNombre||detalle.nombre||detalle.email||detalle.motivo||JSON.stringify(detalle).slice(0,60)||'—';
+                  const hora = h.fecha ? new Date(h.fecha).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}) : '—';
                   return `<tr>
                     <td style="font-size:.8rem;white-space:nowrap">${formatDate(h.fecha)}</td>
+                    <td style="font-size:.8rem;white-space:nowrap;color:var(--muted)">${hora}</td>
                     <td><span style="display:flex;align-items:center;gap:6px;font-size:.85rem">${icon} ${h.accion}</span></td>
                     <td style="font-size:.82rem">${displayUser}</td>
                     <td><span class="pill ${rolPill}" style="font-size:.72rem">${rol||'—'}</span></td>
                     <td style="font-size:.78rem;color:var(--muted);max-width:220px">${displayDetail}</td>
                   </tr>`;
                 }).join('')
-              : `<tr><td colspan="5"><div class="empty-state" style="padding:40px"><div class="empty-icon">📂</div><p>Sin registros aún</p></div></td></tr>`}
+              : `<tr><td colspan="6"><div class="empty-state" style="padding:40px"><div class="empty-icon">📂</div><p>Sin registros aún</p></div></td></tr>`}
           </tbody>
         </table>
       </div>
