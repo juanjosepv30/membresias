@@ -802,9 +802,13 @@ function renderClientes(c, view){
 
   if(showToggle && clientesView === 'inyecto'){
     const pacientes = state.pacientesInyecto || [];
-    c.innerHTML = toggleHtml('inyecto') + (pacientes.length
+    const gridHtml  = pacientes.length
       ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${pacientes.map(p=>renderPacienteInyectoCard(p)).join('')}</div>`
-      : '<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">💉</div><p>No hay pacientes de inyectología registrados.</p></div>');
+      : '<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">💉</div><p>No hay pacientes registrados</p></div>';
+    c.innerHTML = toggleHtml('inyecto') + `
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+        <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openNuevoPacienteInyecto()">+ Nuevo paciente</button>
+      </div>` + gridHtml;
     return;
   }
 
@@ -2723,7 +2727,8 @@ async function switchToInyecto(c){
 }
 
 function renderInyecto(c, skipRefresh){
-  const isAdmin = state.session.rol === 'admin';
+  const isAdmin    = state.session.rol === 'admin';
+  const isPersonal = state.session.rol === 'personal';
   const n = state.pacientesInyecto.length;
   c.innerHTML = `
     <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
@@ -2731,7 +2736,7 @@ function renderInyecto(c, skipRefresh){
         <h2 style="font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--plum)">💉 Inyectología y Medicación</h2>
         <p style="color:var(--muted);font-size:.85rem;margin-top:2px">${n} paciente${n!==1?'s':''} registrado${n!==1?'s':''}</p>
       </div>
-      ${isAdmin ? '<button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openNuevoPacienteInyecto()">+ Nuevo paciente</button>' : ''}
+      ${(isAdmin||isPersonal) ? '<button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openNuevoPacienteInyecto()">+ Nuevo paciente</button>' : ''}
     </div>
     ${n
       ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${state.pacientesInyecto.map(p=>renderPacienteInyectoCard(p)).join('')}</div>`
@@ -2895,7 +2900,7 @@ async function guardarPacienteInyecto(){
     state.pacientesInyecto.push(r.paciente);
     closeModal(); hideLoading();
     toast('Paciente registrado');
-    renderPage('inyecto');
+    refreshInyectoView();
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
 
