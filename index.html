@@ -611,7 +611,6 @@ function buildNav(){
     if(rol==='personal'){
       tabs.push({id:'vencimientos',label:'Vencimientos',icon:'⏰'});
       tabs.push({id:'descartados',label:'Descartados',icon:'🗑'});
-      tabs.push({id:'inyecto',label:'Inyectología',icon:'💉'});
     }
     if(rol==='admin'){
       tabs.push({id:'terapias',label:'Terapias',icon:'🐾'});
@@ -769,7 +768,7 @@ function pillPlan(plan){
 // PAGE: CLIENTES
 // ════════════════════════════════════════════
 let clientFilter = {q:'', plan:'', status:'', sort:'reciente'};
-let clientesView = 'membresias'; // 'membresias' | 'terapias'
+let clientesView = 'membresias'; // 'membresias' | 'terapias' | 'inyecto'
 
 function renderClientes(c, view){
   const rol = state.session.rol;
@@ -780,13 +779,17 @@ function renderClientes(c, view){
   // Personal sees both views; admin only sees membresías here (terapias has its own tab)
   const showToggle = isPersonal;
 
+  const tabStyle = (active, key) =>
+    `padding:8px 20px;border-radius:20px;border:2px solid var(--plum);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;${active===key?'background:var(--plum);color:#fff':'background:transparent;color:var(--plum)'}`;
+  const toggleHtml = (active) => `
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+      <button onclick="renderClientes(document.getElementById('page-content'),'membresias')" style="${tabStyle(active,'membresias')}">💳 Membresías</button>
+      <button onclick="renderClientes(document.getElementById('page-content'),'terapias')"   style="${tabStyle(active,'terapias')}">🐾 Terapia Física</button>
+      <button onclick="renderClientes(document.getElementById('page-content'),'inyecto')"    style="${tabStyle(active,'inyecto')}">💉 Inyectología</button>
+    </div>`;
+
   if(showToggle && clientesView === 'terapias'){
-    c.innerHTML = `
-      <div style="display:flex;gap:8px;margin-bottom:20px">
-        <button onclick="renderClientes(document.getElementById('page-content'),'membresias')" style="padding:8px 20px;border-radius:20px;border:2px solid var(--plum);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;background:transparent;color:var(--plum)">💳 Membresías</button>
-        <button onclick="renderClientes(document.getElementById('page-content'),'terapias')" style="padding:8px 20px;border-radius:20px;border:2px solid var(--plum);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;background:var(--plum);color:#fff">🐾 Terapia Física</button>
-      </div>
-      <div id="terapias-list"></div>`;
+    c.innerHTML = toggleHtml('terapias') + '<div id="terapias-list"></div>';
     const list = document.getElementById('terapias-list');
     const pacientes = state.pacientesTerapia || [];
     if(!pacientes.length){
@@ -797,12 +800,20 @@ function renderClientes(c, view){
     return;
   }
 
+  if(showToggle && clientesView === 'inyecto'){
+    c.innerHTML = toggleHtml('inyecto') + '<div id="inyecto-sub-list"></div>';
+    const list = document.getElementById('inyecto-sub-list');
+    const pacientes = state.pacientesInyecto || [];
+    if(!pacientes.length){
+      list.innerHTML = '<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">💉</div><p>No hay pacientes de inyectología registrados.</p></div>';
+    } else {
+      list.innerHTML = pacientes.map(p => renderPacienteInyectoCard(p)).join('');
+    }
+    return;
+  }
+
   c.innerHTML = `
-    ${showToggle ? `
-    <div style="display:flex;gap:8px;margin-bottom:20px">
-      <button onclick="renderClientes(document.getElementById('page-content'),'membresias')" style="padding:8px 20px;border-radius:20px;border:2px solid var(--plum);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;background:var(--plum);color:#fff">💳 Membresías</button>
-      <button onclick="renderClientes(document.getElementById('page-content'),'terapias')" style="padding:8px 20px;border-radius:20px;border:2px solid var(--plum);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;background:transparent;color:var(--plum)">🐾 Terapia Física</button>
-    </div>` : ''}
+    ${showToggle ? toggleHtml('membresias') : ''}
     <div class="table-card">
       <div class="table-header">
         <h2>Clientes · <span id="client-count">${state.clientes.length}</span></h2>
@@ -2707,6 +2718,18 @@ function renderPacienteInyectoCard(p){
   const isAdmin = state.session.rol === 'admin';
   const combosP = state.combosInyecto.filter(c => String(c.pacienteId) === String(p.id));
   const activos = combosP.filter(c => c.estado === 'activo');
+  const primerActivo = activos[0];
+  let actionBtn = '';
+  if(activos.length === 1){
+    actionBtn = `<button class="btn-primary" style="font-size:.8rem;padding:6px 12px"
+      onclick="event.stopPropagation();openRegistrarAplicacion('${primerActivo.id}','${p.id}')">+ Aplicar</button>`;
+  } else if(activos.length > 1){
+    actionBtn = `<button class="btn-primary" style="font-size:.8rem;padding:6px 12px"
+      onclick="event.stopPropagation();verPacienteInyecto('${p.id}')">+ Aplicar</button>`;
+  } else if(isAdmin){
+    actionBtn = `<button class="btn-primary" style="font-size:.8rem;padding:6px 12px"
+      onclick="event.stopPropagation();openNuevoComboInyecto('${p.id}')">+ Combo</button>`;
+  }
   return `<div class="client-card" style="cursor:pointer" onclick="verPacienteInyecto('${p.id}')">
     <div class="client-info">
       <div class="client-name">${p.nombre}</div>
@@ -2716,8 +2739,7 @@ function renderPacienteInyectoCard(p){
       ${activos.length
         ? `<span class="pill pill-active">${activos.length} combo${activos.length>1?'s':''} activo${activos.length>1?'s':''}</span>`
         : `<span class="pill pill-silver">Sin combo activo</span>`}
-      ${isAdmin ? `<button class="btn-primary" style="font-size:.8rem;padding:6px 12px"
-        onclick="event.stopPropagation();openNuevoComboInyecto('${p.id}')">+ Combo</button>` : ''}
+      ${actionBtn}
     </div>
   </div>`;
 }
