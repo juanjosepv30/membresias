@@ -529,6 +529,9 @@ async function apiCall(action, data={}){
       doLogout();
       throw new Error('Sesión expirada. Iniciá sesión de nuevo.');
     }
+    if(json.error === 'sin_permiso'){
+      throw new Error('No tenés permiso para realizar esta acción.');
+    }
     throw new Error(json.error || 'Error desconocido');
   }
   return json;
