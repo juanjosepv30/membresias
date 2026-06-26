@@ -457,6 +457,9 @@ let state = {
   pacientesTerapia: [],
   combos: [],
   sesionesTerapia: [],
+  pacientesInyecto: [],
+  combosInyecto: [],
+  aplicacionesInyecto: [],
 };
 
 // ════════════════════════════════════════════
@@ -550,6 +553,10 @@ async function loadFromSheets(){
         state.pacientesTerapia = rt.pacientes || [];
         state.combos = rt.combos || [];
         state.sesionesTerapia = rt.sesiones || [];
+        const ri = await apiCall('getAllInyecto');
+        state.pacientesInyecto = ri.pacientes || [];
+        state.combosInyecto = ri.combos || [];
+        state.aplicacionesInyecto = ri.aplicaciones || [];
       }
     }
     hideSync();
@@ -607,6 +614,7 @@ function buildNav(){
     }
     if(rol==='admin'){
       tabs.push({id:'terapias',label:'Terapias',icon:'🐾'});
+      tabs.push({id:'inyecto',label:'Inyectología',icon:'💉'});
       tabs.push({id:'dashboard',label:'Dashboard',icon:'📊'});
       tabs.push({id:'historial',label:'Historial',icon:'🕐'});
       tabs.push({id:'usuarios',label:'Usuarios',icon:'🔐'});
@@ -642,6 +650,7 @@ function renderPage(page){
     case 'descartados':   c.innerHTML = ''; renderDescartados(c); break;
     case 'mi-membresia':  c.innerHTML = ''; renderMiMembresia(c); break;
     case 'terapias':      c.innerHTML = ''; renderTerapias(c); break;
+    case 'inyecto':       c.innerHTML = ''; renderInyecto(c); break;
     case 'mis-terapias':  c.innerHTML = ''; renderMisTerapias(c); break;
     default: c.innerHTML = '<p>Página no encontrada</p>';
   }
@@ -2677,6 +2686,209 @@ function formatDetalle(accion, d){
 }
 
 // ════════════════════════════════════════════
+// PAGE: INYECTOLOGÍA
+// ════════════════════════════════════════════
+function renderInyecto(c){
+  c.innerHTML = `
+    <div class="table-card">
+      <div class="table-header">
+        <h2>💉 Inyectología · ${state.pacientesInyecto.length} pacientes</h2>
+        <button class="btn-primary" onclick="openNuevoPacienteInyecto()">+ Nuevo paciente</button>
+      </div>
+      ${state.pacientesInyecto.length
+        ? state.pacientesInyecto.map(p => renderPacienteInyectoCard(p)).join('')
+        : '<div class="empty-state"><div class="empty-icon">💉</div><p>Sin pacientes registrados</p><p style="font-size:.85rem;color:var(--muted)">La primera vez iniciá sesión como admin y el sistema creará las hojas automáticamente.</p></div>'}
+    </div>`;
+}
+
+function renderPacienteInyectoCard(p){
+  const combosP  = state.combosInyecto.filter(c => String(c.pacienteId) === String(p.id));
+  const activos  = combosP.filter(c => c.estado === 'activo');
+  return `<div class="client-card" style="cursor:pointer" onclick="verPacienteInyecto('${p.id}')">
+    <div class="client-info">
+      <div class="client-name">${p.nombre}</div>
+      <div class="client-meta">${p.mascota||'—'} · ${p.especie||'—'}${p.tel?' · '+p.tel:''}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      ${activos.length
+        ? `<span class="pill pill-active">${activos.length} combo${activos.length>1?'s':''} activo${activos.length>1?'s':''}</span>`
+        : `<span class="pill pill-silver">Sin combo activo</span>`}
+      <button class="btn-primary" style="font-size:.8rem;padding:6px 12px"
+        onclick="event.stopPropagation();openNuevoComboInyecto('${p.id}')">+ Combo</button>
+    </div>
+  </div>`;
+}
+
+function verPacienteInyecto(pacienteId){
+  const p        = state.pacientesInyecto.find(x => String(x.id) === String(pacienteId));
+  if(!p) return;
+  const combosP  = state.combosInyecto.filter(c => String(c.pacienteId) === String(pacienteId));
+  const activos  = combosP.filter(c => c.estado === 'activo');
+  const completos= combosP.filter(c => c.estado === 'completado');
+
+  const renderComboInyecto = (combo, isActivo) => {
+    const apps       = state.aplicacionesInyecto.filter(a => String(a.comboId) === String(combo.id));
+    const dosisUsadas= Number(combo.dosisUsadas) || 0;
+    const dosisTotal = Number(combo.dosisTotal)  || 1;
+    const pct        = Math.min(100, Math.round(dosisUsadas / dosisTotal * 100));
+    return `<div style="border:1px solid #E8E0F4;border-radius:10px;padding:16px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div>
+          <strong style="color:#4A1A6B">${combo.medicamento||'—'}</strong>
+          ${combo.notas?`<div style="color:var(--muted);font-size:.8rem;margin-top:2px">${combo.notas}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="pill ${isActivo?'pill-active':'pill-silver'}" style="font-size:.72rem">${isActivo?'Activo':'Completado'}</span>
+          ${isActivo?`<button class="btn-primary" style="font-size:.78rem;padding:5px 10px"
+            onclick="openRegistrarAplicacion('${combo.id}','${pacienteId}')">+ Aplicación</button>`:''}
+        </div>
+      </div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">
+        ${dosisUsadas} / ${dosisTotal} dosis · $${Number(combo.precio||0).toLocaleString('es-CO')} · Desde ${formatDate(combo.fecha)}
+      </div>
+      <div style="background:#F0E8FA;border-radius:6px;height:8px;overflow:hidden;margin-bottom:10px">
+        <div style="background:${pct>=100?'var(--success)':'#6B2FA0'};height:100%;width:${pct}%;transition:width .3s"></div>
+      </div>
+      ${apps.length
+        ? `<div style="font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">Aplicaciones</div>
+           ${apps.slice().reverse().map(a=>`
+             <div style="display:flex;justify-content:space-between;border-top:1px solid #EEE;padding:5px 0;font-size:.8rem">
+               <span>${formatDate(a.fecha)}${a.notas?' — '+a.notas:''}</span>
+               <span style="color:var(--muted)">${(a.registradoPor||'').replace(/^(cli:|tp:)/,'')}</span>
+             </div>`).join('')}`
+        : `<div style="font-size:.8rem;color:var(--muted)">Sin aplicaciones aún</div>`}
+    </div>`;
+  };
+
+  openModal(`
+    <h3 style="margin:0 0 2px;color:#4A1A6B">${p.nombre}</h3>
+    <p style="margin:0 0 16px;color:var(--muted);font-size:.85rem">${p.mascota||'—'} · ${p.especie||'—'}${p.tel?' · '+p.tel:''}</p>
+    ${activos.length?`<div style="font-size:.75rem;font-weight:600;color:#4A1A6B;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Combos activos</div>${activos.map(c=>renderComboInyecto(c,true)).join('')}`:''}
+    ${completos.length?`<div style="font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:12px 0 8px">Completados</div>${completos.map(c=>renderComboInyecto(c,false)).join('')}`:''}
+    ${!combosP.length?'<div class="empty-state" style="padding:20px"><div class="empty-icon">💉</div><p>Sin combos</p></div>':''}
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-secondary" onclick="closeModal()">Cerrar</button>
+      <button class="btn-primary" onclick="closeModal();openNuevoComboInyecto('${pacienteId}')">+ Nuevo combo</button>
+    </div>`);
+}
+
+function openNuevoPacienteInyecto(){
+  openModal(`
+    <h3 style="margin:0 0 16px;color:#4A1A6B">Nuevo paciente — Inyectología</h3>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <input id="iny-nombre"  class="form-input" placeholder="Nombre del propietario *">
+      <input id="iny-cedula"  class="form-input" placeholder="Cédula">
+      <input id="iny-mascota" class="form-input" placeholder="Nombre de la mascota *">
+      <select id="iny-especie" class="form-input">
+        <option value="Perro">Perro</option>
+        <option value="Gato">Gato</option>
+        <option value="Otro">Otro</option>
+      </select>
+      <input id="iny-tel"   class="form-input" placeholder="Teléfono">
+      <input id="iny-email" class="form-input" placeholder="Email">
+    </div>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary"   onclick="guardarPacienteInyecto()">Guardar</button>
+    </div>`);
+}
+
+async function guardarPacienteInyecto(){
+  const nombre  = document.getElementById('iny-nombre').value.trim();
+  const mascota = document.getElementById('iny-mascota').value.trim();
+  if(!nombre||!mascota) return toast('Nombre y mascota son obligatorios','error');
+  showLoading();
+  try {
+    const r = await apiCall('addPacienteInyecto',{
+      nombre, mascota,
+      cedula:  document.getElementById('iny-cedula').value.trim(),
+      especie: document.getElementById('iny-especie').value,
+      tel:     document.getElementById('iny-tel').value.trim(),
+      email:   document.getElementById('iny-email').value.trim(),
+    });
+    state.pacientesInyecto.push(r.paciente);
+    closeModal(); hideLoading();
+    toast('Paciente registrado');
+    renderPage('inyecto');
+  } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
+}
+
+function openNuevoComboInyecto(pacienteId){
+  const p = state.pacientesInyecto.find(x => String(x.id) === String(pacienteId));
+  openModal(`
+    <h3 style="margin:0 0 4px;color:#4A1A6B">Nuevo combo de medicación</h3>
+    <p style="margin:0 0 14px;color:var(--muted);font-size:.85rem">${p?p.nombre+' · '+p.mascota:''}</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <input id="iny-med"    class="form-input" placeholder="Medicamento / tratamiento *">
+      <input id="iny-dosis"  class="form-input" type="number" min="1" placeholder="Número de dosis *" value="10">
+      <input id="iny-precio" class="form-input" type="number" min="0" placeholder="Precio total (COP)">
+      <input id="iny-fecha"  class="form-input" type="date" value="${new Date().toISOString().slice(0,10)}">
+      <input id="iny-notas"  class="form-input" placeholder="Notas (opcional)">
+    </div>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary"   onclick="guardarComboInyecto('${pacienteId}')">Guardar</button>
+    </div>`);
+}
+
+async function guardarComboInyecto(pacienteId){
+  const medicamento = document.getElementById('iny-med').value.trim();
+  const dosisTotal  = parseInt(document.getElementById('iny-dosis').value)||0;
+  if(!medicamento)   return toast('El medicamento es obligatorio','error');
+  if(dosisTotal < 1) return toast('Ingresá al menos 1 dosis','error');
+  showLoading();
+  try {
+    const r = await apiCall('addComboInyecto',{
+      pacienteId, medicamento, dosisTotal,
+      precio: parseFloat(document.getElementById('iny-precio').value)||0,
+      fecha:  document.getElementById('iny-fecha').value,
+      notas:  document.getElementById('iny-notas').value.trim(),
+    });
+    state.combosInyecto.push(r.combo);
+    closeModal(); hideLoading();
+    toast('Combo registrado');
+    verPacienteInyecto(pacienteId);
+  } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
+}
+
+function openRegistrarAplicacion(comboId, pacienteId){
+  const combo      = state.combosInyecto.find(c => String(c.id) === String(comboId));
+  const dosisUsadas= Number(combo?.dosisUsadas)||0;
+  const dosisTotal = Number(combo?.dosisTotal)||1;
+  openModal(`
+    <h3 style="margin:0 0 4px;color:#4A1A6B">Registrar aplicación</h3>
+    <p style="margin:0 0 14px;color:var(--muted);font-size:.85rem">${combo?.medicamento||'—'} · aplicación ${dosisUsadas+1} de ${dosisTotal}</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <input id="iny-ap-fecha" class="form-input" type="date" value="${new Date().toISOString().slice(0,10)}">
+      <input id="iny-ap-notas" class="form-input" placeholder="Notas (opcional)">
+    </div>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary"   onclick="guardarAplicacion('${comboId}','${pacienteId}')">Registrar</button>
+    </div>`);
+}
+
+async function guardarAplicacion(comboId, pacienteId){
+  showLoading();
+  try {
+    const r = await apiCall('addAplicacion',{
+      comboId, pacienteId,
+      fecha: document.getElementById('iny-ap-fecha').value,
+      notas: document.getElementById('iny-ap-notas').value.trim(),
+    });
+    state.aplicacionesInyecto.push(r.aplicacion);
+    const combo = state.combosInyecto.find(c => String(c.id) === String(comboId));
+    if(combo){
+      combo.dosisUsadas = Number(combo.dosisUsadas||0)+1;
+      if(Number(combo.dosisUsadas) >= Number(combo.dosisTotal)) combo.estado = 'completado';
+    }
+    closeModal(); hideLoading();
+    toast('Aplicación registrada');
+    verPacienteInyecto(pacienteId);
+  } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════
 // FORGOT PASSWORD
 // ════════════════════════════════════════════
 function openForgotPassword(){
@@ -2774,7 +2986,7 @@ function verPacienteTerapia(pacienteId){
         const def = COMBOS_TERAPIA[combo.tipo] || {};
         const sesiones = state.sesionesTerapia.filter(s => s.comboId === combo.id);
         const usadas = sesiones.length;
-        const total = combo.totalSesiones || def.sesiones || 0;
+        const total = combo.sesionesTotal || def.sesiones || 0;
         const pct = total > 0 ? Math.round(usadas/total*100) : 0;
         const activo = combo.estado === 'activo';
         return `
@@ -2966,7 +3178,7 @@ async function guardarSesion(comboId){
     // Auto-cerrar combo si ya alcanzó el total
     const combo = state.combos.find(c => c.id === comboId);
     const usadas = state.sesionesTerapia.filter(s => s.comboId === comboId).length;
-    if(combo && usadas >= (combo.totalSesiones || 0)) combo.estado = 'completado';
+    if(combo && usadas >= (combo.sesionesTotal || 10)) combo.estado = 'completado';
     closeModal();
     hideLoading();
     toast('✅ Sesión registrada');
@@ -3018,7 +3230,7 @@ function renderMisTerapias(c){
             const def = COMBOS_TERAPIA[combo.tipo] || {};
             const sesiones = state.sesionesTerapia.filter(s => s.comboId === combo.id);
             const usadas = sesiones.length;
-            const total = combo.totalSesiones || def.sesiones || 0;
+            const total = combo.sesionesTotal || def.sesiones || 0;
             const pct = total > 0 ? Math.round(usadas/total*100) : 0;
             const activo = combo.estado === 'activo';
             return `
