@@ -800,7 +800,7 @@ function renderClientes(c, view){
       </div>
       <div id="terapias-list"></div>`;
     document.getElementById('terapias-list').innerHTML = activos.length
-      ? activos.map(p => renderPacienteCard(p)).join('')
+      ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${activos.map(p => renderPacienteCard(p)).join('')}</div>`
       : '<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">🐾</div><p>No hay pacientes activos de terapia.</p></div>';
     return;
   }
@@ -1701,7 +1701,7 @@ async function renderDescartados(c){
       return combos.length > 0 && combos.every(cb => cb.estado === 'completado');
     });
     c.innerHTML = header + toggleHtml('terapias') + (completados.length
-      ? `<div style="display:flex;flex-direction:column;gap:8px">${completados.map(p => renderPacienteCard(p)).join('')}</div>`
+      ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${completados.map(p => renderPacienteCard(p)).join('')}</div>`
       : emptyHtml('No hay pacientes de terapia completados'));
     return;
   }
@@ -3297,33 +3297,55 @@ function renderTerapias(c){
     <div id="terapias-list">
       ${pacientes.length === 0
         ? '<div class="empty-state" style="text-align:center;padding:60px 20px;color:var(--muted)">🐾<br><br>No hay pacientes registrados aún.</div>'
-        : pacientes.map(p => renderPacienteCard(p)).join('')}
+        : `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${pacientes.map(p => renderPacienteCard(p)).join('')}</div>`}
     </div>`;
 }
 
 function renderPacienteCard(p){
-  const combos = state.combos.filter(c => c.pacienteId === p.id);
-  const comboActivo = combos.find(c => c.estado === 'activo');
-  const badgeColor = comboActivo ? 'var(--success)' : 'var(--muted)';
-  const badgeLabel = comboActivo ? (COMBOS_TERAPIA[comboActivo.tipo]?.label || comboActivo.tipo) : 'Sin combo activo';
-  const def = comboActivo ? (COMBOS_TERAPIA[comboActivo.tipo] || {}) : {};
-  return `
-    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-sm)">
-      <div onclick="verPacienteTerapia('${p.id}')" style="width:42px;height:42px;border-radius:50%;background:var(--plum);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0;cursor:pointer">${(p.nombre||'?')[0].toUpperCase()}</div>
-      <div onclick="verPacienteTerapia('${p.id}')" style="flex:1;min-width:0;cursor:pointer">
-        <div style="font-weight:600;font-size:.95rem">${p.nombre}</div>
-        <div style="font-size:.78rem;color:var(--muted)">${p.mascota || ''}${p.especie ? ' · '+p.especie : ''}</div>
+  const combos       = state.combos.filter(c => c.pacienteId === p.id);
+  const activos      = combos.filter(c => c.estado === 'activo');
+  const comboActivo  = activos[0];
+  const todosCompletos = combos.length > 0 && activos.length === 0;
+
+  // Status / progress section
+  let statusHtml = '';
+  if(comboActivo){
+    const def    = COMBOS_TERAPIA[comboActivo.tipo] || {};
+    const usadas = state.sesionesTerapia.filter(s => s.comboId === comboActivo.id).length;
+    const total  = comboActivo.sesionesTotal || def.sesiones || 0;
+    const pct    = total > 0 ? Math.min(100, Math.round(usadas/total*100)) : 0;
+    statusHtml = `
+      <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${usadas}/${total} sesiones · ${def.icon||''} ${def.label||comboActivo.tipo}</div>
+      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:10px">
+        <div style="height:100%;width:${pct}%;background:var(--plum);border-radius:2px;transition:width .3s"></div>
+      </div>`;
+  } else if(todosCompletos){
+    statusHtml = `<div style="margin-bottom:10px"><span style="background:var(--plum);color:#fff;font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">✓ Completado</span></div>`;
+  } else {
+    statusHtml = `<div style="margin-bottom:10px"><span style="background:var(--border);color:var(--muted);font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">Sin combo activo</span></div>`;
+  }
+
+  // Action button
+  const actionBtn = comboActivo
+    ? `<button class="btn-primary" style="width:100%;font-size:.82rem;padding:8px 0"
+        onclick="event.stopPropagation();openRegistrarSesion('${comboActivo.id}')">+ Sesión</button>`
+    : `<button class="btn-primary" style="width:100%;font-size:.82rem;padding:8px 0"
+        onclick="event.stopPropagation();openNuevoCombo('${p.id}')">+ Combo</button>`;
+
+  return `<div onclick="verPacienteTerapia('${p.id}')"
+    style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:box-shadow .15s;box-shadow:var(--shadow-sm)">
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--plum);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0">
+        ${(p.nombre||'?')[0].toUpperCase()}
       </div>
-      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-        <div style="text-align:right">
-          <div style="background:${comboActivo?'var(--success-lt)':'var(--border)'};color:${badgeColor};font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">${def.icon ? def.icon+' ':''} ${badgeLabel}</div>
-          <div style="font-size:.72rem;color:var(--muted);margin-top:4px">${p.telefono || ''}</div>
-        </div>
-        ${comboActivo
-          ? `<button class="btn-icon" style="white-space:nowrap" onclick="openRegistrarSesion('${comboActivo.id}')">＋ Sesión</button>`
-          : `<button class="btn-icon" style="white-space:nowrap" onclick="openNuevoCombo('${p.id}')">＋ Combo</button>`}
+      <div style="min-width:0;flex:1">
+        <div style="font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nombre}</div>
+        <div style="font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.mascota||'—'} · ${p.especie||'—'}${p.telefono?' · '+p.telefono:''}</div>
       </div>
-    </div>`;
+    </div>
+    ${statusHtml}
+    ${actionBtn}
+  </div>`;
 }
 
 function verPacienteTerapia(pacienteId){
