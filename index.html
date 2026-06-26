@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -611,6 +611,7 @@ function buildNav(){
     if(rol==='personal'){
       tabs.push({id:'vencimientos',label:'Vencimientos',icon:'⏰'});
       tabs.push({id:'descartados',label:'Descartados',icon:'🗑'});
+      tabs.push({id:'inyecto',label:'Inyectología',icon:'💉'});
     }
     if(rol==='admin'){
       tabs.push({id:'terapias',label:'Terapias',icon:'🐾'});
@@ -2686,24 +2687,26 @@ function formatDetalle(accion, d){
 }
 
 // ════════════════════════════════════════════
-// PAGE: INYECTOLOGÍA
+// PAGE: INYECTOLOGÍA Y MEDICACIÓN
 // ════════════════════════════════════════════
 function renderInyecto(c){
+  const isAdmin = state.session.rol === 'admin';
   c.innerHTML = `
     <div class="table-card">
       <div class="table-header">
-        <h2>💉 Inyectología · ${state.pacientesInyecto.length} pacientes</h2>
-        <button class="btn-primary" onclick="openNuevoPacienteInyecto()">+ Nuevo paciente</button>
+        <h2>💉 Inyectología y Medicación · ${state.pacientesInyecto.length} pacientes</h2>
+        ${isAdmin ? '<button class="btn-primary" onclick="openNuevoPacienteInyecto()">+ Nuevo paciente</button>' : ''}
       </div>
       ${state.pacientesInyecto.length
         ? state.pacientesInyecto.map(p => renderPacienteInyectoCard(p)).join('')
-        : '<div class="empty-state"><div class="empty-icon">💉</div><p>Sin pacientes registrados</p><p style="font-size:.85rem;color:var(--muted)">La primera vez iniciá sesión como admin y el sistema creará las hojas automáticamente.</p></div>'}
+        : '<div class="empty-state"><div class="empty-icon">💉</div><p>Sin pacientes registrados</p></div>'}
     </div>`;
 }
 
 function renderPacienteInyectoCard(p){
-  const combosP  = state.combosInyecto.filter(c => String(c.pacienteId) === String(p.id));
-  const activos  = combosP.filter(c => c.estado === 'activo');
+  const isAdmin = state.session.rol === 'admin';
+  const combosP = state.combosInyecto.filter(c => String(c.pacienteId) === String(p.id));
+  const activos = combosP.filter(c => c.estado === 'activo');
   return `<div class="client-card" style="cursor:pointer" onclick="verPacienteInyecto('${p.id}')">
     <div class="client-info">
       <div class="client-name">${p.nombre}</div>
@@ -2713,45 +2716,53 @@ function renderPacienteInyectoCard(p){
       ${activos.length
         ? `<span class="pill pill-active">${activos.length} combo${activos.length>1?'s':''} activo${activos.length>1?'s':''}</span>`
         : `<span class="pill pill-silver">Sin combo activo</span>`}
-      <button class="btn-primary" style="font-size:.8rem;padding:6px 12px"
-        onclick="event.stopPropagation();openNuevoComboInyecto('${p.id}')">+ Combo</button>
+      ${isAdmin ? `<button class="btn-primary" style="font-size:.8rem;padding:6px 12px"
+        onclick="event.stopPropagation();openNuevoComboInyecto('${p.id}')">+ Combo</button>` : ''}
     </div>
   </div>`;
 }
 
 function verPacienteInyecto(pacienteId){
-  const p        = state.pacientesInyecto.find(x => String(x.id) === String(pacienteId));
+  const isAdmin = state.session.rol === 'admin';
+  const p = state.pacientesInyecto.find(x => String(x.id) === String(pacienteId));
   if(!p) return;
-  const combosP  = state.combosInyecto.filter(c => String(c.pacienteId) === String(pacienteId));
-  const activos  = combosP.filter(c => c.estado === 'activo');
-  const completos= combosP.filter(c => c.estado === 'completado');
+  const combosP   = state.combosInyecto.filter(c => String(c.pacienteId) === String(pacienteId));
+  const activos   = combosP.filter(c => c.estado === 'activo');
+  const completos = combosP.filter(c => c.estado === 'completado');
+
+  const tipoLabel = t => t === 'medicacion' ? 'Medicación' : 'Inyectología';
+  const tipoPill  = t => t === 'medicacion'
+    ? 'background:#EDE9FE;color:#5B21B6'
+    : 'background:#DBEAFE;color:#1D4ED8';
 
   const renderComboInyecto = (combo, isActivo) => {
-    const apps       = state.aplicacionesInyecto.filter(a => String(a.comboId) === String(combo.id));
-    const dosisUsadas= Number(combo.dosisUsadas) || 0;
-    const dosisTotal = Number(combo.dosisTotal)  || 1;
-    const pct        = Math.min(100, Math.round(dosisUsadas / dosisTotal * 100));
+    const apps        = state.aplicacionesInyecto.filter(a => String(a.comboId) === String(combo.id));
+    const dosisUsadas = Number(combo.dosisUsadas) || 0;
+    const dosisTotal  = Number(combo.dosisTotal)  || 1;
+    const pct         = Math.min(100, Math.round(dosisUsadas / dosisTotal * 100));
+    const unidades    = combo.tipo === 'medicacion' ? 'dosis' : 'inyecciones';
     return `<div style="border:1px solid #E8E0F4;border-radius:10px;padding:16px;margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         <div>
+          <span style="font-size:.72rem;padding:2px 8px;border-radius:10px;${tipoPill(combo.tipo)};margin-right:6px">${tipoLabel(combo.tipo||'inyectologia')}</span>
           <strong style="color:#4A1A6B">${combo.medicamento||'—'}</strong>
-          ${combo.notas?`<div style="color:var(--muted);font-size:.8rem;margin-top:2px">${combo.notas}</div>`:''}
+          ${combo.notas ? `<div style="color:var(--muted);font-size:.8rem;margin-top:4px">${combo.notas}</div>` : ''}
         </div>
-        <div style="display:flex;align-items:center;gap:6px">
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px">
           <span class="pill ${isActivo?'pill-active':'pill-silver'}" style="font-size:.72rem">${isActivo?'Activo':'Completado'}</span>
-          ${isActivo?`<button class="btn-primary" style="font-size:.78rem;padding:5px 10px"
-            onclick="openRegistrarAplicacion('${combo.id}','${pacienteId}')">+ Aplicación</button>`:''}
+          ${isActivo ? `<button class="btn-primary" style="font-size:.78rem;padding:5px 10px"
+            onclick="openRegistrarAplicacion('${combo.id}','${pacienteId}')">+ Aplicar</button>` : ''}
         </div>
       </div>
       <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">
-        ${dosisUsadas} / ${dosisTotal} dosis · $${Number(combo.precio||0).toLocaleString('es-CO')} · Desde ${formatDate(combo.fecha)}
+        ${dosisUsadas} / ${dosisTotal} ${unidades} · $${Number(combo.precio||0).toLocaleString('es-CO')} · Desde ${formatDate(combo.fecha)}
       </div>
       <div style="background:#F0E8FA;border-radius:6px;height:8px;overflow:hidden;margin-bottom:10px">
         <div style="background:${pct>=100?'var(--success)':'#6B2FA0'};height:100%;width:${pct}%;transition:width .3s"></div>
       </div>
       ${apps.length
         ? `<div style="font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">Aplicaciones</div>
-           ${apps.slice().reverse().map(a=>`
+           ${apps.slice().reverse().map(a => `
              <div style="display:flex;justify-content:space-between;border-top:1px solid #EEE;padding:5px 0;font-size:.8rem">
                <span>${formatDate(a.fecha)}${a.notas?' — '+a.notas:''}</span>
                <span style="color:var(--muted)">${(a.registradoPor||'').replace(/^(cli:|tp:)/,'')}</span>
@@ -2760,21 +2771,19 @@ function verPacienteInyecto(pacienteId){
     </div>`;
   };
 
-  openModal(`
-    <h3 style="margin:0 0 2px;color:#4A1A6B">${p.nombre}</h3>
-    <p style="margin:0 0 16px;color:var(--muted);font-size:.85rem">${p.mascota||'—'} · ${p.especie||'—'}${p.tel?' · '+p.tel:''}</p>
-    ${activos.length?`<div style="font-size:.75rem;font-weight:600;color:#4A1A6B;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Combos activos</div>${activos.map(c=>renderComboInyecto(c,true)).join('')}`:''}
-    ${completos.length?`<div style="font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:12px 0 8px">Completados</div>${completos.map(c=>renderComboInyecto(c,false)).join('')}`:''}
-    ${!combosP.length?'<div class="empty-state" style="padding:20px"><div class="empty-icon">💉</div><p>Sin combos</p></div>':''}
+  openModal(`${p.nombre} · ${p.mascota||'—'}`, `
+    <p style="margin:0 0 16px;color:var(--muted);font-size:.85rem">${p.especie||'—'}${p.tel?' · '+p.tel:''}</p>
+    ${activos.length ? `<div style="font-size:.75rem;font-weight:600;color:#4A1A6B;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Activos</div>${activos.map(c=>renderComboInyecto(c,true)).join('')}` : ''}
+    ${completos.length ? `<div style="font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:12px 0 8px">Completados</div>${completos.map(c=>renderComboInyecto(c,false)).join('')}` : ''}
+    ${!combosP.length ? '<div class="empty-state" style="padding:20px"><div class="empty-icon">💉</div><p>Sin combos</p></div>' : ''}
     <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
       <button class="btn-secondary" onclick="closeModal()">Cerrar</button>
-      <button class="btn-primary" onclick="closeModal();openNuevoComboInyecto('${pacienteId}')">+ Nuevo combo</button>
+      ${isAdmin ? `<button class="btn-primary" onclick="closeModal();openNuevoComboInyecto('${pacienteId}')">+ Nuevo combo</button>` : ''}
     </div>`);
 }
 
 function openNuevoPacienteInyecto(){
-  openModal(`
-    <h3 style="margin:0 0 16px;color:#4A1A6B">Nuevo paciente — Inyectología</h3>
+  openModal('Nuevo paciente — Inyectología y Medicación', `
     <div style="display:flex;flex-direction:column;gap:10px">
       <input id="iny-nombre"  class="form-input" placeholder="Nombre del propietario *">
       <input id="iny-cedula"  class="form-input" placeholder="Cédula">
@@ -2815,12 +2824,32 @@ async function guardarPacienteInyecto(){
 
 function openNuevoComboInyecto(pacienteId){
   const p = state.pacientesInyecto.find(x => String(x.id) === String(pacienteId));
-  openModal(`
-    <h3 style="margin:0 0 4px;color:#4A1A6B">Nuevo combo de medicación</h3>
-    <p style="margin:0 0 14px;color:var(--muted);font-size:.85rem">${p?p.nombre+' · '+p.mascota:''}</p>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <input id="iny-med"    class="form-input" placeholder="Medicamento / tratamiento *">
-      <input id="iny-dosis"  class="form-input" type="number" min="1" placeholder="Número de dosis *" value="10">
+  openModal(`Nuevo combo — ${p?p.nombre:''}`, `
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px">Tipo de tratamiento</label>
+        <div style="display:flex;gap:8px">
+          <button id="iny-tipo-inj" onclick="selTipoInyecto('inyectologia')"
+            style="flex:1;padding:10px;border-radius:8px;border:2px solid #1D4ED8;background:#DBEAFE;color:#1D4ED8;font-weight:600;cursor:pointer;font-size:.9rem">
+            Inyectología
+          </button>
+          <button id="iny-tipo-med" onclick="selTipoInyecto('medicacion')"
+            style="flex:1;padding:10px;border-radius:8px;border:2px solid #E9D5FF;background:#FFF;color:#7C3AED;font-weight:600;cursor:pointer;font-size:.9rem">
+            Medicación
+          </button>
+        </div>
+        <input type="hidden" id="iny-tipo" value="inyectologia">
+      </div>
+      <input id="iny-med" class="form-input" placeholder="Nombre del medicamento / tratamiento *">
+      <div>
+        <label style="font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px">Cantidad de unidades</label>
+        <div style="display:flex;align-items:center;border:1.5px solid #D8D0E8;border-radius:8px;overflow:hidden;width:fit-content">
+          <button onclick="ajustarDosisIny(-1)" style="padding:9px 18px;background:#F5F0FF;border:none;font-size:1.3rem;cursor:pointer;color:#6B2FA0;font-weight:700;line-height:1">-</button>
+          <input id="iny-dosis" type="number" min="1" value="10"
+            style="width:64px;text-align:center;border:none;border-left:1.5px solid #D8D0E8;border-right:1.5px solid #D8D0E8;padding:9px 0;font-size:1.1rem;font-weight:700;color:#4A1A6B;outline:none">
+          <button onclick="ajustarDosisIny(1)"  style="padding:9px 18px;background:#F5F0FF;border:none;font-size:1.3rem;cursor:pointer;color:#6B2FA0;font-weight:700;line-height:1">+</button>
+        </div>
+      </div>
       <input id="iny-precio" class="form-input" type="number" min="0" placeholder="Precio total (COP)">
       <input id="iny-fecha"  class="form-input" type="date" value="${new Date().toISOString().slice(0,10)}">
       <input id="iny-notas"  class="form-input" placeholder="Notas (opcional)">
@@ -2831,15 +2860,35 @@ function openNuevoComboInyecto(pacienteId){
     </div>`);
 }
 
+function selTipoInyecto(tipo){
+  document.getElementById('iny-tipo').value = tipo;
+  const base = 'flex:1;padding:10px;border-radius:8px;font-weight:600;cursor:pointer;font-size:.9rem;border:2px solid ';
+  const inj  = document.getElementById('iny-tipo-inj');
+  const med  = document.getElementById('iny-tipo-med');
+  if(tipo === 'inyectologia'){
+    inj.style.cssText = base + '#1D4ED8;background:#DBEAFE;color:#1D4ED8';
+    med.style.cssText = base + '#E9D5FF;background:#FFF;color:#7C3AED';
+  } else {
+    med.style.cssText = base + '#7C3AED;background:#EDE9FE;color:#5B21B6';
+    inj.style.cssText = base + '#DBEAFE;background:#FFF;color:#1D4ED8';
+  }
+}
+
+function ajustarDosisIny(delta){
+  const el = document.getElementById('iny-dosis');
+  el.value = Math.max(1, (parseInt(el.value)||1) + delta);
+}
+
 async function guardarComboInyecto(pacienteId){
   const medicamento = document.getElementById('iny-med').value.trim();
   const dosisTotal  = parseInt(document.getElementById('iny-dosis').value)||0;
-  if(!medicamento)   return toast('El medicamento es obligatorio','error');
-  if(dosisTotal < 1) return toast('Ingresá al menos 1 dosis','error');
+  const tipo        = document.getElementById('iny-tipo').value;
+  if(!medicamento)   return toast('El nombre del medicamento es obligatorio','error');
+  if(dosisTotal < 1) return toast('Ingresá al menos 1 unidad','error');
   showLoading();
   try {
     const r = await apiCall('addComboInyecto',{
-      pacienteId, medicamento, dosisTotal,
+      pacienteId, tipo, medicamento, dosisTotal,
       precio: parseFloat(document.getElementById('iny-precio').value)||0,
       fecha:  document.getElementById('iny-fecha').value,
       notas:  document.getElementById('iny-notas').value.trim(),
@@ -2852,12 +2901,12 @@ async function guardarComboInyecto(pacienteId){
 }
 
 function openRegistrarAplicacion(comboId, pacienteId){
-  const combo      = state.combosInyecto.find(c => String(c.id) === String(comboId));
-  const dosisUsadas= Number(combo?.dosisUsadas)||0;
-  const dosisTotal = Number(combo?.dosisTotal)||1;
-  openModal(`
-    <h3 style="margin:0 0 4px;color:#4A1A6B">Registrar aplicación</h3>
-    <p style="margin:0 0 14px;color:var(--muted);font-size:.85rem">${combo?.medicamento||'—'} · aplicación ${dosisUsadas+1} de ${dosisTotal}</p>
+  const combo       = state.combosInyecto.find(c => String(c.id) === String(comboId));
+  const dosisUsadas = Number(combo?.dosisUsadas)||0;
+  const dosisTotal  = Number(combo?.dosisTotal)||1;
+  const unidad      = combo?.tipo === 'medicacion' ? 'dosis' : 'inyección';
+  openModal('Registrar aplicación', `
+    <p style="margin:0 0 14px;color:var(--muted);font-size:.9rem"><strong>${combo?.medicamento||'—'}</strong> · ${unidad} ${dosisUsadas+1} de ${dosisTotal}</p>
     <div style="display:flex;flex-direction:column;gap:10px">
       <input id="iny-ap-fecha" class="form-input" type="date" value="${new Date().toISOString().slice(0,10)}">
       <input id="iny-ap-notas" class="form-input" placeholder="Notas (opcional)">
@@ -2879,7 +2928,7 @@ async function guardarAplicacion(comboId, pacienteId){
     state.aplicacionesInyecto.push(r.aplicacion);
     const combo = state.combosInyecto.find(c => String(c.id) === String(comboId));
     if(combo){
-      combo.dosisUsadas = Number(combo.dosisUsadas||0)+1;
+      combo.dosisUsadas = Number(combo.dosisUsadas||0) + 1;
       if(Number(combo.dosisUsadas) >= Number(combo.dosisTotal)) combo.estado = 'completado';
     }
     closeModal(); hideLoading();
