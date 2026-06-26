@@ -2750,37 +2750,69 @@ function renderInyecto(c, skipRefresh){
 }
 
 function renderPacienteInyectoCard(p){
-  const isAdmin = state.session.rol === 'admin';
-  const combosP    = state.combosInyecto.filter(c => String(c.pacienteId) === String(p.id));
-  const activos    = combosP.filter(c => c.estado === 'activo');
+  const isAdmin    = state.session.rol === 'admin';
+  const isPersonal = state.session.rol === 'personal';
+  const combosP      = state.combosInyecto.filter(c => String(c.pacienteId) === String(p.id));
+  const activos      = combosP.filter(c => c.estado === 'activo');
+  const completos    = combosP.filter(c => c.estado === 'completado');
   const primerActivo = activos[0];
+  const todosCompletos = combosP.length > 0 && activos.length === 0;
+
+  // Status / progress section
+  let statusHtml = '';
+  if(activos.length === 1){
+    const u   = Number(primerActivo.dosisUsadas)||0;
+    const t   = Number(primerActivo.dosisTotal)||1;
+    const pct = Math.min(100, Math.round(u/t*100));
+    const und = primerActivo.tipo === 'medicacion' ? 'dosis' : 'iny.';
+    statusHtml = `
+      <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u}/${t} ${und} · ${primerActivo.medicamento||''}</div>
+      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:10px">
+        <div style="height:100%;width:${pct}%;background:var(--plum);border-radius:2px;transition:width .3s"></div>
+      </div>`;
+  } else if(activos.length > 1){
+    statusHtml = `<div style="margin-bottom:10px"><span style="background:var(--success-lt);color:var(--success);font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">${activos.length} combos activos</span></div>`;
+  } else if(todosCompletos){
+    statusHtml = `<div style="margin-bottom:10px"><span style="background:var(--plum);color:#fff;font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">✓ Completado</span></div>`;
+  } else {
+    statusHtml = `<div style="margin-bottom:10px"><span style="background:var(--border);color:var(--muted);font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">Sin combo</span></div>`;
+  }
+
+  // Action button
   let actionBtn = '';
   if(activos.length === 1){
-    actionBtn = `<button class="btn-primary" style="width:100%;margin-top:10px;font-size:.82rem;padding:8px 0"
+    actionBtn = `<button class="btn-primary" style="width:100%;font-size:.82rem;padding:8px 0"
       onclick="event.stopPropagation();openRegistrarAplicacion('${primerActivo.id}','${p.id}')">+ Aplicar</button>`;
   } else if(activos.length > 1){
-    actionBtn = `<button class="btn-primary" style="width:100%;margin-top:10px;font-size:.82rem;padding:8px 0"
-      onclick="event.stopPropagation();verPacienteInyecto('${p.id}')">+ Aplicar</button>`;
-  } else if(isAdmin){
-    actionBtn = `<button class="btn-primary" style="width:100%;margin-top:10px;font-size:.82rem;padding:8px 0"
+    actionBtn = `<button class="btn-primary" style="width:100%;font-size:.82rem;padding:8px 0"
+      onclick="event.stopPropagation();verPacienteInyecto('${p.id}')">Ver combos</button>`;
+  } else if(todosCompletos){
+    actionBtn = `<button onclick="event.stopPropagation();descartarPacienteInyecto('${p.id}')"
+      style="width:100%;font-size:.82rem;padding:8px 0;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif">Archivar</button>`;
+  } else if(isAdmin || isPersonal){
+    actionBtn = `<button class="btn-primary" style="width:100%;font-size:.82rem;padding:8px 0"
       onclick="event.stopPropagation();openNuevoComboInyecto('${p.id}')">+ Combo</button>`;
   }
+
+  // Admin delete button (top-right corner)
+  const deleteBtn = isAdmin
+    ? `<button title="Eliminar paciente" onclick="event.stopPropagation();eliminarPacienteInyecto('${p.id}')"
+        style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:2px 4px;line-height:1;flex-shrink:0;border-radius:4px">✕</button>`
+    : '';
+
   return `<div onclick="verPacienteInyecto('${p.id}')"
     style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:box-shadow .15s;box-shadow:var(--shadow-sm)">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">
       <div style="width:40px;height:40px;border-radius:50%;background:var(--plum);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0">
         ${(p.nombre||'?')[0].toUpperCase()}
       </div>
-      <div style="min-width:0">
+      <div style="min-width:0;flex:1">
         <div style="font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nombre}</div>
         <div style="font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.mascota||'—'} · ${p.especie||'—'}${p.tel?' · '+p.tel:''}</div>
       </div>
+      ${deleteBtn}
     </div>
-    <div>
-      ${activos.length
-        ? `<span style="background:var(--success-lt);color:var(--success);font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">${activos.length} combo${activos.length>1?'s':''} activo${activos.length>1?'s':''}</span>`
-        : `<span style="background:var(--border);color:var(--muted);font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">Sin combo activo</span>`}
-    </div>
+    ${statusHtml}
     ${actionBtn}
   </div>`;
 }
@@ -2789,9 +2821,10 @@ function verPacienteInyecto(pacienteId){
   const isAdmin = state.session.rol === 'admin';
   const p = state.pacientesInyecto.find(x => String(x.id) === String(pacienteId));
   if(!p) return;
-  const combosP   = state.combosInyecto.filter(c => String(c.pacienteId) === String(pacienteId));
-  const activos   = combosP.filter(c => c.estado === 'activo');
-  const completos = combosP.filter(c => c.estado === 'completado');
+  const combosP      = state.combosInyecto.filter(c => String(c.pacienteId) === String(pacienteId));
+  const activos      = combosP.filter(c => c.estado === 'activo');
+  const completos    = combosP.filter(c => c.estado === 'completado');
+  const todosCompletos = combosP.length > 0 && activos.length === 0;
 
   const tipoLabel = t => t === 'medicacion' ? 'Medicación' : 'Inyectología';
   const tipoPill  = t => t === 'medicacion'
@@ -2841,7 +2874,10 @@ function verPacienteInyecto(pacienteId){
     ${!combosP.length ? '<div class="empty-state" style="padding:20px"><div class="empty-icon">💉</div><p>Sin combos</p></div>' : ''}
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal();refreshInyectoView()">Cerrar</button>
+      ${todosCompletos ? `<button class="btn-cancel" onclick="closeModal();descartarPacienteInyecto('${pacienteId}')">Archivar</button>` : ''}
       ${isAdmin ? `<button class="btn-save" onclick="closeModal();openNuevoComboInyecto('${pacienteId}')">+ Nuevo combo</button>` : ''}
+      ${isAdmin ? `<button onclick="closeModal();eliminarPacienteInyecto('${pacienteId}')"
+        style="padding:10px 20px;border-radius:var(--radius-sm);border:1px solid #EF4444;background:transparent;color:#EF4444;font-family:'DM Sans',sans-serif;font-size:.875rem;font-weight:600;cursor:pointer">Eliminar paciente</button>` : ''}
     </div>`);
 }
 
@@ -3102,6 +3138,34 @@ async function guardarAplicacion(comboId, pacienteId){
     toast('Aplicación registrada');
     refreshInyectoView();
     verPacienteInyecto(pacienteId);
+  } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
+}
+
+async function descartarPacienteInyecto(pacienteId){
+  if(!confirm('¿Archivar este paciente? Ya no aparecerá en la lista activa.')) return;
+  showLoading();
+  try {
+    await apiCall('archivePacienteInyecto', { pacienteId });
+    state.pacientesInyecto = state.pacientesInyecto.filter(p => String(p.id) !== String(pacienteId));
+    hideLoading();
+    toast('Paciente archivado');
+    refreshInyectoView();
+  } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
+}
+
+async function eliminarPacienteInyecto(pacienteId){
+  const p = state.pacientesInyecto.find(x => String(x.id) === String(pacienteId));
+  if(!confirm(`¿Eliminar permanentemente a "${p?.nombre||'este paciente'}" y todos sus datos? Esta acción no se puede deshacer.`)) return;
+  showLoading();
+  try {
+    await apiCall('deletePacienteInyecto', { pacienteId });
+    state.pacientesInyecto    = state.pacientesInyecto.filter(x => String(x.id) !== String(pacienteId));
+    state.combosInyecto       = state.combosInyecto.filter(c => String(c.pacienteId) !== String(pacienteId));
+    state.aplicacionesInyecto = state.aplicacionesInyecto.filter(a => String(a.pacienteId) !== String(pacienteId));
+    hideLoading();
+    toast('Paciente eliminado');
+    closeModal();
+    refreshInyectoView();
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
 
