@@ -785,7 +785,7 @@ function renderClientes(c, view){
     <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
       <button onclick="renderClientes(document.getElementById('page-content'),'membresias')" style="${tabStyle(active,'membresias')}">💳 Membresías</button>
       <button onclick="renderClientes(document.getElementById('page-content'),'terapias')"   style="${tabStyle(active,'terapias')}">🐾 Terapia Física</button>
-      <button onclick="renderClientes(document.getElementById('page-content'),'inyecto')"    style="${tabStyle(active,'inyecto')}">💉 Inyectología</button>
+      <button onclick="switchToInyecto(document.getElementById('page-content'))"            style="${tabStyle(active,'inyecto')}">💉 Inyectología</button>
     </div>`;
 
   if(showToggle && clientesView === 'terapias'){
@@ -2696,7 +2696,33 @@ function formatDetalle(accion, d){
 // ════════════════════════════════════════════
 // PAGE: INYECTOLOGÍA Y MEDICACIÓN
 // ════════════════════════════════════════════
-function renderInyecto(c){
+async function reloadInyectoData(){
+  try {
+    const ri = await apiCall('getAllInyecto');
+    state.pacientesInyecto    = ri.pacientes    || [];
+    state.combosInyecto       = ri.combos       || [];
+    state.aplicacionesInyecto = ri.aplicaciones || [];
+  } catch(e){ /* silent */ }
+}
+
+function refreshInyectoView(){
+  const pg  = document.getElementById('page-content');
+  if(!pg) return;
+  if(state.session.rol === 'admin'){
+    renderInyecto(pg, true);
+  } else if(clientesView === 'inyecto'){
+    renderClientes(pg);
+  }
+}
+
+async function switchToInyecto(c){
+  clientesView = 'inyecto';
+  renderClientes(c);
+  await reloadInyectoData();
+  if(clientesView === 'inyecto') renderClientes(c);
+}
+
+function renderInyecto(c, skipRefresh){
   const isAdmin = state.session.rol === 'admin';
   const n = state.pacientesInyecto.length;
   c.innerHTML = `
@@ -2710,6 +2736,9 @@ function renderInyecto(c){
     ${n
       ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${state.pacientesInyecto.map(p=>renderPacienteInyectoCard(p)).join('')}</div>`
       : '<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">💉</div><p>Sin pacientes registrados</p></div>'}`;
+  if(!skipRefresh){
+    reloadInyectoData().then(() => renderInyecto(c, true));
+  }
 }
 
 function renderPacienteInyectoCard(p){
@@ -2803,7 +2832,7 @@ function verPacienteInyecto(pacienteId){
     ${completos.length ? `<div style="font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:12px 0 8px">Completados</div>${completos.map(c=>renderComboInyecto(c,false)).join('')}` : ''}
     ${!combosP.length ? '<div class="empty-state" style="padding:20px"><div class="empty-icon">💉</div><p>Sin combos</p></div>' : ''}
     <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal()">Cerrar</button>
+      <button class="btn-cancel" onclick="closeModal();refreshInyectoView()">Cerrar</button>
       ${isAdmin ? `<button class="btn-save" onclick="closeModal();openNuevoComboInyecto('${pacienteId}')">+ Nuevo combo</button>` : ''}
     </div>`);
 }
@@ -2954,6 +2983,7 @@ async function guardarComboInyecto(pacienteId){
     state.combosInyecto.push(r.combo);
     closeModal(); hideLoading();
     toast('Combo registrado');
+    refreshInyectoView();
     verPacienteInyecto(pacienteId);
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
@@ -3000,6 +3030,7 @@ async function guardarAplicacion(comboId, pacienteId){
     }
     closeModal(); hideLoading();
     toast('Aplicación registrada');
+    refreshInyectoView();
     verPacienteInyecto(pacienteId);
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
