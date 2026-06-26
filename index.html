@@ -1701,7 +1701,7 @@ async function renderDescartados(c){
       return combos.length > 0 && combos.every(cb => cb.estado === 'completado');
     });
     c.innerHTML = header + toggleHtml('terapias') + (completados.length
-      ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${completados.map(p => renderPacienteCard(p)).join('')}</div>`
+      ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${completados.map(p => renderTerapiaDescartadaCard(p)).join('')}</div>`
       : emptyHtml('No hay pacientes de terapia completados'));
     return;
   }
@@ -1761,6 +1761,66 @@ async function restaurarPacienteInyecto(pacienteId){
     hideLoading();
     toast('Paciente restaurado a activos');
     renderPage('descartados');
+  } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
+}
+
+function renderTerapiaDescartadaCard(p){
+  const combos = state.combos.filter(c => c.pacienteId === p.id);
+  // Pick the combo whose latest session is the most recent (the one that just completed)
+  const ultimoCombo = combos.slice().sort((a,b) => sesionMasReciente(b.id) - sesionMasReciente(a.id))[0];
+  const def    = ultimoCombo ? (COMBOS_TERAPIA[ultimoCombo.tipo] || {}) : {};
+  const usadas = ultimoCombo ? state.sesionesTerapia.filter(s => s.comboId === ultimoCombo.id).length : 0;
+  const total  = ultimoCombo ? (ultimoCombo.sesionesTotal || def.sesiones || 0) : 0;
+
+  return `<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)">
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--muted);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0">
+        ${(p.nombre||'?')[0].toUpperCase()}
+      </div>
+      <div style="min-width:0;flex:1">
+        <div style="font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nombre}</div>
+        <div style="font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.mascota||'—'} · ${p.especie||'—'}</div>
+      </div>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);margin-bottom:8px">${usadas}/${total} sesiones · ${def.icon||''} ${def.label||(ultimoCombo?ultimoCombo.tipo:'—')}</div>
+    <div style="margin-bottom:10px">
+      <span style="background:var(--plum);color:#fff;font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">✓ Completado</span>
+    </div>
+    <button onclick="restaurarTerapia('${p.id}')"
+      style="width:100%;font-size:.82rem;padding:8px 0;border:1px solid var(--success);background:transparent;color:var(--success);border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">♻️ Restaurar (deshacer última sesión)</button>
+  </div>`;
+}
+
+// Returns the timestamp (ms) of the most recent session of a combo, 0 if none
+function sesionMasReciente(comboId){
+  const ses = state.sesionesTerapia.filter(s => String(s.comboId) === String(comboId));
+  if(!ses.length) return 0;
+  return Math.max(...ses.map(s => {
+    const t = new Date(s.creadoEn || s.fecha || 0).getTime();
+    return isNaN(t) ? 0 : t;
+  }));
+}
+
+async function restaurarTerapia(pacienteId){
+  const combos = state.combos.filter(c => c.pacienteId === pacienteId);
+  const combo  = combos.slice().sort((a,b) => sesionMasReciente(b.id) - sesionMasReciente(a.id))[0];
+  if(!combo){ toast('No hay combo para restaurar','error'); return; }
+  const ses = state.sesionesTerapia
+    .filter(s => String(s.comboId) === String(combo.id))
+    .slice()
+    .sort((a,b) => new Date(b.creadoEn||b.fecha||0) - new Date(a.creadoEn||a.fecha||0));
+  if(!ses.length){ toast('Este combo no tiene sesiones que deshacer','error'); return; }
+  const ultima = ses[0];
+  if(!confirm(`¿Restaurar a "${(state.pacientesTerapia.find(p=>p.id===pacienteId)||{}).nombre||'este paciente'}"? Se eliminará la última sesión y el combo volverá a estar activo.`)) return;
+  showLoading();
+  try {
+    await apiCall('deleteSesion', { sesionId: ultima.id, comboId: combo.id });
+    state.sesionesTerapia = state.sesionesTerapia.filter(s => String(s.id) !== String(ultima.id));
+    combo.estado = 'activo';
+    if(typeof combo.sesionesUsadas !== 'undefined') combo.sesionesUsadas = Math.max(0, Number(combo.sesionesUsadas) - 1);
+    hideLoading();
+    toast('Paciente restaurado a activos');
+    renderDescartados(document.getElementById('page-content'));
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
 
