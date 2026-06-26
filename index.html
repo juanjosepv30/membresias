@@ -1802,6 +1802,14 @@ async function reloadTerapiaData(){
   } catch(e){ /* silent */ }
 }
 
+// Re-render the terapia card grid behind the modal (mirror of refreshInyectoView)
+function refreshTerapiaView(){
+  const pg = document.getElementById('page-content');
+  if(!pg) return;
+  if(state.session.rol === 'terapista'){ renderTerapias(pg); }
+  else if(clientesView === 'terapias'){ renderClientes(pg); }
+}
+
 async function archivarTerapia(pacienteId){
   if(!confirm('¿Archivar este paciente? Pasará al módulo de Descartados.')) return;
   showLoading();
@@ -3593,6 +3601,7 @@ async function guardarCombo(pacienteId){
     closeModal();
     hideLoading();
     toast('✅ Combo registrado');
+    refreshTerapiaView();
     verPacienteTerapia(pacienteId);
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
@@ -3639,6 +3648,7 @@ async function guardarSesion(comboId){
     }
     closeModal(); hideLoading();
     toast('✅ Sesión registrada');
+    refreshTerapiaView();
     verPacienteTerapia(combo.pacienteId);
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
@@ -3652,6 +3662,7 @@ async function eliminarCombo(comboId, pacienteId){
     state.sesionesTerapia = state.sesionesTerapia.filter(s => s.comboId !== comboId);
     hideLoading();
     toast('Combo eliminado');
+    refreshTerapiaView();
     verPacienteTerapia(pacienteId);
     } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
   });
@@ -3665,6 +3676,7 @@ async function eliminarSesion(sesionId, comboId, pacienteId){
       state.sesionesTerapia = state.sesionesTerapia.filter(s => s.id !== sesionId);
       hideLoading();
       toast('Sesión eliminada');
+      refreshTerapiaView();
       verPacienteTerapia(pacienteId);
     } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
   });
