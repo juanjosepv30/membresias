@@ -616,8 +616,6 @@ function buildNav(){
       tabs.push({id:'descartados',label:'Descartados',icon:'🗑'});
     }
     if(rol==='admin'){
-      tabs.push({id:'terapias',label:'Terapias',icon:'🐾'});
-      tabs.push({id:'inyecto',label:'Inyectología',icon:'💉'});
       tabs.push({id:'dashboard',label:'Dashboard',icon:'📊'});
       tabs.push({id:'historial',label:'Historial',icon:'🕐'});
       tabs.push({id:'usuarios',label:'Usuarios',icon:'🔐'});
@@ -771,7 +769,8 @@ function pillPlan(plan){
 // PAGE: CLIENTES
 // ════════════════════════════════════════════
 let clientFilter = {q:'', plan:'', status:'', sort:'reciente'};
-let clientesView = 'membresias'; // 'membresias' | 'terapias' | 'inyecto'
+let clientesView   = 'membresias'; // 'membresias' | 'terapias' | 'inyecto'
+let descartadosView = 'membresias'; // 'membresias' | 'terapias' | 'inyecto'
 
 function renderClientes(c, view){
   const rol = state.session.rol;
@@ -779,8 +778,7 @@ function renderClientes(c, view){
   const isPersonal = rol === 'personal';
   if(view) clientesView = view;
 
-  // Personal sees both views; admin only sees membresías here (terapias has its own tab)
-  const showToggle = isPersonal;
+  const showToggle = isPersonal || isAdmin;
 
   const tabStyle = (active, key) =>
     `padding:8px 20px;border-radius:20px;border:2px solid var(--plum);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;${active===key?'background:var(--plum);color:#fff':'background:transparent;color:var(--plum)'}`;
@@ -792,14 +790,18 @@ function renderClientes(c, view){
     </div>`;
 
   if(showToggle && clientesView === 'terapias'){
-    c.innerHTML = toggleHtml('terapias') + '<div id="terapias-list"></div>';
-    const list = document.getElementById('terapias-list');
-    const pacientes = state.pacientesTerapia || [];
-    if(!pacientes.length){
-      list.innerHTML = '<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">🐾</div><p>No hay pacientes de terapia registrados.</p></div>';
-    } else {
-      list.innerHTML = pacientes.map(p => renderPacienteCard(p)).join('');
-    }
+    const activos = (state.pacientesTerapia || []).filter(p => {
+      const combos = state.combos.filter(c => c.pacienteId === p.id);
+      return !(combos.length > 0 && combos.every(c => c.estado === 'completado'));
+    });
+    c.innerHTML = toggleHtml('terapias') + `
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+        <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openNuevoPacienteTerapia()">+ Nuevo paciente</button>
+      </div>
+      <div id="terapias-list"></div>`;
+    document.getElementById('terapias-list').innerHTML = activos.length
+      ? activos.map(p => renderPacienteCard(p)).join('')
+      : '<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">🐾</div><p>No hay pacientes activos de terapia.</p></div>';
     return;
   }
 
@@ -1645,60 +1647,121 @@ function eliminarConsumo(consumoId, clienteId){
 // PAGE: DESCARTADOS
 // ════════════════════════════════════════════
 async function renderDescartados(c){
-  c.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted)">Cargando...</div>`;
-  let descartados = [];
-  try {
-    const res = await apiCall('getPapelera');
-    descartados = res.descartados || [];
-  } catch(e){
-    c.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><p>Error al cargar: ${e.message}</p></div>`;
-    return;
-  }
-
   const isAdmin = state.session.rol === 'admin';
+  const tabStyle = (a,k) =>
+    `padding:8px 20px;border-radius:20px;border:2px solid var(--plum);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;${a===k?'background:var(--plum);color:#fff':'background:transparent;color:var(--plum)'}`;
+  const toggleHtml = (a) => `
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+      <button onclick="switchDescartadosView('membresias')" style="${tabStyle(a,'membresias')}">💳 Membresías</button>
+      <button onclick="switchDescartadosView('terapias')"   style="${tabStyle(a,'terapias')}">🐾 Terapia Física</button>
+      <button onclick="switchDescartadosView('inyecto')"    style="${tabStyle(a,'inyecto')}">💉 Inyectología</button>
+    </div>`;
+  const header = `<div class="page-header" style="margin-bottom:16px"><h1 class="page-title">🗑 Descartados</h1></div>`;
+  const emptyHtml = (msg) => `<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">✅</div><p>${msg}</p></div>`;
 
-  if(!descartados.length){
-    c.innerHTML = `
-      <div class="page-header"><h1 class="page-title">🗑 Descartados</h1></div>
-      <div class="empty-state" style="padding:60px 0">
-        <div class="empty-icon">✅</div>
-        <p>No hay clientes descartados</p>
+  // ── MEMBRESÍAS ──────────────────────────────────────────────────
+  if(descartadosView === 'membresias'){
+    c.innerHTML = header + toggleHtml('membresias') + `<div id="desc-content" style="text-align:center;padding:40px;color:var(--muted)">Cargando...</div>`;
+    const cont = document.getElementById('desc-content');
+    try {
+      const res = await apiCall('getPapelera');
+      const descartados = res.descartados || [];
+      if(!descartados.length){ cont.innerHTML = emptyHtml('No hay membresías descartadas'); return; }
+      cont.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+        ${descartados.map(d=>{
+          const plan  = PLANES[d.plan] || {};
+          const fecha = d.descartadoEn ? formatDate(d.descartadoEn.slice(0,10)) : '—';
+          return `
+            <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:44px;height:44px;border-radius:50%;background:var(--danger-lt);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">${plan.icon||'👤'}</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:700;font-size:1rem">${d.nombre}</div>
+                  <div style="font-size:.8rem;color:var(--muted)">${d.mascota||''} · ${d.plan||''}</div>
+                </div>
+              </div>
+              <div style="font-size:.78rem;color:var(--muted);border-top:1px solid var(--border);padding-top:8px">
+                Descartado el <strong>${fecha}</strong> por <strong>${d.descartadoPor||'—'}</strong>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn-icon" style="color:var(--success);border-color:var(--success)" onclick="restaurarCliente('${d.id}')">♻️ Restaurar</button>
+                ${isAdmin ? `<button class="btn-icon danger" onclick="eliminarPermanente('${d.id}','${d.nombre}')">🗑 Eliminar</button>` : ''}
+              </div>
+            </div>`;
+        }).join('')}
       </div>`;
+    } catch(e){ document.getElementById('desc-content').innerHTML = `<p style="color:var(--danger)">Error: ${e.message}</p>`; }
     return;
   }
 
-  const cards = descartados.map(d=>{
-    const plan = PLANES[d.plan] || {};
-    const fecha = d.descartadoEn ? formatDate(d.descartadoEn.slice(0,10)) : '—';
-    const por   = d.descartadoPor || '—';
-    return `
-      <div style="background:var(--white);border:2px solid var(--border);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="width:44px;height:44px;border-radius:50%;background:var(--danger-lt);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">${plan.icon||'👤'}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:700;color:var(--ink);font-size:1rem">${d.nombre}</div>
-            <div style="font-size:.8rem;color:var(--muted)">${d.mascota||''} · ${d.plan||''}</div>
-          </div>
-          <span class="pill pill-inactive" style="flex-shrink:0">Descartado</span>
-        </div>
-        <div style="font-size:.78rem;color:var(--muted);border-top:1px solid var(--border);padding-top:8px">
-          Descartado el <strong>${fecha}</strong> por <strong>${por}</strong>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn-icon" style="color:var(--success);border-color:var(--success)" onclick="restaurarCliente('${d.id}')">♻️ Restaurar</button>
-          ${isAdmin ? `<button class="btn-icon danger" onclick="eliminarPermanente('${d.id}','${d.nombre}')">🗑 Eliminar permanente</button>` : ''}
-        </div>
-      </div>`;
-  }).join('');
+  // ── TERAPIA FÍSICA ──────────────────────────────────────────────
+  if(descartadosView === 'terapias'){
+    const completados = (state.pacientesTerapia || []).filter(p => {
+      const combos = state.combos.filter(cb => cb.pacienteId === p.id);
+      return combos.length > 0 && combos.every(cb => cb.estado === 'completado');
+    });
+    c.innerHTML = header + toggleHtml('terapias') + (completados.length
+      ? `<div style="display:flex;flex-direction:column;gap:8px">${completados.map(p => renderPacienteCard(p)).join('')}</div>`
+      : emptyHtml('No hay pacientes de terapia completados'));
+    return;
+  }
 
-  c.innerHTML = `
-    <div class="page-header">
-      <h1 class="page-title">🗑 Descartados</h1>
-      <p class="page-subtitle">${descartados.length} cliente${descartados.length!==1?'s':''} descartado${descartados.length!==1?'s':''}</p>
+  // ── INYECTOLOGÍA ────────────────────────────────────────────────
+  if(descartadosView === 'inyecto'){
+    c.innerHTML = header + toggleHtml('inyecto') + `<div id="desc-content" style="text-align:center;padding:40px;color:var(--muted)">Cargando...</div>`;
+    const cont = document.getElementById('desc-content');
+    try {
+      const res = await apiCall('getArchivedInyecto');
+      const pacientes = res.pacientes || [];
+      state.pacientesInyectoArchivados = pacientes;
+      state.combosInyectoArchivados    = res.combos || [];
+      if(!pacientes.length){ cont.innerHTML = emptyHtml('No hay pacientes archivados'); return; }
+      cont.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+        ${pacientes.map(p => renderArchivedInyectoCard(p)).join('')}
+      </div>`;
+    } catch(e){ document.getElementById('desc-content').innerHTML = `<p style="color:var(--danger)">Error: ${e.message}</p>`; }
+  }
+}
+
+function switchDescartadosView(view){
+  descartadosView = view;
+  renderDescartados(document.getElementById('page-content'));
+}
+
+function renderArchivedInyectoCard(p){
+  const combos    = (state.combosInyectoArchivados || []).filter(c => String(c.pacienteId) === String(p.id));
+  const nCombos   = combos.length;
+  const isAdmin   = state.session.rol === 'admin';
+  return `<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)">
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--muted);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0">
+        ${(p.nombre||'?')[0].toUpperCase()}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.9rem">${p.nombre}</div>
+        <div style="font-size:.75rem;color:var(--muted)">${p.mascota||'—'} · ${p.especie||'—'}</div>
+      </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
-      ${cards}
-    </div>`;
+    <div style="margin-bottom:10px">
+      <span style="background:var(--plum);color:#fff;font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">✓ Completado</span>
+      ${nCombos ? `<span style="font-size:.75rem;color:var(--muted);margin-left:8px">${nCombos} combo${nCombos>1?'s':''}</span>` : ''}
+    </div>
+    <button onclick="restaurarPacienteInyecto('${p.id}')"
+      style="width:100%;font-size:.82rem;padding:8px 0;border:1px solid var(--success);background:transparent;color:var(--success);border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">♻️ Restaurar</button>
+    ${isAdmin ? `<button onclick="eliminarPacienteInyecto('${p.id}')"
+      style="width:100%;font-size:.82rem;padding:8px 0;border:1px solid #EF4444;background:transparent;color:#EF4444;border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;margin-top:6px">Eliminar permanente</button>` : ''}
+  </div>`;
+}
+
+async function restaurarPacienteInyecto(pacienteId){
+  showLoading();
+  try {
+    await apiCall('restorePacienteInyecto', { pacienteId });
+    await reloadInyectoData();
+    hideLoading();
+    toast('Paciente restaurado a activos');
+    renderPage('descartados');
+  } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
 
 async function restaurarCliente(id){
@@ -2713,13 +2776,9 @@ async function reloadInyectoData(){
 }
 
 function refreshInyectoView(){
-  const pg  = document.getElementById('page-content');
+  const pg = document.getElementById('page-content');
   if(!pg) return;
-  if(state.session.rol === 'admin'){
-    renderInyecto(pg, true);
-  } else if(clientesView === 'inyecto'){
-    renderClientes(pg);
-  }
+  if(clientesView === 'inyecto') renderClientes(pg);
 }
 
 async function switchToInyecto(c){
@@ -3134,6 +3193,17 @@ async function guardarAplicacion(comboId, pacienteId){
       combo.dosisUsadas = Number(combo.dosisUsadas||0) + 1;
       if(Number(combo.dosisUsadas) >= Number(combo.dosisTotal)) combo.estado = 'completado';
     }
+    // Auto-archive if ALL combos for this patient are now completed
+    const combosDelPaciente = state.combosInyecto.filter(c => String(c.pacienteId) === String(pacienteId));
+    const todosTerminados = combosDelPaciente.length > 0 && combosDelPaciente.every(c => c.estado === 'completado');
+    if(todosTerminados){
+      try { await apiCall('archivePacienteInyecto', { pacienteId }); } catch(_){}
+      state.pacientesInyecto = state.pacientesInyecto.filter(p => String(p.id) !== String(pacienteId));
+      closeModal(); hideLoading();
+      toast('¡Tratamiento completado! Movido a Descartados.');
+      refreshInyectoView();
+      return;
+    }
     closeModal(); hideLoading();
     toast('Aplicación registrada');
     refreshInyectoView();
@@ -3396,7 +3466,8 @@ async function guardarPacienteTerapia(){
     closeModal();
     hideLoading();
     toast('✅ Paciente registrado' + (comboTipo ? ' con combo' : ''));
-    renderPage('terapias');
+    if(state.session.rol === 'terapista'){ renderPage('terapias'); }
+    else { clientesView = 'terapias'; renderPage('clientes'); }
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
 
@@ -3460,8 +3531,17 @@ async function guardarSesion(comboId){
     const combo = state.combos.find(c => c.id === comboId);
     const usadas = state.sesionesTerapia.filter(s => s.comboId === comboId).length;
     if(combo && usadas >= (combo.sesionesTotal || 10)) combo.estado = 'completado';
-    closeModal();
-    hideLoading();
+    // Detect if ALL combos for this patient are now completed
+    const combosPaciente = state.combos.filter(c => c.pacienteId === combo?.pacienteId);
+    const todosTerapiaCompletos = combosPaciente.length > 0 && combosPaciente.every(c => c.estado === 'completado');
+    closeModal(); hideLoading();
+    if(todosTerapiaCompletos){
+      toast('¡Tratamiento completado! El paciente fue movido a Descartados.');
+      const pg = document.getElementById('page-content');
+      if(state.session.rol === 'terapista') renderTerapias(pg);
+      else { clientesView = 'terapias'; renderClientes(pg); }
+      return;
+    }
     toast('✅ Sesión registrada');
     verPacienteTerapia(combo.pacienteId);
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
