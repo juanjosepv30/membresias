@@ -2844,6 +2844,7 @@ function verPacienteInyecto(pacienteId){
 
 function openNuevoPacienteInyecto(){
   openModal('Nuevo paciente', `
+    <div style="font-size:.75rem;font-weight:700;color:var(--plum);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Datos del paciente</div>
     <div class="form-row">
       <div class="form-group">
         <label>Nombre del propietario *</label>
@@ -2878,29 +2879,90 @@ function openNuevoPacienteInyecto(){
         <input type="email" id="iny-email" placeholder="cliente@correo.com">
       </div>
     </div>
+
+    <div style="border-top:2px solid var(--border);margin:20px 0 16px"></div>
+    <div style="font-size:.75rem;font-weight:700;color:var(--plum);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Combo de tratamiento</div>
+
+    <div class="form-group">
+      <label>Tipo de tratamiento</label>
+      <div style="display:flex;gap:8px">
+        <button id="iny-tipo-inj" onclick="selTipoInyecto('inyectologia')"
+          style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--plum);background:var(--plum);color:#fff;font-weight:600;cursor:pointer;font-size:.9rem;font-family:'DM Sans',sans-serif;transition:.2s">
+          Inyectología
+        </button>
+        <button id="iny-tipo-med" onclick="selTipoInyecto('medicacion')"
+          style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--border);background:var(--cream);color:var(--muted);font-weight:600;cursor:pointer;font-size:.9rem;font-family:'DM Sans',sans-serif;transition:.2s">
+          Medicación
+        </button>
+      </div>
+      <input type="hidden" id="iny-tipo" value="inyectologia">
+    </div>
+    <div class="form-group">
+      <label>Medicamento / tratamiento *</label>
+      <input type="text" id="iny-med" placeholder="Ej: Ivermectina, Doxiciclina…">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Cantidad de unidades</label>
+        <div style="display:flex;align-items:center;border:2px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--cream)">
+          <button onclick="ajustarDosisIny(-1)" style="padding:10px 16px;background:transparent;border:none;border-right:2px solid var(--border);font-size:1.2rem;cursor:pointer;color:var(--plum);font-weight:700;line-height:1;font-family:'DM Sans',sans-serif">-</button>
+          <input id="iny-dosis" type="number" min="1" value="10"
+            style="flex:1;text-align:center;border:none;padding:10px 0;font-size:1rem;font-weight:700;color:var(--ink);outline:none;background:transparent;font-family:'DM Sans',sans-serif">
+          <button onclick="ajustarDosisIny(1)" style="padding:10px 16px;background:transparent;border:none;border-left:2px solid var(--border);font-size:1.2rem;cursor:pointer;color:var(--plum);font-weight:700;line-height:1;font-family:'DM Sans',sans-serif">+</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Precio total (COP)</label>
+        <input type="number" id="iny-precio" min="0" placeholder="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fecha de inicio</label>
+        <input type="date" id="iny-fecha" value="${new Date().toISOString().slice(0,10)}">
+      </div>
+      <div class="form-group">
+        <label>Notas</label>
+        <input type="text" id="iny-notas" placeholder="Opcional">
+      </div>
+    </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-      <button class="btn-save" onclick="guardarPacienteInyecto()">Guardar paciente</button>
+      <button class="btn-save" onclick="guardarPacienteInyecto()">Guardar</button>
     </div>`);
 }
 
 async function guardarPacienteInyecto(){
-  const nombre  = document.getElementById('iny-nombre').value.trim();
-  const mascota = document.getElementById('iny-mascota').value.trim();
-  if(!nombre||!mascota) return toast('Nombre y mascota son obligatorios','error');
+  const nombre      = document.getElementById('iny-nombre').value.trim();
+  const mascota     = document.getElementById('iny-mascota').value.trim();
+  const medicamento = document.getElementById('iny-med').value.trim();
+  const dosisTotal  = parseInt(document.getElementById('iny-dosis').value)||0;
+  if(!nombre||!mascota)  return toast('Nombre y mascota son obligatorios','error');
+  if(!medicamento)        return toast('El medicamento es obligatorio','error');
+  if(dosisTotal < 1)      return toast('Ingresá al menos 1 unidad','error');
   showLoading();
   try {
-    const r = await apiCall('addPacienteInyecto',{
+    const rp = await apiCall('addPacienteInyecto',{
       nombre, mascota,
       cedula:  document.getElementById('iny-cedula').value.trim(),
       especie: document.getElementById('iny-especie').value,
       tel:     document.getElementById('iny-tel').value.trim(),
       email:   document.getElementById('iny-email').value.trim(),
     });
-    state.pacientesInyecto.push(r.paciente);
+    state.pacientesInyecto.push(rp.paciente);
+    const rc = await apiCall('addComboInyecto',{
+      pacienteId:  rp.paciente.id,
+      tipo:        document.getElementById('iny-tipo').value,
+      medicamento, dosisTotal,
+      precio: parseFloat(document.getElementById('iny-precio').value)||0,
+      fecha:  document.getElementById('iny-fecha').value,
+      notas:  document.getElementById('iny-notas').value.trim(),
+    });
+    state.combosInyecto.push(rc.combo);
     closeModal(); hideLoading();
-    toast('Paciente registrado');
+    toast('Paciente y combo registrados');
     refreshInyectoView();
+    verPacienteInyecto(rp.paciente.id);
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
 
