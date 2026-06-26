@@ -2741,11 +2741,11 @@ function verPacienteInyecto(pacienteId){
     const dosisTotal  = Number(combo.dosisTotal)  || 1;
     const pct         = Math.min(100, Math.round(dosisUsadas / dosisTotal * 100));
     const unidades    = combo.tipo === 'medicacion' ? 'dosis' : 'inyecciones';
-    return `<div style="border:1px solid #E8E0F4;border-radius:10px;padding:16px;margin-bottom:12px">
+    return `<div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         <div>
           <span style="font-size:.72rem;padding:2px 8px;border-radius:10px;${tipoPill(combo.tipo)};margin-right:6px">${tipoLabel(combo.tipo||'inyectologia')}</span>
-          <strong style="color:#4A1A6B">${combo.medicamento||'—'}</strong>
+          <strong style="color:var(--plum)">${combo.medicamento||'—'}</strong>
           ${combo.notas ? `<div style="color:var(--muted);font-size:.8rem;margin-top:4px">${combo.notas}</div>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px">
@@ -2757,13 +2757,13 @@ function verPacienteInyecto(pacienteId){
       <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">
         ${dosisUsadas} / ${dosisTotal} ${unidades} · $${Number(combo.precio||0).toLocaleString('es-CO')} · Desde ${formatDate(combo.fecha)}
       </div>
-      <div style="background:#F0E8FA;border-radius:6px;height:8px;overflow:hidden;margin-bottom:10px">
-        <div style="background:${pct>=100?'var(--success)':'#6B2FA0'};height:100%;width:${pct}%;transition:width .3s"></div>
+      <div style="background:var(--cream);border-radius:6px;height:8px;overflow:hidden;margin-bottom:10px">
+        <div style="background:${pct>=100?'var(--success)':'var(--plum)'};height:100%;width:${pct}%;transition:width .3s"></div>
       </div>
       ${apps.length
         ? `<div style="font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">Aplicaciones</div>
            ${apps.slice().reverse().map(a => `
-             <div style="display:flex;justify-content:space-between;border-top:1px solid #EEE;padding:5px 0;font-size:.8rem">
+             <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding:5px 0;font-size:.8rem">
                <span>${formatDate(a.fecha)}${a.notas?' — '+a.notas:''}</span>
                <span style="color:var(--muted)">${(a.registradoPor||'').replace(/^(cli:|tp:)/,'')}</span>
              </div>`).join('')}`
@@ -2773,32 +2773,54 @@ function verPacienteInyecto(pacienteId){
 
   openModal(`${p.nombre} · ${p.mascota||'—'}`, `
     <p style="margin:0 0 16px;color:var(--muted);font-size:.85rem">${p.especie||'—'}${p.tel?' · '+p.tel:''}</p>
-    ${activos.length ? `<div style="font-size:.75rem;font-weight:600;color:#4A1A6B;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Activos</div>${activos.map(c=>renderComboInyecto(c,true)).join('')}` : ''}
+    ${activos.length ? `<div style="font-size:.75rem;font-weight:600;color:var(--plum);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Activos</div>${activos.map(c=>renderComboInyecto(c,true)).join('')}` : ''}
     ${completos.length ? `<div style="font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:12px 0 8px">Completados</div>${completos.map(c=>renderComboInyecto(c,false)).join('')}` : ''}
     ${!combosP.length ? '<div class="empty-state" style="padding:20px"><div class="empty-icon">💉</div><p>Sin combos</p></div>' : ''}
-    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn-secondary" onclick="closeModal()">Cerrar</button>
-      ${isAdmin ? `<button class="btn-primary" onclick="closeModal();openNuevoComboInyecto('${pacienteId}')">+ Nuevo combo</button>` : ''}
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cerrar</button>
+      ${isAdmin ? `<button class="btn-save" onclick="closeModal();openNuevoComboInyecto('${pacienteId}')">+ Nuevo combo</button>` : ''}
     </div>`);
 }
 
 function openNuevoPacienteInyecto(){
-  openModal('Nuevo paciente — Inyectología y Medicación', `
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <input id="iny-nombre"  class="form-input" placeholder="Nombre del propietario *">
-      <input id="iny-cedula"  class="form-input" placeholder="Cédula">
-      <input id="iny-mascota" class="form-input" placeholder="Nombre de la mascota *">
-      <select id="iny-especie" class="form-input">
-        <option value="Perro">Perro</option>
-        <option value="Gato">Gato</option>
-        <option value="Otro">Otro</option>
-      </select>
-      <input id="iny-tel"   class="form-input" placeholder="Teléfono">
-      <input id="iny-email" class="form-input" placeholder="Email">
+  openModal('Nuevo paciente', `
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre del propietario *</label>
+        <input type="text" id="iny-nombre" placeholder="Ej: Juan Pérez">
+      </div>
+      <div class="form-group">
+        <label>Cédula</label>
+        <input type="text" id="iny-cedula" placeholder="Número de cédula">
+      </div>
     </div>
-    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn-primary"   onclick="guardarPacienteInyecto()">Guardar</button>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre de la mascota *</label>
+        <input type="text" id="iny-mascota" placeholder="Ej: Milo">
+      </div>
+      <div class="form-group">
+        <label>Especie</label>
+        <select id="iny-especie">
+          <option value="Perro">Perro</option>
+          <option value="Gato">Gato</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="text" id="iny-tel" placeholder="3XX XXX XXXX">
+      </div>
+      <div class="form-group">
+        <label>Correo electrónico</label>
+        <input type="email" id="iny-email" placeholder="cliente@correo.com">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="guardarPacienteInyecto()">Guardar paciente</button>
     </div>`);
 }
 
@@ -2825,53 +2847,63 @@ async function guardarPacienteInyecto(){
 function openNuevoComboInyecto(pacienteId){
   const p = state.pacientesInyecto.find(x => String(x.id) === String(pacienteId));
   openModal(`Nuevo combo — ${p?p.nombre:''}`, `
-    <div style="display:flex;flex-direction:column;gap:12px">
-      <div>
-        <label style="font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px">Tipo de tratamiento</label>
-        <div style="display:flex;gap:8px">
-          <button id="iny-tipo-inj" onclick="selTipoInyecto('inyectologia')"
-            style="flex:1;padding:10px;border-radius:8px;border:2px solid #1D4ED8;background:#DBEAFE;color:#1D4ED8;font-weight:600;cursor:pointer;font-size:.9rem">
-            Inyectología
-          </button>
-          <button id="iny-tipo-med" onclick="selTipoInyecto('medicacion')"
-            style="flex:1;padding:10px;border-radius:8px;border:2px solid #E9D5FF;background:#FFF;color:#7C3AED;font-weight:600;cursor:pointer;font-size:.9rem">
-            Medicación
-          </button>
-        </div>
-        <input type="hidden" id="iny-tipo" value="inyectologia">
+    <div class="form-group">
+      <label>Tipo de tratamiento</label>
+      <div style="display:flex;gap:8px">
+        <button id="iny-tipo-inj" onclick="selTipoInyecto('inyectologia')"
+          style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--plum);background:var(--plum);color:#fff;font-weight:600;cursor:pointer;font-size:.9rem;font-family:'DM Sans',sans-serif;transition:.2s">
+          Inyectología
+        </button>
+        <button id="iny-tipo-med" onclick="selTipoInyecto('medicacion')"
+          style="flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--border);background:var(--cream);color:var(--muted);font-weight:600;cursor:pointer;font-size:.9rem;font-family:'DM Sans',sans-serif;transition:.2s">
+          Medicación
+        </button>
       </div>
-      <input id="iny-med" class="form-input" placeholder="Nombre del medicamento / tratamiento *">
-      <div>
-        <label style="font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px">Cantidad de unidades</label>
-        <div style="display:flex;align-items:center;border:1.5px solid #D8D0E8;border-radius:8px;overflow:hidden;width:fit-content">
-          <button onclick="ajustarDosisIny(-1)" style="padding:9px 18px;background:#F5F0FF;border:none;font-size:1.3rem;cursor:pointer;color:#6B2FA0;font-weight:700;line-height:1">-</button>
-          <input id="iny-dosis" type="number" min="1" value="10"
-            style="width:64px;text-align:center;border:none;border-left:1.5px solid #D8D0E8;border-right:1.5px solid #D8D0E8;padding:9px 0;font-size:1.1rem;font-weight:700;color:#4A1A6B;outline:none">
-          <button onclick="ajustarDosisIny(1)"  style="padding:9px 18px;background:#F5F0FF;border:none;font-size:1.3rem;cursor:pointer;color:#6B2FA0;font-weight:700;line-height:1">+</button>
-        </div>
-      </div>
-      <input id="iny-precio" class="form-input" type="number" min="0" placeholder="Precio total (COP)">
-      <input id="iny-fecha"  class="form-input" type="date" value="${new Date().toISOString().slice(0,10)}">
-      <input id="iny-notas"  class="form-input" placeholder="Notas (opcional)">
+      <input type="hidden" id="iny-tipo" value="inyectologia">
     </div>
-    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn-primary"   onclick="guardarComboInyecto('${pacienteId}')">Guardar</button>
+    <div class="form-group">
+      <label>Medicamento / tratamiento *</label>
+      <input type="text" id="iny-med" placeholder="Ej: Ivermectina, Doxiciclina…">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Cantidad de unidades</label>
+        <div style="display:flex;align-items:center;border:2px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--cream)">
+          <button onclick="ajustarDosisIny(-1)" style="padding:10px 16px;background:transparent;border:none;border-right:2px solid var(--border);font-size:1.2rem;cursor:pointer;color:var(--plum);font-weight:700;line-height:1;font-family:'DM Sans',sans-serif">-</button>
+          <input id="iny-dosis" type="number" min="1" value="10"
+            style="flex:1;text-align:center;border:none;padding:10px 0;font-size:1rem;font-weight:700;color:var(--ink);outline:none;background:transparent;font-family:'DM Sans',sans-serif">
+          <button onclick="ajustarDosisIny(1)" style="padding:10px 16px;background:transparent;border:none;border-left:2px solid var(--border);font-size:1.2rem;cursor:pointer;color:var(--plum);font-weight:700;line-height:1;font-family:'DM Sans',sans-serif">+</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Precio total (COP)</label>
+        <input type="number" id="iny-precio" min="0" placeholder="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fecha de inicio</label>
+        <input type="date" id="iny-fecha" value="${new Date().toISOString().slice(0,10)}">
+      </div>
+      <div class="form-group">
+        <label>Notas</label>
+        <input type="text" id="iny-notas" placeholder="Opcional">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="guardarComboInyecto('${pacienteId}')">Guardar combo</button>
     </div>`);
 }
 
 function selTipoInyecto(tipo){
   document.getElementById('iny-tipo').value = tipo;
-  const base = 'flex:1;padding:10px;border-radius:8px;font-weight:600;cursor:pointer;font-size:.9rem;border:2px solid ';
-  const inj  = document.getElementById('iny-tipo-inj');
-  const med  = document.getElementById('iny-tipo-med');
-  if(tipo === 'inyectologia'){
-    inj.style.cssText = base + '#1D4ED8;background:#DBEAFE;color:#1D4ED8';
-    med.style.cssText = base + '#E9D5FF;background:#FFF;color:#7C3AED';
-  } else {
-    med.style.cssText = base + '#7C3AED;background:#EDE9FE;color:#5B21B6';
-    inj.style.cssText = base + '#DBEAFE;background:#FFF;color:#1D4ED8';
-  }
+  const inj = document.getElementById('iny-tipo-inj');
+  const med = document.getElementById('iny-tipo-med');
+  const active   = 'flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--plum);background:var(--plum);color:#fff;font-weight:600;cursor:pointer;font-size:.9rem;font-family:DM Sans,sans-serif;transition:.2s';
+  const inactive = 'flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid var(--border);background:var(--cream);color:var(--muted);font-weight:600;cursor:pointer;font-size:.9rem;font-family:DM Sans,sans-serif;transition:.2s';
+  if(tipo === 'inyectologia'){ inj.style.cssText = active; med.style.cssText = inactive; }
+  else                       { med.style.cssText = active; inj.style.cssText = inactive; }
 }
 
 function ajustarDosisIny(delta){
@@ -2906,14 +2938,23 @@ function openRegistrarAplicacion(comboId, pacienteId){
   const dosisTotal  = Number(combo?.dosisTotal)||1;
   const unidad      = combo?.tipo === 'medicacion' ? 'dosis' : 'inyección';
   openModal('Registrar aplicación', `
-    <p style="margin:0 0 14px;color:var(--muted);font-size:.9rem"><strong>${combo?.medicamento||'—'}</strong> · ${unidad} ${dosisUsadas+1} de ${dosisTotal}</p>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <input id="iny-ap-fecha" class="form-input" type="date" value="${new Date().toISOString().slice(0,10)}">
-      <input id="iny-ap-notas" class="form-input" placeholder="Notas (opcional)">
+    <p style="margin:0 0 20px;color:var(--muted);line-height:1.5">
+      <strong style="color:var(--ink)">${combo?.medicamento||'—'}</strong><br>
+      Aplicación ${dosisUsadas+1} de ${dosisTotal} ${unidad}${dosisTotal>1?'es':''}
+    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="iny-ap-fecha" value="${new Date().toISOString().slice(0,10)}">
+      </div>
+      <div class="form-group">
+        <label>Notas</label>
+        <input type="text" id="iny-ap-notas" placeholder="Opcional">
+      </div>
     </div>
-    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn-primary"   onclick="guardarAplicacion('${comboId}','${pacienteId}')">Registrar</button>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="guardarAplicacion('${comboId}','${pacienteId}')">Registrar</button>
     </div>`);
 }
 
