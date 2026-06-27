@@ -390,7 +390,7 @@ tbody tr:hover{background:var(--cream)}
 <!-- ── LOADING ── -->
 <div class="loading-overlay" id="loading-overlay">
   <div class="spinner"></div>
-  <div style="color:var(--plum);font-size:.9rem">Guardando…</div>
+  <div class="loading-text" style="color:var(--plum);font-size:.9rem;font-weight:600">Cargando…</div>
 </div>
 
 <script>
@@ -726,7 +726,12 @@ function showSync(msg){
   document.getElementById('sync-bar').classList.add('show');
 }
 function hideSync(){ document.getElementById('sync-bar').classList.remove('show'); }
-function showLoading(){ document.getElementById('loading-overlay').classList.add('show'); }
+function showLoading(msg){
+  const ov  = document.getElementById('loading-overlay');
+  const txt = ov.querySelector('.loading-text');
+  if(txt) txt.textContent = msg || 'Cargando…';
+  ov.classList.add('show');
+}
 function hideLoading(){ document.getElementById('loading-overlay').classList.remove('show'); }
 
 function toast(msg, type='success', dur=3500){
@@ -2840,12 +2845,14 @@ function formatDetalle(accion, d){
 // PAGE: INYECTOLOGÍA Y MEDICACIÓN
 // ════════════════════════════════════════════
 async function reloadInyectoData(){
+  showLoading('Cargando…');
   try {
     const ri = await apiCall('getAllInyecto');
     state.pacientesInyecto    = ri.pacientes    || [];
     state.combosInyecto       = ri.combos       || [];
     state.aplicacionesInyecto = ri.aplicaciones || [];
   } catch(e){ /* silent */ }
+  finally { hideLoading(); }
 }
 
 function refreshInyectoView(){
@@ -2951,6 +2958,7 @@ function renderPacienteInyectoCard(p){
 
 function verPacienteInyecto(pacienteId){
   const isAdmin = state.session.rol === 'admin';
+  const isPersonal = state.session.rol === 'personal';
   const p = state.pacientesInyecto.find(x => String(x.id) === String(pacienteId));
   if(!p) return;
   const combosP      = state.combosInyecto.filter(c => String(c.pacienteId) === String(pacienteId));
@@ -3007,7 +3015,7 @@ function verPacienteInyecto(pacienteId){
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal();refreshInyectoView()">Cerrar</button>
       ${todosCompletos ? `<button class="btn-cancel" onclick="closeModal();descartarPacienteInyecto('${pacienteId}')">Archivar</button>` : ''}
-      ${isAdmin ? `<button class="btn-save" onclick="closeModal();openNuevoComboInyecto('${pacienteId}')">+ Nuevo combo</button>` : ''}
+      ${(isAdmin || isPersonal) ? `<button class="btn-save" onclick="closeModal();openNuevoComboInyecto('${pacienteId}')">+ Nuevo combo</button>` : ''}
       ${isAdmin ? `<button onclick="closeModal();eliminarPacienteInyecto('${pacienteId}')"
         style="padding:10px 20px;border-radius:var(--radius-sm);border:1px solid #EF4444;background:transparent;color:#EF4444;font-family:'DM Sans',sans-serif;font-size:.875rem;font-weight:600;cursor:pointer">Eliminar paciente</button>` : ''}
     </div>`);
@@ -3430,6 +3438,7 @@ function renderPacienteCard(p){
 function verPacienteTerapia(pacienteId){
   const p = state.pacientesTerapia.find(x => x.id === pacienteId);
   if(!p) return;
+  const puedeEliminar = state.session.rol === 'admin' || state.session.rol === 'terapista';
   const combos = state.combos.filter(c => c.pacienteId === pacienteId);
 
   const combosHtml = combos.length === 0
@@ -3451,7 +3460,7 @@ function verPacienteTerapia(pacienteId){
               </div>
               <div style="display:flex;gap:6px">
                 ${activo ? `<button class="btn-icon" onclick="openRegistrarSesion('${combo.id}')">＋ Sesión</button>` : ''}
-                <button class="btn-icon" onclick="eliminarCombo('${combo.id}','${pacienteId}')" title="Eliminar combo">🗑</button>
+                ${puedeEliminar ? `<button class="btn-icon" onclick="eliminarCombo('${combo.id}','${pacienteId}')" title="Eliminar combo">🗑</button>` : ''}
               </div>
             </div>
             <div style="background:var(--border);border-radius:4px;height:6px;margin-bottom:6px">
@@ -3464,7 +3473,7 @@ function verPacienteTerapia(pacienteId){
                   <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
                     <span style="color:var(--muted);flex-shrink:0">${s.fecha||''}</span>
                     <span style="flex:1;margin:0 10px;color:var(--ink)">${s.nota||''}</span>
-                    <button class="btn-icon danger" onclick="eliminarSesion('${s.id}','${combo.id}','${pacienteId}')" title="Eliminar sesión" style="padding:2px 6px;font-size:.75rem">🗑</button>
+                    ${puedeEliminar ? `<button class="btn-icon danger" onclick="eliminarSesion('${s.id}','${combo.id}','${pacienteId}')" title="Eliminar sesión" style="padding:2px 6px;font-size:.75rem">🗑</button>` : ''}
                   </div>`).join('')}
               </div>` : ''}
           </div>`;
