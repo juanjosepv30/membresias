@@ -639,6 +639,7 @@ function setActiveTab(id){
 // ROUTING
 // ════════════════════════════════════════════
 function renderPage(page){
+  state.currentPage = page;
   setActiveTab(page);
   const c = document.getElementById('page-content');
   switch(page){
@@ -713,6 +714,14 @@ function formatDate(d){
   const dt = new Date(d);
   if(isNaN(dt)) return d;
   return dt.toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+// Returns "HH:MM" from an ISO timestamp, or '' if missing/invalid
+function formatHora(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d)) return '';
+  return d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
 }
 
 function addDays(date, days){
@@ -1720,8 +1729,9 @@ async function renderDescartados(c){
     try {
       const res = await apiCall('getArchivedInyecto');
       const pacientes = res.pacientes || [];
-      state.pacientesInyectoArchivados = pacientes;
-      state.combosInyectoArchivados    = res.combos || [];
+      state.pacientesInyectoArchivados    = pacientes;
+      state.combosInyectoArchivados       = res.combos || [];
+      state.aplicacionesInyectoArchivadas = res.aplicaciones || [];
       if(!pacientes.length){ cont.innerHTML = emptyHtml('No hay pacientes archivados'); return; }
       cont.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
         ${pacientes.map(p => renderArchivedInyectoCard(p)).join('')}
@@ -1739,7 +1749,8 @@ function renderArchivedInyectoCard(p){
   const combos    = (state.combosInyectoArchivados || []).filter(c => String(c.pacienteId) === String(p.id));
   const nCombos   = combos.length;
   const isAdmin   = state.session.rol === 'admin';
-  return `<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)">
+  return `<div onclick="verPacienteInyecto('${p.id}')" title="Ver detalle"
+    style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm);cursor:pointer;transition:box-shadow .15s">
     <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">
       <div style="width:40px;height:40px;border-radius:50%;background:var(--muted);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0">
         ${(p.nombre||'?')[0].toUpperCase()}
@@ -1753,9 +1764,9 @@ function renderArchivedInyectoCard(p){
       <span style="background:var(--plum);color:#fff;font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">✓ Completado</span>
       ${nCombos ? `<span style="font-size:.75rem;color:var(--muted);margin-left:8px">${nCombos} combo${nCombos>1?'s':''}</span>` : ''}
     </div>
-    <button onclick="restaurarPacienteInyecto('${p.id}')"
+    <button onclick="event.stopPropagation();restaurarPacienteInyecto('${p.id}')"
       style="width:100%;font-size:.82rem;padding:8px 0;border:1px solid var(--success);background:transparent;color:var(--success);border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">♻️ Restaurar</button>
-    ${isAdmin ? `<button onclick="eliminarPacienteInyecto('${p.id}')"
+    ${isAdmin ? `<button onclick="event.stopPropagation();eliminarPacienteInyecto('${p.id}')"
       style="width:100%;font-size:.82rem;padding:8px 0;border:1px solid #EF4444;background:transparent;color:#EF4444;border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;margin-top:6px">Eliminar permanente</button>` : ''}
   </div>`;
 }
@@ -1778,8 +1789,10 @@ function renderTerapiaDescartadaCard(p){
   const usadas = combo ? (state.sesionesTerapiaArchivadas || []).filter(s => String(s.comboId) === String(combo.id)).length : 0;
   const total  = combo ? (combo.sesionesTotal || def.sesiones || 0) : 0;
   const nCombos = combos.length;
+  const isAdmin = state.session.rol === 'admin';
 
-  return `<div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)">
+  return `<div onclick="verPacienteTerapia('${p.id}')" title="Ver detalle"
+    style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm);cursor:pointer;transition:box-shadow .15s">
     <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">
       <div style="width:40px;height:40px;border-radius:50%;background:var(--muted);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0">
         ${(p.nombre||'?')[0].toUpperCase()}
@@ -1793,8 +1806,10 @@ function renderTerapiaDescartadaCard(p){
     <div style="margin-bottom:10px">
       <span style="background:var(--plum);color:#fff;font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">✓ Completado</span>
     </div>
-    <button onclick="restaurarTerapia('${p.id}')"
+    <button onclick="event.stopPropagation();restaurarTerapia('${p.id}')"
       style="width:100%;font-size:.82rem;padding:8px 0;border:1px solid var(--success);background:transparent;color:var(--success);border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600">♻️ Restaurar a Terapia Física</button>
+    ${isAdmin ? `<button onclick="event.stopPropagation();eliminarPacienteTerapia('${p.id}')"
+      style="width:100%;font-size:.82rem;padding:8px 0;border:1px solid #EF4444;background:transparent;color:#EF4444;border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;margin-top:6px">Eliminar permanente</button>` : ''}
   </div>`;
 }
 
@@ -1839,6 +1854,23 @@ async function restaurarTerapia(pacienteId){
     hideLoading();
     toast('Paciente restaurado a Terapia Física');
     renderDescartados(document.getElementById('page-content'));
+  } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
+}
+
+async function eliminarPacienteTerapia(pacienteId){
+  const p = (state.pacientesTerapiaArchivados||[]).find(x => String(x.id) === String(pacienteId))
+         || state.pacientesTerapia.find(x => String(x.id) === String(pacienteId));
+  if(!confirm(`¿Eliminar permanentemente a "${p?p.nombre:'este paciente'}" y todos sus datos? Esta acción no se puede deshacer.`)) return;
+  showLoading();
+  try {
+    await apiCall('deletePacienteTerapia', { pacienteId });
+    state.pacientesTerapiaArchivados = (state.pacientesTerapiaArchivados||[]).filter(x => String(x.id) !== String(pacienteId));
+    state.combosTerapiaArchivados    = (state.combosTerapiaArchivados||[]).filter(c => String(c.pacienteId) !== String(pacienteId));
+    state.pacientesTerapia = state.pacientesTerapia.filter(x => String(x.id) !== String(pacienteId));
+    hideLoading();
+    toast('Paciente eliminado');
+    closeModal();
+    renderPage('descartados');
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
 
@@ -2940,9 +2972,9 @@ function renderPacienteInyectoCard(p){
       onclick="event.stopPropagation();openNuevoComboInyecto('${p.id}')">+ Combo</button>`;
   }
 
-  // Admin delete button (top-right corner)
+  // Admin archive button (top-right corner) — sends the card to Descartados
   const deleteBtn = isAdmin
-    ? `<button title="Eliminar paciente" onclick="event.stopPropagation();eliminarPacienteInyecto('${p.id}')"
+    ? `<button title="Pasar a descartados" onclick="event.stopPropagation();descartarPacienteInyecto('${p.id}')"
         style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:2px 4px;line-height:1;flex-shrink:0;border-radius:4px">✕</button>`
     : '';
 
@@ -2966,9 +2998,13 @@ function renderPacienteInyectoCard(p){
 function verPacienteInyecto(pacienteId){
   const isAdmin = state.session.rol === 'admin';
   const isPersonal = state.session.rol === 'personal';
-  const p = state.pacientesInyecto.find(x => String(x.id) === String(pacienteId));
+  const activoP = state.pacientesInyecto.find(x => String(x.id) === String(pacienteId));
+  const p = activoP || (state.pacientesInyectoArchivados||[]).find(x => String(x.id) === String(pacienteId));
   if(!p) return;
-  const combosP      = state.combosInyecto.filter(c => String(c.pacienteId) === String(pacienteId));
+  const esArchivado  = !activoP;
+  const fuenteCombos = esArchivado ? (state.combosInyectoArchivados||[]) : state.combosInyecto;
+  const fuenteAplic  = esArchivado ? (state.aplicacionesInyectoArchivadas||[]) : state.aplicacionesInyecto;
+  const combosP      = fuenteCombos.filter(c => String(c.pacienteId) === String(pacienteId));
   const activos      = combosP.filter(c => c.estado === 'activo');
   const completos    = combosP.filter(c => c.estado === 'completado');
   const todosCompletos = combosP.length > 0 && activos.length === 0;
@@ -2979,11 +3015,12 @@ function verPacienteInyecto(pacienteId){
     : 'background:#DBEAFE;color:#1D4ED8';
 
   const renderComboInyecto = (combo, isActivo) => {
-    const apps        = state.aplicacionesInyecto.filter(a => String(a.comboId) === String(combo.id));
+    const apps        = fuenteAplic.filter(a => String(a.comboId) === String(combo.id));
     const dosisUsadas = Number(combo.dosisUsadas) || 0;
     const dosisTotal  = Number(combo.dosisTotal)  || 1;
     const pct         = Math.min(100, Math.round(dosisUsadas / dosisTotal * 100));
     const unidades    = combo.tipo === 'medicacion' ? 'dosis' : 'inyecciones';
+    const puedeAplicar = isActivo && !esArchivado;
     return `<div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         <div>
@@ -2993,7 +3030,7 @@ function verPacienteInyecto(pacienteId){
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px">
           <span class="pill ${isActivo?'pill-active':'pill-silver'}" style="font-size:.72rem">${isActivo?'Activo':'Completado'}</span>
-          ${isActivo ? `<button class="btn-primary" style="font-size:.78rem;padding:5px 10px"
+          ${puedeAplicar ? `<button class="btn-primary" style="font-size:.78rem;padding:5px 10px"
             onclick="openRegistrarAplicacion('${combo.id}','${pacienteId}')">+ Aplicar</button>` : ''}
         </div>
       </div>
@@ -3005,26 +3042,31 @@ function verPacienteInyecto(pacienteId){
       </div>
       ${apps.length
         ? `<div style="font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">Aplicaciones</div>
-           ${apps.slice().reverse().map(a => `
-             <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding:5px 0;font-size:.8rem">
-               <span>${formatDate(a.fecha)}${a.notas?' — '+a.notas:''}</span>
-               <span style="color:var(--muted)">${(a.registradoPor||'').replace(/^(cli:|tp:)/,'')}</span>
-             </div>`).join('')}`
+           ${apps.slice().reverse().map(a => {
+             const hora = formatHora(a.creadoEn);
+             return `<div style="display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--border);padding:5px 0;font-size:.8rem">
+               <span>${formatDate(a.fecha)}${hora?' · '+hora:''}${a.notas?' — '+a.notas:''}</span>
+               <span style="color:var(--muted);flex-shrink:0">${(a.registradoPor||'').replace(/^(cli:|tp:)/,'')}</span>
+             </div>`;
+           }).join('')}`
         : `<div style="font-size:.8rem;color:var(--muted)">Sin aplicaciones aún</div>`}
     </div>`;
   };
 
   openModal(`${p.nombre} · ${p.mascota||'—'}`, `
-    <p style="margin:0 0 16px;color:var(--muted);font-size:.85rem">${p.especie||'—'}${p.tel?' · '+p.tel:''}</p>
+    <p style="margin:0 0 16px;color:var(--muted);font-size:.85rem">${p.especie||'—'}${p.tel?' · '+p.tel:''}${esArchivado?' · <span style="color:var(--plum);font-weight:600">Descartado</span>':''}</p>
     ${activos.length ? `<div style="font-size:.75rem;font-weight:600;color:var(--plum);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Activos</div>${activos.map(c=>renderComboInyecto(c,true)).join('')}` : ''}
     ${completos.length ? `<div style="font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:12px 0 8px">Completados</div>${completos.map(c=>renderComboInyecto(c,false)).join('')}` : ''}
     ${!combosP.length ? '<div class="empty-state" style="padding:20px"><div class="empty-icon">💉</div><p>Sin combos</p></div>' : ''}
     <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal();refreshInyectoView()">Cerrar</button>
-      ${todosCompletos ? `<button class="btn-cancel" onclick="closeModal();descartarPacienteInyecto('${pacienteId}')">Archivar</button>` : ''}
-      ${(isAdmin || isPersonal) ? `<button class="btn-save" onclick="closeModal();openNuevoComboInyecto('${pacienteId}')">+ Nuevo combo</button>` : ''}
-      ${isAdmin ? `<button onclick="closeModal();eliminarPacienteInyecto('${pacienteId}')"
-        style="padding:10px 20px;border-radius:var(--radius-sm);border:1px solid #EF4444;background:transparent;color:#EF4444;font-family:'DM Sans',sans-serif;font-size:.875rem;font-weight:600;cursor:pointer">Eliminar paciente</button>` : ''}
+      ${esArchivado
+        ? `<button class="btn-cancel" onclick="closeModal()">Cerrar</button>
+           <button class="btn-save" onclick="closeModal();restaurarPacienteInyecto('${pacienteId}')">♻️ Restaurar</button>
+           ${isAdmin ? `<button onclick="closeModal();eliminarPacienteInyecto('${pacienteId}')"
+             style="padding:10px 20px;border-radius:var(--radius-sm);border:1px solid #EF4444;background:transparent;color:#EF4444;font-family:'DM Sans',sans-serif;font-size:.875rem;font-weight:600;cursor:pointer">Eliminar permanente</button>` : ''}`
+        : `<button class="btn-cancel" onclick="closeModal();refreshInyectoView()">Cerrar</button>
+           ${todosCompletos ? `<button class="btn-cancel" onclick="closeModal();descartarPacienteInyecto('${pacienteId}')">Archivar</button>` : ''}
+           ${(isAdmin || isPersonal) ? `<button class="btn-save" onclick="closeModal();openNuevoComboInyecto('${pacienteId}')">+ Nuevo combo</button>` : ''}`}
     </div>`);
 }
 
@@ -3312,7 +3354,8 @@ async function descartarPacienteInyecto(pacienteId){
 }
 
 async function eliminarPacienteInyecto(pacienteId){
-  const p = state.pacientesInyecto.find(x => String(x.id) === String(pacienteId));
+  const p = state.pacientesInyecto.find(x => String(x.id) === String(pacienteId))
+         || (state.pacientesInyectoArchivados||[]).find(x => String(x.id) === String(pacienteId));
   if(!confirm(`¿Eliminar permanentemente a "${p?.nombre||'este paciente'}" y todos sus datos? Esta acción no se puede deshacer.`)) return;
   showLoading();
   try {
@@ -3320,10 +3363,14 @@ async function eliminarPacienteInyecto(pacienteId){
     state.pacientesInyecto    = state.pacientesInyecto.filter(x => String(x.id) !== String(pacienteId));
     state.combosInyecto       = state.combosInyecto.filter(c => String(c.pacienteId) !== String(pacienteId));
     state.aplicacionesInyecto = state.aplicacionesInyecto.filter(a => String(a.pacienteId) !== String(pacienteId));
+    state.pacientesInyectoArchivados    = (state.pacientesInyectoArchivados||[]).filter(x => String(x.id) !== String(pacienteId));
+    state.combosInyectoArchivados       = (state.combosInyectoArchivados||[]).filter(c => String(c.pacienteId) !== String(pacienteId));
+    state.aplicacionesInyectoArchivadas = (state.aplicacionesInyectoArchivadas||[]).filter(a => String(a.pacienteId) !== String(pacienteId));
     hideLoading();
     toast('Paciente eliminado');
     closeModal();
-    refreshInyectoView();
+    if(state.currentPage === 'descartados') renderPage('descartados');
+    else refreshInyectoView();
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
 }
 
@@ -3394,6 +3441,7 @@ function renderPacienteCard(p){
   const activos      = combos.filter(c => c.estado === 'activo');
   const comboActivo  = activos[0];
   const todosCompletos = combos.length > 0 && activos.length === 0;
+  const isAdmin      = state.session.rol === 'admin';
 
   // Status / progress section — list every active combo with its own progress bar
   const comboRowTer = (c) => {
@@ -3447,6 +3495,8 @@ function renderPacienteCard(p){
         <div style="font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nombre}</div>
         <div style="font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.mascota||'—'} · ${p.especie||'—'}${p.telefono?' · '+p.telefono:''}</div>
       </div>
+      ${isAdmin ? `<button title="Pasar a descartados" onclick="event.stopPropagation();archivarTerapia('${p.id}')"
+        style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:2px 4px;line-height:1;flex-shrink:0;border-radius:4px">✕</button>` : ''}
     </div>
     ${statusHtml}
     ${actionBtn}
@@ -3454,16 +3504,21 @@ function renderPacienteCard(p){
 }
 
 function verPacienteTerapia(pacienteId){
-  const p = state.pacientesTerapia.find(x => x.id === pacienteId);
+  const activoP = state.pacientesTerapia.find(x => x.id === pacienteId);
+  const p = activoP || (state.pacientesTerapiaArchivados||[]).find(x => String(x.id) === String(pacienteId));
   if(!p) return;
-  const puedeEliminar = state.session.rol === 'admin' || state.session.rol === 'terapista';
-  const combos = state.combos.filter(c => c.pacienteId === pacienteId);
+  const esArchivado = !activoP;
+  const isAdmin = state.session.rol === 'admin';
+  const puedeEliminar = (state.session.rol === 'admin' || state.session.rol === 'terapista') && !esArchivado;
+  const fuenteCombos   = esArchivado ? (state.combosTerapiaArchivados||[])   : state.combos;
+  const fuenteSesiones = esArchivado ? (state.sesionesTerapiaArchivadas||[]) : state.sesionesTerapia;
+  const combos = fuenteCombos.filter(c => String(c.pacienteId) === String(pacienteId));
 
   const combosHtml = combos.length === 0
     ? '<p style="color:var(--muted);text-align:center;padding:20px">Sin combos registrados</p>'
     : combos.map(combo => {
         const def = COMBOS_TERAPIA[combo.tipo] || {};
-        const sesiones = state.sesionesTerapia.filter(s => s.comboId === combo.id);
+        const sesiones = fuenteSesiones.filter(s => s.comboId === combo.id);
         const usadas = sesiones.length;
         const total = combo.sesionesTotal || def.sesiones || 0;
         const pct = total > 0 ? Math.round(usadas/total*100) : 0;
@@ -3487,12 +3542,15 @@ function verPacienteTerapia(pacienteId){
             <div style="font-size:.78rem;color:var(--muted);margin-bottom:${sesiones.length?'10px':'0'}">${usadas} de ${total} sesiones · ${fmtCOP(combo.precio||0)}</div>
             ${sesiones.length > 0 ? `
               <div style="font-size:.8rem">
-                ${sesiones.slice().reverse().map(s=>`
-                  <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
-                    <span style="color:var(--muted);flex-shrink:0">${s.fecha||''}</span>
-                    <span style="flex:1;margin:0 10px;color:var(--ink)">${s.nota||''}</span>
+                ${sesiones.slice().reverse().map(s=>{
+                  const hora  = formatHora(s.creadoEn);
+                  const quien = (s.registradoPor||'').replace(/^(cli:|tp:)/,'');
+                  return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+                    <span style="color:var(--muted);flex-shrink:0">${formatDate(s.fecha)}${hora?' · '+hora:''}</span>
+                    <span style="flex:1;color:var(--ink)">${s.nota||''}${quien?` <span style="color:var(--muted)">· ${quien}</span>`:''}</span>
                     ${puedeEliminar ? `<button class="btn-icon danger" onclick="eliminarSesion('${s.id}','${combo.id}','${pacienteId}')" title="Eliminar sesión" style="padding:2px 6px;font-size:.75rem">🗑</button>` : ''}
-                  </div>`).join('')}
+                  </div>`;
+                }).join('')}
               </div>` : ''}
           </div>`;
       }).join('');
@@ -3504,11 +3562,18 @@ function verPacienteTerapia(pacienteId){
       <div><span style="color:var(--muted)">Teléfono:</span> ${p.telefono||'—'}</div>
       <div><span style="color:var(--muted)">Email:</span> ${p.email||'—'}</div>
     </div>
+    ${esArchivado ? '<div style="margin-bottom:12px"><span style="background:var(--plum);color:#fff;font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">✓ Descartado</span></div>' : ''}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <strong style="font-size:.9rem">Combos</strong>
-      <button class="btn-icon" onclick="openNuevoCombo('${p.id}')">+ Combo</button>
+      ${!esArchivado ? `<button class="btn-icon" onclick="openNuevoCombo('${p.id}')">+ Combo</button>` : ''}
     </div>
     ${combosHtml}
+    ${esArchivado ? `<div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cerrar</button>
+      <button class="btn-save" onclick="closeModal();restaurarTerapia('${pacienteId}')">♻️ Restaurar</button>
+      ${isAdmin ? `<button onclick="closeModal();eliminarPacienteTerapia('${pacienteId}')"
+        style="padding:10px 20px;border-radius:var(--radius-sm);border:1px solid #EF4444;background:transparent;color:#EF4444;font-family:'DM Sans',sans-serif;font-size:.875rem;font-weight:600;cursor:pointer">Eliminar permanente</button>` : ''}
+    </div>` : ''}
   `);
 }
 
