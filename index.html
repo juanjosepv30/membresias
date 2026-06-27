@@ -2897,20 +2897,27 @@ function renderPacienteInyectoCard(p){
   const primerActivo = activos[0];
   const todosCompletos = combosP.length > 0 && activos.length === 0;
 
-  // Status / progress section
-  let statusHtml = '';
-  if(activos.length === 1){
-    const u   = Number(primerActivo.dosisUsadas)||0;
-    const t   = Number(primerActivo.dosisTotal)||1;
+  // Status / progress section — list every active combo with its own progress bar
+  const comboRowIny = (c) => {
+    const u   = Number(c.dosisUsadas)||0;
+    const t   = Number(c.dosisTotal)||1;
     const pct = Math.min(100, Math.round(u/t*100));
-    const und = primerActivo.tipo === 'medicacion' ? 'dosis' : 'iny.';
-    statusHtml = `
-      <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u}/${t} ${und} · ${primerActivo.medicamento||''}</div>
-      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:10px">
-        <div style="height:100%;width:${pct}%;background:var(--plum);border-radius:2px;transition:width .3s"></div>
+    const und = c.tipo === 'medicacion' ? 'dosis' : 'iny.';
+    const nom = c.medicamento || (c.tipo === 'medicacion' ? 'Medicación' : 'Inyectología');
+    return `
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;gap:6px;font-size:.72rem;margin-bottom:4px">
+          <span style="color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nom}</span>
+          <span style="flex-shrink:0;font-weight:600;color:var(--ink)">${u}/${t} ${und}</span>
+        </div>
+        <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:var(--plum);border-radius:2px;transition:width .3s"></div>
+        </div>
       </div>`;
-  } else if(activos.length > 1){
-    statusHtml = `<div style="margin-bottom:10px"><span style="background:var(--success-lt);color:var(--success);font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">${activos.length} combos activos</span></div>`;
+  };
+  let statusHtml = '';
+  if(activos.length >= 1){
+    statusHtml = `<div style="margin-bottom:10px">${activos.map(comboRowIny).join('')}</div>`;
   } else if(todosCompletos){
     statusHtml = `<div style="margin-bottom:10px"><span style="background:var(--plum);color:#fff;font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">✓ Completado</span></div>`;
   } else {
@@ -3388,18 +3395,26 @@ function renderPacienteCard(p){
   const comboActivo  = activos[0];
   const todosCompletos = combos.length > 0 && activos.length === 0;
 
-  // Status / progress section
-  let statusHtml = '';
-  if(comboActivo){
-    const def    = COMBOS_TERAPIA[comboActivo.tipo] || {};
-    const usadas = state.sesionesTerapia.filter(s => s.comboId === comboActivo.id).length;
-    const total  = comboActivo.sesionesTotal || def.sesiones || 0;
+  // Status / progress section — list every active combo with its own progress bar
+  const comboRowTer = (c) => {
+    const def    = COMBOS_TERAPIA[c.tipo] || {};
+    const usadas = state.sesionesTerapia.filter(s => s.comboId === c.id).length;
+    const total  = c.sesionesTotal || def.sesiones || 0;
     const pct    = total > 0 ? Math.min(100, Math.round(usadas/total*100)) : 0;
-    statusHtml = `
-      <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${usadas}/${total} sesiones · ${def.icon||''} ${def.label||comboActivo.tipo}</div>
-      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:10px">
-        <div style="height:100%;width:${pct}%;background:var(--plum);border-radius:2px;transition:width .3s"></div>
+    return `
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;gap:6px;font-size:.72rem;margin-bottom:4px">
+          <span style="color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${def.icon||''} ${def.label||c.tipo}</span>
+          <span style="flex-shrink:0;font-weight:600;color:var(--ink)">${usadas}/${total}</span>
+        </div>
+        <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:var(--plum);border-radius:2px;transition:width .3s"></div>
+        </div>
       </div>`;
+  };
+  let statusHtml = '';
+  if(activos.length >= 1){
+    statusHtml = `<div style="margin-bottom:10px">${activos.map(comboRowTer).join('')}</div>`;
   } else if(todosCompletos){
     statusHtml = `<div style="margin-bottom:10px"><span style="background:var(--plum);color:#fff;font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:500">✓ Completado</span></div>`;
   } else {
@@ -3408,9 +3423,12 @@ function renderPacienteCard(p){
 
   // Action button
   let actionBtn;
-  if(comboActivo){
+  if(activos.length === 1){
     actionBtn = `<button class="btn-primary" style="width:100%;font-size:.82rem;padding:8px 0"
         onclick="event.stopPropagation();openRegistrarSesion('${comboActivo.id}')">+ Sesión</button>`;
+  } else if(activos.length > 1){
+    actionBtn = `<button class="btn-primary" style="width:100%;font-size:.82rem;padding:8px 0"
+        onclick="event.stopPropagation();verPacienteTerapia('${p.id}')">Ver combos</button>`;
   } else if(todosCompletos){
     actionBtn = `<button onclick="event.stopPropagation();archivarTerapia('${p.id}')"
         style="width:100%;font-size:.82rem;padding:8px 0;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif">Archivar</button>`;
