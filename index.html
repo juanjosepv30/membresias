@@ -3820,6 +3820,41 @@ function renderMisTerapias(c){
           }).join('')}
     </div>`;
 }
+
+// ─── AUTO-REFRESH: detecta un deploy nuevo y recarga la página ───
+let __buildStamp = null;
+async function checkForUpdate(){
+  try {
+    const url = (window.location.pathname || '/') + '?_ts=' + Date.now();
+    const res = await fetch(url, { method:'HEAD', cache:'no-store' });
+    const stamp = res.headers.get('last-modified') || res.headers.get('etag');
+    if(!stamp) return;
+    if(__buildStamp === null){ __buildStamp = stamp; return; }
+    if(stamp !== __buildStamp) showUpdateBanner();
+  } catch(_){ /* sin conexión: ignorar */ }
+}
+function showUpdateBanner(){
+  if(document.getElementById('update-banner')) return;
+  const b = document.createElement('div');
+  b.id = 'update-banner';
+  b.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:9999;background:var(--plum);color:#fff;"
+    + "padding:14px 20px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;"
+    + "font-family:'DM Sans',sans-serif;font-size:.9rem;box-shadow:0 -2px 12px rgba(0,0,0,.2)";
+  b.innerHTML = "🔄 Hay una versión nueva disponible."
+    + "<button onclick=\"location.reload()\" style=\"background:#fff;color:var(--plum);border:none;"
+    + "border-radius:8px;padding:8px 18px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif\">Actualizar ahora</button>";
+  document.body.appendChild(b);
+  // Auto-recarga a los 6s, pero espera si hay un modal abierto (para no interrumpir un formulario)
+  const tryAuto = () => {
+    const modal = document.getElementById('modal-overlay');
+    if(modal && modal.classList.contains('open')){ setTimeout(tryAuto, 5000); return; }
+    location.reload();
+  };
+  setTimeout(tryAuto, 6000);
+}
+checkForUpdate();
+setInterval(checkForUpdate, 120000); // cada 2 minutos
+document.addEventListener('visibilitychange', () => { if(!document.hidden) checkForUpdate(); });
 </script>
 </body>
 </html>
