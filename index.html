@@ -490,7 +490,10 @@ async function doLogin(){
       state.pacientesTerapia = [r.profile];
       state.sesionesTerapia = r.sesiones || [];
     } else {
-      state.session = { username:u.toLowerCase(), rol:r.role, nombre:r.nombre, token:r.token };
+      // 'medico' (and legacy 'terapista') behave exactly like 'personal'; keep the real role for display
+      const rolReal = r.role;
+      const rolNorm = (rolReal === 'medico' || rolReal === 'terapista') ? 'personal' : rolReal;
+      state.session = { username:u.toLowerCase(), rol:rolNorm, rolReal, nombre:r.nombre, token:r.token };
     }
     err.textContent = '';
     startApp();
@@ -2231,7 +2234,7 @@ function renderUsuarios(c){
   const clientes = state.clientes.filter(cl => cl.usuario || cl.email);
 
   const rolPill = rol => {
-    const map = { admin:'pill-gold', personal:'pill-silver', terapista:'pill-morada' };
+    const map = { admin:'pill-gold', personal:'pill-silver', medico:'pill-morada', terapista:'pill-morada' };
     return `<span class="pill ${map[rol]||'pill-silver'}">${rol}</span>`;
   };
 
