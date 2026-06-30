@@ -811,17 +811,13 @@ function renderClientes(c, view){
         <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openNuevoPacienteTerapia()">+ Nuevo paciente</button>
       </div>
       <div id="terapias-list"></div>`;
-    document.getElementById('terapias-list').innerHTML = pacientes.length
-      ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${pacientes.map(p => renderPacienteCard(p)).join('')}</div>`
-      : '<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">🐾</div><p>No hay pacientes de terapia.</p></div>';
+    document.getElementById('terapias-list').innerHTML = gridTerapia(pacientes);
     return;
   }
 
   if(showToggle && clientesView === 'inyecto'){
     const pacientes = state.pacientesInyecto || [];
-    const gridHtml  = pacientes.length
-      ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${pacientes.map(p=>renderPacienteInyectoCard(p)).join('')}</div>`
-      : '<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">💉</div><p>No hay pacientes registrados</p></div>';
+    const gridHtml  = gridInyecto(pacientes);
     c.innerHTML = toggleHtml('inyecto') + `
       <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
         <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openNuevoPacienteInyecto()">+ Nuevo paciente</button>
@@ -2912,12 +2908,48 @@ function renderInyecto(c, skipRefresh){
       </div>
       ${(isAdmin||isPersonal) ? '<button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openNuevoPacienteInyecto()">+ Nuevo paciente</button>' : ''}
     </div>
-    ${n
-      ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${state.pacientesInyecto.map(p=>renderPacienteInyectoCard(p)).join('')}</div>`
-      : '<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">💉</div><p>Sin pacientes registrados</p></div>'}`;
+    ${gridInyecto(state.pacientesInyecto)}`;
   if(!skipRefresh){
     reloadInyectoData().then(() => renderInyecto(c, true));
   }
+}
+
+// Splits patients into active vs completed (all combos done) and renders two grids
+// separated by a divider; completed cards are dimmed but still clickable.
+function gridSeparado(activos, completados, renderFn, emptyMsg){
+  const G = arr => `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${arr.map(p=>renderFn(p)).join('')}</div>`;
+  const linea = `<div style="display:flex;align-items:center;gap:10px;margin:26px 0 16px">
+    <div style="flex:1;height:1px;background:var(--border)"></div>
+    <span style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px">✓ Completados</span>
+    <div style="flex:1;height:1px;background:var(--border)"></div></div>`;
+  if(!activos.length && !completados.length) return emptyMsg;
+  let html = activos.length ? G(activos) : '';
+  if(completados.length){
+    html += linea + `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;opacity:.55;filter:grayscale(.5)">${completados.map(p=>renderFn(p)).join('')}</div>`;
+  }
+  return html;
+}
+function pacienteInyectoCompleto(p){
+  const cs = state.combosInyecto.filter(c => String(c.pacienteId) === String(p.id));
+  return cs.length > 0 && cs.every(c => c.estado === 'completado');
+}
+function pacienteTerapiaCompleto(p){
+  const cs = state.combos.filter(c => String(c.pacienteId) === String(p.id));
+  return cs.length > 0 && cs.every(c => c.estado === 'completado');
+}
+function gridInyecto(pacientes){
+  return gridSeparado(
+    pacientes.filter(p => !pacienteInyectoCompleto(p)),
+    pacientes.filter(p =>  pacienteInyectoCompleto(p)),
+    renderPacienteInyectoCard,
+    '<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">💉</div><p>Sin pacientes registrados</p></div>');
+}
+function gridTerapia(pacientes){
+  return gridSeparado(
+    pacientes.filter(p => !pacienteTerapiaCompleto(p)),
+    pacientes.filter(p =>  pacienteTerapiaCompleto(p)),
+    renderPacienteCard,
+    '<div class="empty-state" style="padding:60px 20px"><div class="empty-icon">🐾</div><p>No hay pacientes de terapia.</p></div>');
 }
 
 function renderPacienteInyectoCard(p){
@@ -3323,19 +3355,11 @@ async function guardarAplicacion(comboId, pacienteId){
       combo.dosisUsadas = Number(combo.dosisUsadas||0) + 1;
       if(Number(combo.dosisUsadas) >= Number(combo.dosisTotal)) combo.estado = 'completado';
     }
-    // Auto-archive if ALL combos for this patient are now completed
+    // No auto-archive: completed patients stay in the list (shown dimmed under "Completados")
     const combosDelPaciente = state.combosInyecto.filter(c => String(c.pacienteId) === String(pacienteId));
     const todosTerminados = combosDelPaciente.length > 0 && combosDelPaciente.every(c => c.estado === 'completado');
-    if(todosTerminados){
-      try { await apiCall('archivePacienteInyecto', { pacienteId }); } catch(_){}
-      state.pacientesInyecto = state.pacientesInyecto.filter(p => String(p.id) !== String(pacienteId));
-      closeModal(); hideLoading();
-      toast('¡Tratamiento completado! Movido a Descartados.');
-      refreshInyectoView();
-      return;
-    }
     closeModal(); hideLoading();
-    toast('Aplicación registrada');
+    toast(todosTerminados ? '✅ ¡Tratamiento completado!' : 'Aplicación registrada');
     refreshInyectoView();
     verPacienteInyecto(pacienteId);
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
@@ -3430,9 +3454,7 @@ function renderTerapias(c){
       <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openNuevoPacienteTerapia()">+ Nuevo paciente</button>
     </div>
     <div id="terapias-list">
-      ${pacientes.length === 0
-        ? '<div class="empty-state" style="text-align:center;padding:60px 20px;color:var(--muted)">🐾<br><br>No hay pacientes registrados aún.</div>'
-        : `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${pacientes.map(p => renderPacienteCard(p)).join('')}</div>`}
+      ${gridTerapia(pacientes)}
     </div>`;
 }
 
@@ -3725,21 +3747,11 @@ async function guardarSesion(comboId){
     const combo = state.combos.find(c => c.id === comboId);
     const usadas = state.sesionesTerapia.filter(s => s.comboId === comboId).length;
     if(combo && usadas >= (combo.sesionesTotal || 10)) combo.estado = 'completado';
-    // Detect if ALL combos for this patient are now completed → archive to Descartados
+    // No auto-archive: completed patients stay in the list (shown dimmed under "Completados")
     const combosPaciente = state.combos.filter(c => c.pacienteId === combo?.pacienteId);
     const todosTerapiaCompletos = combosPaciente.length > 0 && combosPaciente.every(c => c.estado === 'completado');
-    if(todosTerapiaCompletos){
-      try { await apiCall('archivePacienteTerapia', { pacienteId: combo.pacienteId }); } catch(_){}
-      state.pacientesTerapia = state.pacientesTerapia.filter(p => p.id !== combo.pacienteId);
-      closeModal(); hideLoading();
-      toast('¡Tratamiento completado! Movido a Descartados.');
-      const pg = document.getElementById('page-content');
-      if(state.session.rol === 'terapista') renderTerapias(pg);
-      else { clientesView = 'terapias'; renderClientes(pg); }
-      return;
-    }
     closeModal(); hideLoading();
-    toast('✅ Sesión registrada');
+    toast(todosTerapiaCompletos ? '✅ ¡Tratamiento completado!' : '✅ Sesión registrada');
     refreshTerapiaView();
     verPacienteTerapia(combo.pacienteId);
   } catch(e){ hideLoading(); toast('Error: '+e.message,'error'); }
